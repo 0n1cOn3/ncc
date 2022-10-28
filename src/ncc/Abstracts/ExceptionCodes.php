@@ -23,6 +23,7 @@
     use ncc\Exceptions\InvalidVersionNumberException;
     use ncc\Exceptions\MalformedJsonException;
     use ncc\Exceptions\NoUnitsFoundException;
+    use ncc\Exceptions\PackageParsingException;
     use ncc\Exceptions\ProjectAlreadyExistsException;
     use ncc\Exceptions\RuntimeException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
@@ -175,6 +176,11 @@
         const BuildException = -1727;
 
         /**
+         * @see PackageParsingException
+         */
+        const PackageParsingException = -1728;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -205,6 +211,7 @@
             self::InvalidPropertyValueException,
             self::InvalidVersionConfigurationException,
             self::UnsupportedExtensionVersionException,
-            self::BuildException
+            self::BuildException,
+            self::PackageParsingException
         ];
     }
