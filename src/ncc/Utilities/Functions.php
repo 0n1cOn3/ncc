@@ -22,11 +22,11 @@
          * Calculates a byte-code representation of the input using CRC32
          *
          * @param string $input
-         * @return int
+         * @return string
          */
-        public static function cbc(string $input): int
+        public static function cbc(string $input): string
         {
-            return hexdec(hash('crc32', $input, true));
+            return hash('crc32', $input, true);
         }
 
         /**
