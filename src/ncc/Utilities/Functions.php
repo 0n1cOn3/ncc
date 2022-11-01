@@ -217,28 +217,4 @@
             $path = str_ireplace('/', DIRECTORY_SEPARATOR, $path);
             return str_ireplace('\\', DIRECTORY_SEPARATOR, $path);
         }
-
-        /**
-         * Converts the input string into a Bas64 encoding before returning it as a
-         * byte representation
-         *
-         * @param string $string
-         * @return string
-         */
-        public static function byteEncode(string $string): string
-        {
-            return convert_uuencode(Base64::encode($string));
-        }
-
-        /**
-         * Decodes the input string back into the normal string representation that was encoded
-         * by the byteEncode() function
-         *
-         * @param string $string
-         * @return string
-         */
-        public static function byteDecode(string $string): string
-        {
-            return base64_decode(convert_uudecode($string));
-        }
     }
