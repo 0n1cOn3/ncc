@@ -97,6 +97,7 @@
             // Global constants are overridden
             $this->package->Header->RuntimeConstants = array_merge($this->selected_build_configuration->DefineConstants, $this->package->Header->RuntimeConstants);
             $this->package->Header->RuntimeConstants = array_merge($this->project->Build->DefineConstants, $this->package->Header->RuntimeConstants);
+            $this->package->Header->RuntimeConstants = Functions::compileConstants($this->package, $this->project);
 
             $this->package->Header->CompilerExtension = $this->project->Project->Compiler;
             $this->package->Header->CompilerVersion = NCC_VERSION_NUMBER;

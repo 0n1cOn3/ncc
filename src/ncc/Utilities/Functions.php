@@ -2,9 +2,12 @@
 
     namespace ncc\Utilities;
 
+    use ncc\Abstracts\SpecialFormat;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\MalformedJsonException;
     use ncc\Objects\CliHelpSection;
+    use ncc\Objects\Package;
+    use ncc\Objects\ProjectConfiguration;
 
     /**
      * @author Zi Xing Narrakas
@@ -216,5 +219,38 @@
         {
             $path = str_ireplace('/', DIRECTORY_SEPARATOR, $path);
             return str_ireplace('\\', DIRECTORY_SEPARATOR, $path);
+        }
+
+        /**
+         * Compiles the special formatted constants
+         *
+         * @param Package $package
+         * @param ProjectConfiguration $project_configuration
+         * @return array
+         */
+        public static function compileConstants(Package $package, ProjectConfiguration $project_configuration): array
+        {
+            $compiled_constants = [];
+            foreach($package->Header->RuntimeConstants as $name => $value)
+            {
+                $compiled_constants[$name] = match (strtoupper($value)) {
+                    SpecialFormat::AssemblyName => $project_configuration->Assembly->Name,
+                    SpecialFormat::AssemblyPackage => $project_configuration->Assembly->Package,
+                    SpecialFormat::AssemblyDescription => $project_configuration->Assembly->Description,
+                    SpecialFormat::AssemblyCompany => $project_configuration->Assembly->Company,
+                    SpecialFormat::AssemblyProduct => $project_configuration->Assembly->Product,
+                    SpecialFormat::AssemblyCopyright => $project_configuration->Assembly->Copyright,
+                    SpecialFormat::AssemblyTrademark => $project_configuration->Assembly->Trademark,
+                    SpecialFormat::AssemblyVersion => $project_configuration->Assembly->Version,
+                    SpecialFormat::AssemblyUid => $project_configuration->Assembly->UUID,
+                    SpecialFormat::CompileTimestamp => time(),
+                    SpecialFormat::NccBuildVersion => NCC_VERSION_NUMBER,
+                    SpecialFormat::NccBuildFlags => explode(' ', NCC_VERSION_FLAGS),
+                    SpecialFormat::NccBuildBranch => NCC_VERSION_BRANCH,
+                    default => $value,
+                };
+            }
+
+            return $compiled_constants;
         }
     }
