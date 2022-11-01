@@ -102,11 +102,8 @@
             $this->package->Header->CompilerExtension = $this->project->Project->Compiler;
             $this->package->Header->CompilerVersion = NCC_VERSION_NUMBER;
 
-            if(ncc::cliMode())
-            {
-                Console::out('Scanning project files');
-                Console::out('theseer\DirectoryScanner - Copyright (c) 2009-2014 Arne Blankerts <arne@blankerts.de> All rights reserved.');
-            }
+            Console::out('Scanning project files');
+            Console::out('theseer\DirectoryScanner - Copyright (c) 2009-2014 Arne Blankerts <arne@blankerts.de> All rights reserved.');
 
             // First scan the project files and create a file struct.
             $DirectoryScanner = new DirectoryScanner();
@@ -147,18 +144,14 @@
                 $this->package->Components[] = $Component;
             }
 
-            if(ncc::cliMode())
+            if(count($this->package->Components) > 0)
             {
-                if(count($this->package->Components) > 0)
-                {
-                    Console::out(count($this->package->Components) . ' component(s) found');
-                }
-                else
-                {
-                    Console::out('No components found');
-                }
+                Console::out(count($this->package->Components) . ' component(s) found');
             }
-
+            else
+            {
+                Console::out('No components found');
+            }
 
             // Clear previous excludes and includes
             $DirectoryScanner->setExcludes([]);
@@ -183,16 +176,13 @@
 
             }
 
-            if(ncc::cliMode())
+            if(count($this->package->Resources) > 0)
             {
-                if(count($this->package->Resources) > 0)
-                {
-                    Console::out(count($this->package->Resources) . ' resources(s) found');
-                }
-                else
-                {
-                    Console::out('No resources found');
-                }
+                Console::out(count($this->package->Resources) . ' resources(s) found');
+            }
+            else
+            {
+                Console::out('No resources found');
             }
         }
 
@@ -224,16 +214,13 @@
 
             if(count($this->package->Components) > 0)
             {
-                if(ncc::cliMode())
-                {
-                    Console::out('Compiling components');
-                    $total_items = count($this->package->Components);
-                }
+                Console::out('Compiling components');
+                $total_items = count($this->package->Components);
 
                 // Process the components and attempt to create an AST representation of the source
                 foreach($this->package->Components as $component)
                 {
-                    if(ncc::cliMode() && $total_items > 5)
+                    if($total_items > 5)
                     {
                         Console::inlineProgressBar($processed_items, $total_items);
                     }
@@ -284,16 +271,13 @@
             if(count($this->package->Resources) > 0)
             {
                 // Process the resources
-                if(ncc::cliMode())
-                {
-                    Console::out('Processing resources');
-                    $processed_items = 0;
-                    $total_items = count($this->package->Resources);
-                }
+                Console::out('Processing resources');
+                $processed_items = 0;
+                $total_items = count($this->package->Resources);
 
                 foreach($this->package->Resources as $resource)
                 {
-                    if(ncc::cliMode() && $total_items > 5)
+                    if($total_items > 5)
                     {
                         Console::inlineProgressBar($processed_items, $total_items);
                     }
@@ -310,12 +294,9 @@
                 $this->package->Resources = $resources;
             }
 
-            if(ncc::cliMode())
-            {
-                if($total_items > 5)
-                    print(PHP_EOL);
-                Console::out($this->package->Assembly->Package . ' compiled successfully');
-            }
+            if($total_items > 5)
+                print(PHP_EOL);
+            Console::out($this->package->Assembly->Package . ' compiled successfully');
 
             // Write the package to disk
             $FileSystem = new Filesystem();
