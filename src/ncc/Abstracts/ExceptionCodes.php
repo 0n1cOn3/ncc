@@ -6,10 +6,13 @@
     use ncc\Exceptions\AutoloadGeneratorException;
     use ncc\Exceptions\BuildConfigurationNotFoundException;
     use ncc\Exceptions\BuildException;
+    use ncc\Exceptions\ComponentChecksumException;
+    use ncc\Exceptions\ComponentDecodeException;
     use ncc\Exceptions\ComponentVersionNotFoundException;
     use ncc\Exceptions\ConstantReadonlyException;
     use ncc\Exceptions\DirectoryNotFoundException;
     use ncc\Exceptions\FileNotFoundException;
+    use ncc\Exceptions\InstallationException;
     use ncc\Exceptions\InvalidConstantNameException;
     use ncc\Exceptions\InvalidCredentialsEntryException;
     use ncc\Exceptions\InvalidPackageException;
@@ -23,9 +26,12 @@
     use ncc\Exceptions\InvalidVersionNumberException;
     use ncc\Exceptions\MalformedJsonException;
     use ncc\Exceptions\NoUnitsFoundException;
+    use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackageParsingException;
     use ncc\Exceptions\ProjectAlreadyExistsException;
+    use ncc\Exceptions\ResourceChecksumException;
     use ncc\Exceptions\RuntimeException;
+    use ncc\Exceptions\UnsupportedComponentTypeException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedPackageException;
 
@@ -181,6 +187,36 @@
         const PackageParsingException = -1728;
 
         /**
+         * @see PackageLockException
+         */
+        const PackageLockException = -1729;
+
+        /**
+         * @see InstallationException
+         */
+        const InstallationException = -1730;
+
+        /**
+         * @see UnsupportedComponentTypeException
+         */
+        const UnsupportedComponentTypeException = -1731;
+
+        /**
+         * @see ComponentDecodeException
+         */
+        const ComponentDecodeException = -1732;
+
+        /**
+         * @see ComponentChecksumException
+         */
+        const ComponentChecksumException = -1733;
+
+        /**
+         * @see ResourceChecksumException
+         */
+        const ResourceChecksumException = -1734;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -212,6 +248,11 @@
             self::InvalidVersionConfigurationException,
             self::UnsupportedExtensionVersionException,
             self::BuildException,
-            self::PackageParsingException
+            self::PackageParsingException,
+            self::PackageLockException,
+            self::InstallationException,
+            self::UnsupportedComponentTypeException,
+            self::ComponentDecodeException,
+            self::ResourceChecksumException
         ];
     }
