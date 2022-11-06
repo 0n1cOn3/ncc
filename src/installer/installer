@@ -14,7 +14,6 @@
 
     use ncc\Abstracts\ConsoleColors;
     use ncc\Abstracts\Scopes;
-    use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\ComponentVersionNotFoundException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\InvalidScopeException;
@@ -30,8 +29,8 @@
     use ncc\ThirdParty\Symfony\Yaml\Yaml;
     use ncc\Utilities\Console;
     use ncc\Utilities\Functions;
-use ncc\Utilities\IO;
-use ncc\Utilities\PathFinder;
+    use ncc\Utilities\IO;
+    use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
     use ncc\Utilities\Validate;
     use ncc\ZiProto\ZiProto;
@@ -195,7 +194,7 @@ use ncc\Utilities\PathFinder;
     ];
     foreach($required_files as $path)
     {
-        if(!file_exists($path))
+        if(!$NCC_FILESYSTEM->exists($path))
         {
             Console::outError('Missing file \'' . $path . '\', installation failed.', true, 1);
             exit(1);
@@ -205,7 +204,7 @@ use ncc\Utilities\PathFinder;
     // Preform the checksum validation
     if(!$NCC_BYPASS_CHECKSUM)
     {
-        if(!file_exists($NCC_CHECKSUM))
+        if(!$NCC_FILESYSTEM->exists($NCC_CHECKSUM))
         {
             Console::outWarning('The file \'checksum.bin\' was not found, the contents of the program cannot be verified to be safe');
         }
@@ -213,7 +212,16 @@ use ncc\Utilities\PathFinder;
         {
             Console::out('Running checksum');
 
-            $checksum = ZiProto::decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'checksum.bin'));
+            try
+            {
+                $checksum = ZiProto::decode(IO::fread(__DIR__ . DIRECTORY_SEPARATOR . 'checksum.bin'));
+            }
+            catch(Exception $e)
+            {
+                Console::outError($e->getMessage(), true, 1);
+                return;
+            }
+
             $checksum_failed = false;
 
             foreach($checksum as $path => $hash)
@@ -318,7 +326,7 @@ use ncc\Utilities\PathFinder;
             exit(1);
         }
 
-        if(file_exists($install_dir_arg . DIRECTORY_SEPARATOR . 'ncc'))
+        if($NCC_FILESYSTEM->exists($install_dir_arg . DIRECTORY_SEPARATOR . 'ncc'))
         {
             Console::out('NCC Seems to already be installed, the installer will repair/upgrade your current install');
             $NCC_INSTALL_PATH = $install_dir_arg;
@@ -337,9 +345,9 @@ use ncc\Utilities\PathFinder;
         {
             $user_input = null;
             $user_input = Console::getInput("Installation Path (Default: $NCC_INSTALL_PATH): ");
-            if(strlen($user_input) > 0 && file_exists($user_input) && Validate::unixFilepath($user_input))
+            if(strlen($user_input) > 0 && $NCC_FILESYSTEM->exists($user_input) && Validate::unixFilepath($user_input))
             {
-                if(file_exists($user_input . DIRECTORY_SEPARATOR . 'ncc'))
+                if($NCC_FILESYSTEM->exists($user_input . DIRECTORY_SEPARATOR . 'ncc'))
                 {
                     $NCC_INSTALL_PATH = $user_input;
                     break;
@@ -374,7 +382,7 @@ use ncc\Utilities\PathFinder;
             exit(1);
         }
 
-        if(file_exists($data_dir_arg . DIRECTORY_SEPARATOR . 'package.lck'))
+        if($NCC_FILESYSTEM->exists($data_dir_arg . DIRECTORY_SEPARATOR . 'package.lck'))
         {
             $NCC_DATA_PATH = $data_dir_arg;
             $skip_prompt = true;
@@ -393,9 +401,9 @@ use ncc\Utilities\PathFinder;
         {
             $user_input = null;
             $user_input = Console::getInput("Data Path (Default: $NCC_DATA_PATH): ");
-            if(strlen($user_input) > 0 && file_exists($user_input) && Validate::unixFilepath($user_input))
+            if(strlen($user_input) > 0 && $NCC_FILESYSTEM->exists($user_input) && Validate::unixFilepath($user_input))
             {
-                if(file_exists($user_input . DIRECTORY_SEPARATOR . 'package.lck'))
+                if($NCC_FILESYSTEM->exists($user_input . DIRECTORY_SEPARATOR . 'package.lck'))
                 {
                     $NCC_DATA_PATH = $user_input;
                     break;
@@ -453,14 +461,22 @@ use ncc\Utilities\PathFinder;
 
     // Backup the configuration file
     $config_backup = null;
-    if(file_exists($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'ncc.yaml'))
+    if($NCC_FILESYSTEM->exists($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'ncc.yaml'))
     {
         Console::out('ncc.yaml will be updated');
-        $config_backup = file_get_contents($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'ncc.yaml');
+        try
+        {
+            $config_backup = IO::fread($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'ncc.yaml');
+        }
+        catch(Exception $e)
+        {
+            Console::outError($e->getMessage(), true, 1);
+            return;
+        }
     }
 
     // Prepare installation
-    if(file_exists($NCC_INSTALL_PATH))
+    if($NCC_FILESYSTEM->exists($NCC_INSTALL_PATH))
     {
         try
         {
@@ -493,7 +509,7 @@ use ncc\Utilities\PathFinder;
     // Verify directories exist
     foreach($required_dirs as $dir)
     {
-        if(!file_exists($dir))
+        if(!$NCC_FILESYSTEM->exists($dir))
         {
             Console::outError("Cannot create directory '$dir', please verify if you have write permissions to the directory.");
             exit(1);
@@ -554,7 +570,15 @@ use ncc\Utilities\PathFinder;
 
     // Install NCC
     Console::out('Copying files to \'' . $NCC_INSTALL_PATH . '\'');
-    $build_files = explode("\n", file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'build_files'));
+    try
+    {
+        $build_files = explode("\n", IO::fread(__DIR__ . DIRECTORY_SEPARATOR . 'build_files'));
+    }
+    catch(Exception $e)
+    {
+        Console::outError($e->getMessage(), true, 1);
+        return;
+    }
     $total_items = count($build_files);
     $processed_items = 0;
 
@@ -579,7 +603,7 @@ use ncc\Utilities\PathFinder;
             $NCC_FILESYSTEM->copy(__DIR__ . DIRECTORY_SEPARATOR . $file, $NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . $file);
             $NCC_FILESYSTEM->chmod([$NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . $file], 0755);
 
-            if(!file_exists($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . $file))
+            if(!$NCC_FILESYSTEM->exists($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . $file))
             {
                 Console::outError('Cannot create file \'' . $NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . $file . '\', installation failed.');
                 exit(1);
@@ -599,7 +623,7 @@ use ncc\Utilities\PathFinder;
     {
         $credential_manager->constructStore();
     }
-    catch (AccessDeniedException|\ncc\Exceptions\RuntimeException $e)
+    catch (Exception $e)
     {
         Console::outError('Cannot construct credential store, ' . $e->getMessage() . ' (Error Code: ' . $e->getCode() . ')');
     }
@@ -610,13 +634,23 @@ use ncc\Utilities\PathFinder;
     }
     catch (InvalidScopeException $e)
     {
-        Console::outError('Cannot create package lock, ' . $e->getMessage());
-        exit(0);
+        Console::outError('Cannot create package lock, ' . $e->getMessage(), true, 1);
+        return;
     }
 
     // Generate executable shortcut
     Console::out('Creating shortcut');
-    $executable_shortcut = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'ncc.sh');
+
+    try
+    {
+        $executable_shortcut = IO::fread(__DIR__ . DIRECTORY_SEPARATOR . 'ncc.sh');
+    }
+    catch(Exception $e)
+    {
+        Console::outError($e->getMessage(), true, 1);
+        return;
+    }
+
     $executable_shortcut = str_ireplace('%php_exec', $NCC_PHP_EXECUTABLE, $executable_shortcut);
     $executable_shortcut = str_ireplace('%ncc_exec', $NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'ncc', $executable_shortcut);
 
@@ -629,7 +663,7 @@ use ncc\Utilities\PathFinder;
     foreach($bin_paths as $path)
     {
         // Delete old versions of the executable shortcuts.
-        if(file_exists($path . DIRECTORY_SEPARATOR . 'ncc'))
+        if($NCC_FILESYSTEM->exists($path . DIRECTORY_SEPARATOR . 'ncc'))
         {
             $NCC_FILESYSTEM->remove($path . DIRECTORY_SEPARATOR . 'ncc');
         }
@@ -650,21 +684,29 @@ use ncc\Utilities\PathFinder;
 
     // Register the ncc extension
     Console::out('Registering extension');
-    $extension_shortcut = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'extension');
+    try
+    {
+        $extension_shortcut = IO::fread(__DIR__ . DIRECTORY_SEPARATOR . 'extension');
+    }
+    catch(Exception $e)
+    {
+        Console::outError($e->getMessage(), true, 1);
+        return;
+    }
     $extension_shortcut = str_ireplace('%ncc_install', $NCC_INSTALL_PATH, $extension_shortcut);
 
     // Remove all the old extensions first.
     /**
      * @param string $path
-     * @param Filesystem $NCC_FILESYSTEM
+     * @param Filesystem $filesystem
      * @param string $extension_shortcut
      * @return bool
      */
-    function install_extension(string $path, Filesystem $NCC_FILESYSTEM, string $extension_shortcut): bool
+    function install_extension(string $path, Filesystem $filesystem, string $extension_shortcut): bool
     {
-        if (file_exists($path . DIRECTORY_SEPARATOR . 'ncc'))
+        if ($filesystem->exists($path . DIRECTORY_SEPARATOR . 'ncc'))
         {
-            $NCC_FILESYSTEM->remove($path . DIRECTORY_SEPARATOR . 'ncc');
+            $filesystem->remove($path . DIRECTORY_SEPARATOR . 'ncc');
         }
 
         try
@@ -677,7 +719,7 @@ use ncc\Utilities\PathFinder;
             return false;
         }
 
-        if (file_exists($path . DIRECTORY_SEPARATOR . 'ncc'))
+        if ($filesystem->exists($path . DIRECTORY_SEPARATOR . 'ncc'))
         {
             return true;
         }
