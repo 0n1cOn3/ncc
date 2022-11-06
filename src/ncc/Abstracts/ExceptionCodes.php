@@ -24,6 +24,7 @@
     use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\InvalidVersionConfigurationException;
     use ncc\Exceptions\InvalidVersionNumberException;
+    use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
     use ncc\Exceptions\NoUnitsFoundException;
     use ncc\Exceptions\PackageLockException;
@@ -217,6 +218,11 @@
         const ResourceChecksumException = -1734;
 
         /**
+         * @see IOException
+         */
+        const IOException = -1735;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -253,6 +259,7 @@
             self::InstallationException,
             self::UnsupportedComponentTypeException,
             self::ComponentDecodeException,
-            self::ResourceChecksumException
+            self::ResourceChecksumException,
+            self::IOException
         ];
     }
