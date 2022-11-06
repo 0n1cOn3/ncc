@@ -30,7 +30,8 @@
     use ncc\ThirdParty\Symfony\Yaml\Yaml;
     use ncc\Utilities\Console;
     use ncc\Utilities\Functions;
-    use ncc\Utilities\PathFinder;
+use ncc\Utilities\IO;
+use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
     use ncc\Utilities\Validate;
     use ncc\ZiProto\ZiProto;
@@ -635,8 +636,15 @@
 
         if($NCC_FILESYSTEM->exists([$path]))
         {
-            file_put_contents($path . DIRECTORY_SEPARATOR . 'ncc', $executable_shortcut);
-            $NCC_FILESYSTEM->chmod([$path . DIRECTORY_SEPARATOR . 'ncc'], 0755);
+            try
+            {
+                IO::fwrite($path . DIRECTORY_SEPARATOR . 'ncc', $executable_shortcut);
+            }
+            catch (\ncc\Exceptions\IOException $e)
+            {
+                Console::outException($e->getMessage(), $e, 1);
+                return;
+            }
         }
     }
 
@@ -659,10 +667,18 @@
             $NCC_FILESYSTEM->remove($path . DIRECTORY_SEPARATOR . 'ncc');
         }
 
-        file_put_contents($path . DIRECTORY_SEPARATOR . 'ncc', $extension_shortcut);
-        $NCC_FILESYSTEM->chmod([$path . DIRECTORY_SEPARATOR . 'ncc'], 0755);
+        try
+        {
+            IO::fwrite($path . DIRECTORY_SEPARATOR . 'ncc', $extension_shortcut);
+        }
+        catch (\ncc\Exceptions\IOException $e)
+        {
+            Console::outException($e->getMessage(), $e, 1);
+            return false;
+        }
 
-        if (file_exists($path . DIRECTORY_SEPARATOR . 'ncc')) {
+        if (file_exists($path . DIRECTORY_SEPARATOR . 'ncc'))
+        {
             return true;
         }
 
@@ -762,7 +778,15 @@
         Console::out('Updating ncc.yaml');
     }
 
-    file_put_contents($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'ncc.yaml', Yaml::dump($config_obj));
+    try
+    {
+        IO::fwrite($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'ncc.yaml', Yaml::dump($config_obj));
+    }
+        catch (\ncc\Exceptions\IOException $e)
+    {
+        Console::outException($e->getMessage(), $e, 1);
+        return;
+    }
 
     Console::out('NCC version: ' . NCC_VERSION_NUMBER . ' has been successfully installed');
     Console::out('For licensing information see \'' . $NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'LICENSE\' or run \'ncc help --license\'');
