@@ -24,7 +24,7 @@
         {
             $fileInfo = new SplFileInfo($uri);
 
-            if(is_dir($fileInfo->getPath()))
+            if(!is_dir($fileInfo->getPath()))
             {
                 throw new IOException(sprintf('Attempted to write data to a directory instead of a file: (%s)', $uri));
             }
@@ -64,7 +64,7 @@
         {
             $fileInfo = new SplFileInfo($uri);
 
-            if(is_dir($fileInfo->getPath()))
+            if(!is_dir($fileInfo->getPath()))
             {
                 throw new IOException(sprintf('Attempted to read data from a directory instead of a file: (%s)', $uri));
             }
