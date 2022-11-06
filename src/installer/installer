@@ -12,6 +12,7 @@
 
 <?PHP
 
+    use ncc\Abstracts\ConsoleColors;
     use ncc\Abstracts\Scopes;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\ComponentVersionNotFoundException;
@@ -82,6 +83,7 @@
     // Initialize NCC
     try
     {
+        define('NCC_CLI_MODE', 1);
         ncc::initialize();
     }
     catch (FileNotFoundException|\ncc\Exceptions\RuntimeException $e)
@@ -239,24 +241,33 @@
         }
     }
 
-    // Check for required extensions
-    $curl_available = true;
-    foreach(Validate::requiredExtensions() as $ext => $installed)
+    // Check the installed extensions and report
+    Console::out('Checking installed extensions...');
+    $extensions = Validate::requiredExtensions();
+    foreach($extensions as $ext => $installed)
     {
-        if(!$installed)
+        if($installed)
         {
-            switch($ext)
-            {
-                case 'curl':
-                    Console::outWarning('This installer requires the \'curl\' extension to install composer');
-                    $curl_available = false;
-                    break;
-
-                default:
-                    Console::outWarning('The extension \'' . $ext . '\' is not installed, compatibility without it is not guaranteed');
-                    break;
-            }
+            Console::out("$ext ... " . Console::formatColor("installed", ConsoleColors::LightGreen));
         }
+        else
+        {
+            Console::out("$ext ... " . Console::formatColor("missing", ConsoleColors::LightRed));
+        }
+    }
+
+    // Check for curl if the installer requires it
+    $curl_available = true;
+    if(!$extensions['curl'])
+    {
+        if(getParameter($NCC_ARGS, 'install-composer') !== null)
+        {
+            Console::outError('This installer requires the \'curl\' extension to install composer', true, 1);
+            return;
+        }
+
+        $curl_available = false;
+        Console::outWarning('The extension \'curl\' is not installed, the installer will not be able to install composer');
     }
 
     // Attempt to load version information
@@ -283,13 +294,15 @@
 
         try
         {
-            Console::out($full_name . ' Version: ' . $component->getVersion());
+            Console::out(Console::formatColor($full_name, ConsoleColors::Green) . ' Version: ' . Console::formatColor($component->getVersion(), ConsoleColors::LightMagenta));
         }
         catch (ComponentVersionNotFoundException $e)
         {
-            Console::outWarning('Cannot determine component version of ' . $full_name);
+            Console::outWarning('Cannot determine component version of ' . Console::formatColor($full_name, ConsoleColors::Green));
         }
     }
+
+    Console::out('Starting installation');
 
     // Determine the installation path
     $skip_prompt = false;
@@ -409,20 +422,24 @@
         {
             $update_composer = true;
         }
-        elseif(getParameter($NCC_ARGS, 'install-composer') !== null)
-        {
-            $update_composer = true;
-        }
         else
         {
-            Console::out("Note: This doesn't affect your current install of composer (if you have composer installed)");
-            $update_composer = Console::getBooleanInput('Do you want to install composer for NCC? (Recommended)');
+            if(!$NCC_AUTO_MODE)
+            {
+                Console::out("Note: This doesn't affect your current install of composer (if you have composer installed)");
+                $update_composer = Console::getBooleanInput('Do you want to install composer for NCC? (Recommended)');
+            }
+            else
+            {
+                $update_composer = false;
+            }
         }
     }
     else
     {
         $update_composer = false;
     }
+
 
     if(!$NCC_AUTO_MODE)
     {
@@ -483,7 +500,7 @@
     }
 
     // Install composer
-    if($curl_available && $update_composer)
+    if($update_composer)
     {
         Console::out('Installing composer for NCC');
 
