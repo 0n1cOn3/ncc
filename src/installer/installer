@@ -535,11 +535,10 @@
         fclose($fp);
 
         Console::out('Running composer installer');
-        // TODO: Unescaped shell arguments are a security issue
         $Process = Process::fromShellCommandline(implode(' ', [
             $NCC_PHP_EXECUTABLE,
-            $NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'composer-setup.php',
-            '--install-dir=' . $NCC_INSTALL_PATH,
+            escapeshellcmd($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'composer-setup.php'),
+            '--install-dir=' . escapeshellcmd($NCC_INSTALL_PATH),
             '--filename=composer.phar'
         ]));
         $Process->setWorkingDirectory($NCC_INSTALL_PATH);
@@ -668,13 +667,14 @@
             $NCC_FILESYSTEM->remove($path . DIRECTORY_SEPARATOR . 'ncc');
         }
 
-        if($NCC_FILESYSTEM->exists([$path]))
+        if($NCC_FILESYSTEM->exists($path))
         {
             try
             {
                 IO::fwrite($path . DIRECTORY_SEPARATOR . 'ncc', $executable_shortcut);
+                break;
             }
-            catch (\ncc\Exceptions\IOException $e)
+            catch (Exception $e)
             {
                 Console::outException($e->getMessage(), $e, 1);
                 return;
