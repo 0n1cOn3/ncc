@@ -3,9 +3,17 @@
     namespace ncc\Interfaces;
 
     use ncc\Abstracts\Options\BuildConfigurationValues;
+    use ncc\Objects\ProjectConfiguration;
 
     interface CompilerInterface
     {
+        /**
+         * Public constructor
+         *
+         * @param ProjectConfiguration $project
+         */
+        public function __construct(ProjectConfiguration $project);
+
         /**
          * Prepares the package for the build process, this method is called before build()
          *

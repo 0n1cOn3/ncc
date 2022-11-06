@@ -4,10 +4,11 @@
 
     namespace ncc\Objects\PackageLock;
 
+    use ncc\Objects\Package\MainExecutionPolicy;
     use ncc\Objects\ProjectConfiguration\Compiler;
     use ncc\Utilities\Functions;
 
-    class Package
+    class PackageEntry
     {
         /**
          * The compiler extension used for the package
@@ -24,25 +25,23 @@
         public $Name;
 
         /**
-         * The version of the package that's installed
+         * An array of installed versions for this package
          *
-         * @var string
+         * @var PackageEntry[]
          */
-        public $Version;
+        public $Versions;
 
         /**
-         * An array of packages that this package depends on
-         *
-         * @var Dependency[]
+         * @var MainExecutionPolicy
          */
-        public $Dependencies;
+        public $MainExecutionPolicy;
 
         /**
          * Public Constructor
          */
         public function __construct()
         {
-            $this->Dependencies = [];
+            $this->Versions = [];
         }
 
         /**
@@ -53,17 +52,17 @@
          */
         public function toArray(bool $bytecode=false): array
         {
-            $dependencies = [];
-            foreach($this->Dependencies as $dependency)
+            $versions = [];
+            foreach($this->Versions as $dependency)
             {
-                $dependencies[] = $dependency->toArray($bytecode);
+                $versions[] = $dependency->toArray($bytecode);
             }
 
             return [
                 ($bytecode ? Functions::cbc('compiler')  : 'compiler')  => $this->Compiler->toArray($bytecode),
                 ($bytecode ? Functions::cbc('name')  : 'name')  => $this->Name,
-                ($bytecode ? Functions::cbc('version')  : 'version')  => $this->Version,
-                ($bytecode ? Functions::cbc('dependencies')  : 'dependencies')  => $dependencies,
+                ($bytecode ? Functions::cbc('versions')  : 'versions')  => $versions,
+                ($bytecode ? Functions::cbc('main_execution_policy')  : 'main_execution_policy')  => $this->MainExecutionPolicy?->toArray($bytecode),
             ];
         }
 
@@ -71,7 +70,7 @@
          * Constructs object from an array representation
          *
          * @param array $data
-         * @return Package
+         * @return PackageEntry
          */
         public static function fromArray(array $data): self
         {
@@ -79,16 +78,19 @@
 
             $object->Compiler = Compiler::fromArray(Functions::array_bc($data, 'compiler'));
             $object->Name = Functions::array_bc($data, 'name');
-            $object->Version = Functions::array_bc($data, 'version');
+            $object->MainExecutionPolicy = Functions::array_bc($data, 'main_execution_policy');
 
-            $dependencies = Functions::array_bc($data, 'dependencies');
-            if($dependencies !== null)
+            $versions = Functions::array_bc($data, 'versions');
+            if($versions !== null)
             {
-                foreach($dependencies as $_datum)
+                foreach($versions as $_datum)
                 {
-                    $object->Dependencies[] = Dependency::fromArray($_datum);
+                    $object->Versions[] = DependencyEntry::fromArray($_datum);
                 }
             }
+
+            if($object->MainExecutionPolicy !== null)
+                $object->MainExecutionPolicy = MainExecutionPolicy::fromArray($object->MainExecutionPolicy);
 
             return $object;
         }

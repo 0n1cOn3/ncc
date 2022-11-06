@@ -1,5 +1,7 @@
 <?php
 
+    /** @noinspection PhpMissingFieldTypeInspection */
+
     namespace ncc\Objects;
 
     use ncc\Exceptions\FileNotFoundException;
@@ -13,6 +15,7 @@
     use ncc\Exceptions\UnsupportedExtensionVersionException;
     use ncc\Objects\ProjectConfiguration\Assembly;
     use ncc\Objects\ProjectConfiguration\Build;
+    use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
     use ncc\Objects\ProjectConfiguration\Project;
     use ncc\Utilities\Functions;
 
@@ -35,6 +38,13 @@
          * @var Assembly
          */
         public $Assembly;
+
+        /**
+         * An array of execution policies
+         *
+         * @var ExecutionPolicy[]
+         */
+        public $ExecutionPolicies;
 
         /**
          * Build configuration for the project
@@ -88,9 +98,15 @@
          */
         public function toArray(bool $bytecode=false): array
         {
+            $execution_policies = [];
+            foreach($this->ExecutionPolicies as $executionPolicy)
+            {
+                $execution_policies[$executionPolicy->Name] = $executionPolicy->toArray($bytecode);
+            }
             return [
                 ($bytecode ? Functions::cbc('project') : 'project') => $this->Project->toArray($bytecode),
                 ($bytecode ? Functions::cbc('assembly') : 'assembly') => $this->Assembly->toArray($bytecode),
+                ($bytecode ? Functions::cbc('execution_policies') : 'execution_policies') => $execution_policies,
                 ($bytecode ? Functions::cbc('build') : 'build') => $this->Build->toArray($bytecode),
             ];
         }
@@ -128,7 +144,22 @@
 
             $ProjectConfigurationObject->Project = Project::fromArray(Functions::array_bc($data, 'project'));
             $ProjectConfigurationObject->Assembly = Assembly::fromArray(Functions::array_bc($data, 'assembly'));
+            $ProjectConfigurationObject->ExecutionPolicies = Functions::array_bc($data, 'execution_policies');
             $ProjectConfigurationObject->Build = Build::fromArray(Functions::array_bc($data, 'build'));
+
+            if($ProjectConfigurationObject->ExecutionPolicies == null)
+            {
+                $ProjectConfigurationObject->ExecutionPolicies = [];
+            }
+            else
+            {
+                $policies = [];
+                foreach($ProjectConfigurationObject->ExecutionPolicies as $policy)
+                {
+                    $policies[] = ExecutionPolicy::fromArray($policy);
+                }
+                $ProjectConfigurationObject->ExecutionPolicies = $policies;
+            }
 
             return $ProjectConfigurationObject;
         }

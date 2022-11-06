@@ -19,6 +19,7 @@
     use ncc\Objects\Package\Resource;
     use ncc\Objects\ProjectConfiguration\Assembly;
     use ncc\Objects\ProjectConfiguration\Dependency;
+    use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
     use ncc\Utilities\Functions;
     use ncc\ZiProto\ZiProto;
 
@@ -55,7 +56,7 @@
         /**
          * The Main Execution Policy object for the package if the package is an executable package.
          *
-         * @var MainExecutionPolicy|null
+         * @var ExecutionPolicy|null
          */
         public $MainExecutionPolicy;
 

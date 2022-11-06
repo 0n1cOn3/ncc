@@ -4,9 +4,10 @@
 
     namespace ncc\Objects\PackageLock;
 
+    use ncc\Objects\ProjectConfiguration\Dependency;
     use ncc\Utilities\Functions;
 
-    class Dependency
+    class DependencyEntry
     {
         /**
          * The name of the package dependency
@@ -21,6 +22,15 @@
          * @var string
          */
         public $Version;
+
+        public function __construct(?Dependency $dependency)
+        {
+            if(!$dependency)
+            {
+                $this->PackageName = $dependency->Name;
+                $this->Version = $dependency->Version;
+            }
+        }
 
         /**
          * Returns an array representation of the object
@@ -40,7 +50,7 @@
          * Constructs object from an array representation
          *
          * @param array $data
-         * @return Dependency
+         * @return DependencyEntry
          */
         public static function fromArray(array $data): self
         {
