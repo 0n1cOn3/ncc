@@ -1,8 +1,8 @@
 <?php
 
-    namespace ncc\Abstracts;
+    namespace ncc\Abstracts\SpecialConstants;
 
-    abstract class SpecialFormat
+    abstract class ProjectConstants
     {
         /**
          * Assembly's Name Property
@@ -48,24 +48,4 @@
          * Assembly's UUID property
          */
         const AssemblyUid = '%ASSEMBLY.UID%';
-
-        /**
-         * The Unix Timestamp for when the package was compield
-         */
-        const CompileTimestamp = '%COMPILE_TIMESTAMP%';
-
-        /**
-         * The version of NCC that was used to compile the package
-         */
-        const NccBuildVersion = '%NCC_BUILD_VERSION%';
-
-        /**
-         * NCC Build Flags exploded into spaces
-         */
-        const NccBuildFlags = '%NCC_BUILD_FLAGS%';
-
-        /**
-         * NCC Build Branch
-         */
-        const NccBuildBranch = '%NCC_BUILD_BRANCH%';
     }
