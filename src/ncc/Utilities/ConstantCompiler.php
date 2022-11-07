@@ -70,10 +70,10 @@
             if($input == null)
                 return null;
 
-            $input = str_replace($installationPaths->getInstallationPath(), InstallConstants::InstallationPath, $input);
-            $input = str_replace($installationPaths->getBinPath(), InstallConstants::BinPath, $input);
-            $input = str_replace($installationPaths->getSourcePath(), InstallConstants::SourcePath, $input);
-            $input = str_replace($installationPaths->getDataPath(), InstallConstants::DataPath, $input);
+            $input = str_replace(InstallConstants::InstallationPath, $installationPaths->getInstallationPath(), $input);
+            $input = str_replace(InstallConstants::BinPath, $installationPaths->getBinPath(), $input);
+            $input = str_replace(InstallConstants::SourcePath, $installationPaths->getSourcePath(), $input);
+            $input = str_replace(InstallConstants::DataPath, $installationPaths->getDataPath(), $input);
 
             return $input;
         }
