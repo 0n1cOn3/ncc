@@ -60,6 +60,7 @@
         {
             $this->Project = new Project();
             $this->Assembly = new Assembly();
+            $this->ExecutionPolicies = [];
             $this->Build = new Build();
         }
 
