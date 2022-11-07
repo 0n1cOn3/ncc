@@ -52,6 +52,13 @@
         public $Scope;
 
         /**
+         * The execution policy to use as the main execution point
+         *
+         * @var string|null
+         */
+        public $Main;
+
+        /**
          * An array of constants to define by default
          *
          * @var string[]
@@ -125,6 +132,7 @@
          * Returns an array of all the build configurations defined in the project configuration
          *
          * @return array
+         * @noinspection PhpUnused
          */
         public function getBuildConfigurations(): array
         {
@@ -174,6 +182,7 @@
             $ReturnResults[($bytecode ? Functions::cbc('exclude_files') : 'exclude_files')] = $this->ExcludeFiles;
             $ReturnResults[($bytecode ? Functions::cbc('options') : 'options')] = $this->Options;
             $ReturnResults[($bytecode ? Functions::cbc('scope') : 'scope')] = $this->Scope;
+            $ReturnResults[($bytecode ? Functions::cbc('main') : 'main')] = $this->Main;
             $ReturnResults[($bytecode ? Functions::cbc('define_constants') : 'define_constants')] = $this->DefineConstants;
             $ReturnResults[($bytecode ? Functions::cbc('dependencies') : 'dependencies')] = [];
 
@@ -207,6 +216,7 @@
             $BuildObject->ExcludeFiles = (Functions::array_bc($data, 'exclude_files') ?? []);
             $BuildObject->Options = (Functions::array_bc($data, 'options') ?? []);
             $BuildObject->Scope = Functions::array_bc($data, 'scope');
+            $BuildObject->Main = Functions::array_bc($data, 'main');
             $BuildObject->DefineConstants = (Functions::array_bc($data, 'define_constants') ?? []);
 
             if(Functions::array_bc($data, 'dependencies') !== null)
