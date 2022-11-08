@@ -2,12 +2,20 @@
 
     namespace ncc\Utilities;
 
+    use ncc\Abstracts\Runners;
     use ncc\Abstracts\SpecialConstants\ProjectConstants;
+    use ncc\Classes\PhpExtension\Runner;
+    use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
+    use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
+    use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Objects\CliHelpSection;
     use ncc\Objects\Package;
+    use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration;
+    use ncc\Objects\ProjectConfiguration\Assembly;
+    use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
 
     /**
      * @author Zi Xing Narrakas
@@ -221,24 +229,20 @@
             return str_ireplace('\\', DIRECTORY_SEPARATOR, $path);
         }
 
-
         /**
-         * Compiles the special formatted constants
-         *
-         * @param Package $package
-         * @param ProjectConfiguration $project_configuration
-         * @return array
+         * @param string $path
+         * @param ExecutionPolicy $policy
+         * @return ExecutionUnit
+         * @throws UnsupportedRunnerException
+         * @throws AccessDeniedException
+         * @throws FileNotFoundException
+         * @throws IOException
          */
-        public static function compileRuntimeConstants(Package $package, ProjectConfiguration $project_configuration): array
+        public static function compileRunner(string $path, ExecutionPolicy $policy): ExecutionUnit
         {
-            $compiled_constants = [];
-            foreach($package->Header->RuntimeConstants as $name => $value)
-            {
-                $value = ConstantCompiler::compileBuildConstants($value);
-                $value = ConstantCompiler::compileProjectConstants($value, $project_configuration);
-                $compiled_constants[$name] = $value;
-            }
-
-            return $compiled_constants;
+            return match (strtolower($policy->Runner)) {
+                Runners::php => Runner::processUnit($path, $policy),
+                default => throw new UnsupportedRunnerException('The runner \'' . $policy->Runner . '\' is not supported'),
+            };
         }
     }

@@ -35,6 +35,7 @@
     use ncc\Exceptions\UnsupportedComponentTypeException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedPackageException;
+    use ncc\Exceptions\UnsupportedRunnerException;
 
     /**
      * @author Zi Xing Narrakas
@@ -223,6 +224,11 @@
         const IOException = -1735;
 
         /**
+         * @see UnsupportedRunnerException
+         */
+        const UnsupportedRunnerException = -1736;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -260,6 +266,7 @@
             self::UnsupportedComponentTypeException,
             self::ComponentDecodeException,
             self::ResourceChecksumException,
-            self::IOException
+            self::IOException,
+            self::UnsupportedRunnerException
         ];
     }

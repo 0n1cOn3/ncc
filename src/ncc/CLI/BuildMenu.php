@@ -3,9 +3,9 @@
     namespace ncc\CLI;
 
     use Exception;
-    use JetBrains\PhpStorm\NoReturn;
     use ncc\Abstracts\CompilerExtensions;
     use ncc\Abstracts\Options\BuildConfigurationValues;
+    use ncc\Classes\NccExtension\PackageCompiler;
     use ncc\Classes\PhpExtension\Compiler;
     use ncc\Exceptions\BuildConfigurationNotFoundException;
     use ncc\Exceptions\FileNotFoundException;
@@ -22,8 +22,9 @@
          *
          * @param $args
          * @return void
+         * @noinspection PhpNoReturnAttributeCanBeAddedInspection
          */
-        #[NoReturn] public static function start($args): void
+        public static function start($args): void
         {
             if(isset($args['help']))
             {
@@ -82,13 +83,15 @@
                 return;
             }
 
+            if(substr($project_path, -1) !== DIRECTORY_SEPARATOR)
+                $project_path .= DIRECTORY_SEPARATOR;
 
             // Select the correct compiler for the specified extension
             switch(strtolower($ProjectConfiguration->Project->Compiler->Extension))
             {
                 case CompilerExtensions::PHP:
                     /** @var CompilerInterface $Compiler */
-                    $Compiler = new Compiler($ProjectConfiguration);
+                    $Compiler = new Compiler($ProjectConfiguration, $project_path);
                     break;
 
                 default:
@@ -128,11 +131,10 @@
                 ' Build Configuration: ' .  $build_configuration . PHP_EOL
             );
 
-            Console::out('Preparing package');
-
             try
             {
-                $Compiler->prepare($project_path, $build_configuration);
+                Console::out('Preparing package');
+                $Compiler->prepare($project_path);
             }
             catch (Exception $e)
             {
@@ -140,11 +142,12 @@
                 return;
             }
 
-            Console::out('Compiling package');
-
             try
             {
-                $Compiler->build($project_path);
+                Console::out('Compiling package');
+                $Compiler->compileComponents();
+                $Compiler->compileResources();
+                $Compiler->compileExecutionPolicies();
             }
             catch (Exception $e)
             {
@@ -152,6 +155,18 @@
                 return;
             }
 
+            try
+            {
+                Console::out('Saving package');
+                $output = PackageCompiler::writePackage($project_path, $Compiler->getPackage(), $ProjectConfiguration, $build_configuration);
+            }
+            catch (Exception $e)
+            {
+                Console::outException('Saving Failed', $e, 1);
+                return;
+            }
+
+            Console::out('Successfully built ' . $output);
             exit(0);
         }
 

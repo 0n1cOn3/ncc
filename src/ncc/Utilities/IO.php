@@ -87,6 +87,5 @@
                     throw new IOException(sprintf('Cannot determine file size for %s', $uri));
             }
             return $file->fread($length);
-
         }
     }

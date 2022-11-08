@@ -10,17 +10,19 @@
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\InvalidPackageException;
     use ncc\Exceptions\InvalidProjectConfigurationException;
+    use ncc\Exceptions\IOException;
     use ncc\Exceptions\PackageParsingException;
     use ncc\Objects\Package\Component;
+    use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\Package\Header;
     use ncc\Objects\Package\Installer;
     use ncc\Objects\Package\MagicBytes;
-    use ncc\Objects\Package\MainExecutionPolicy;
     use ncc\Objects\Package\Resource;
     use ncc\Objects\ProjectConfiguration\Assembly;
     use ncc\Objects\ProjectConfiguration\Dependency;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
     use ncc\Utilities\Functions;
+    use ncc\Utilities\IO;
     use ncc\ZiProto\ZiProto;
 
     class Package
@@ -68,6 +70,13 @@
         public $Installer;
 
         /**
+         * An array of execution units defined in the package
+         *
+         * @var ExecutionUnit[]
+         */
+        public $ExecutionUnits;
+
+        /**
          * An array of resources that the package depends on
          *
          * @var Resource[]
@@ -89,6 +98,7 @@
             $this->MagicBytes = new MagicBytes();
             $this->Header = new Header();
             $this->Assembly = new Assembly();
+            $this->ExecutionUnits = [];
             $this->Components = [];
             $this->Dependencies = [];
             $this->Resources = [];
@@ -137,11 +147,12 @@
          *
          * @param string $output_path
          * @return void
+         * @throws IOException
          */
         public function save(string $output_path): void
         {
             $package_contents = $this->MagicBytes->toString() . ZiProto::encode($this->toArray(true));
-            file_put_contents($output_path, $package_contents);
+            IO::fwrite($output_path, $package_contents, 0777);
         }
 
         /**
@@ -240,7 +251,7 @@
             // Assuming all is good, load the entire fire into memory and parse its contents
             try
             {
-                $package = Package::fromArray(ZiProto::decode(substr(file_get_contents($path), strlen($magic_bytes->toString()))));
+                $package = Package::fromArray(ZiProto::decode(substr(IO::fread($path), strlen($magic_bytes->toString()))));
             }
             catch(Exception $e)
             {
@@ -274,12 +285,17 @@
             foreach($this->Resources as $resource)
                 $_resources[] = $resource->toArray($bytecode);
 
+            $_execution_units = [];
+            foreach($this->ExecutionUnits as $unit)
+                $_execution_units[] = $unit->toArray($bytecode);
+
             return [
                 ($bytecode ? Functions::cbc('header') : 'header') => $this->Header->toArray($bytecode),
                 ($bytecode ? Functions::cbc('assembly') : 'assembly') => $this->Assembly->toArray($bytecode),
                 ($bytecode ? Functions::cbc('dependencies') : 'dependencies') => $_dependencies,
                 ($bytecode ? Functions::cbc('main_execution_policy') : 'main_execution_policy') => $this->MainExecutionPolicy?->toArray($bytecode),
                 ($bytecode ? Functions::cbc('installer') : 'installer') => $this->Installer?->toArray($bytecode),
+                ($bytecode ? Functions::cbc('execution_units') : 'execution_units') => $_execution_units,
                 ($bytecode ? Functions::cbc('resources') : 'resources') => $_resources,
                 ($bytecode ? Functions::cbc('components') : 'components') => $_components
             ];
@@ -303,7 +319,7 @@
 
             $object->MainExecutionPolicy = Functions::array_bc($data, 'main_execution_policy');
             if($object->MainExecutionPolicy !== null)
-                $object->MainExecutionPolicy = MainExecutionPolicy::fromArray($object->MainExecutionPolicy);
+                $object->MainExecutionPolicy = ExecutionPolicy::fromArray($object->MainExecutionPolicy);
 
             $object->Installer = Functions::array_bc($data, 'installer');
             if($object->Installer !== null)
@@ -333,6 +349,15 @@
                 foreach($_components as $component)
                 {
                     $object->Components[] = Component::fromArray($component);
+                }
+            }
+
+            $_execution_units = Functions::array_bc($data, 'execution_units');
+            if($_execution_units !== null)
+            {
+                foreach($_execution_units as $unit)
+                {
+                    $object->ExecutionUnits[] = ExecutionUnit::fromArray($unit);
                 }
             }
 

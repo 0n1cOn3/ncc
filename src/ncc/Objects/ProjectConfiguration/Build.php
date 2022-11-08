@@ -4,6 +4,7 @@
 
     namespace ncc\Objects\ProjectConfiguration;
 
+    use ncc\Abstracts\Options\BuildConfigurationValues;
     use ncc\Exceptions\BuildConfigurationNotFoundException;
     use ncc\Exceptions\InvalidConstantNameException;
     use ncc\Exceptions\InvalidProjectBuildConfiguration;
@@ -156,6 +157,9 @@
          */
         public function getBuildConfiguration(string $name): BuildConfiguration
         {
+            if($name == BuildConfigurationValues::DefaultConfiguration)
+                $name = $this->DefaultConfiguration;
+
             foreach($this->Configurations as $configuration)
             {
                 if($configuration->Name == $name)

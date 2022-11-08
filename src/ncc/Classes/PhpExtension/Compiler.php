@@ -9,21 +9,25 @@
     use ncc\Abstracts\ComponentFileExtensions;
     use ncc\Abstracts\ComponentDataType;
     use ncc\Abstracts\Options\BuildConfigurationValues;
+    use ncc\Classes\NccExtension\ConstantCompiler;
+    use ncc\Classes\NccExtension\PackageCompiler;
+    use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\BuildConfigurationNotFoundException;
     use ncc\Exceptions\BuildException;
+    use ncc\Exceptions\FileNotFoundException;
+    use ncc\Exceptions\IOException;
     use ncc\Exceptions\PackagePreparationFailedException;
+    use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Interfaces\CompilerInterface;
     use ncc\ncc;
     use ncc\Objects\Package;
     use ncc\Objects\ProjectConfiguration;
-    use ncc\ThirdParty\nikic\PhpParser\Error;
     use ncc\ThirdParty\nikic\PhpParser\ParserFactory;
-    use ncc\ThirdParty\Symfony\Filesystem\Exception\IOException;
-    use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\ThirdParty\theseer\DirectoryScanner\DirectoryScanner;
     use ncc\Utilities\Base64;
     use ncc\Utilities\Console;
     use ncc\Utilities\Functions;
+    use ncc\Utilities\IO;
     use SplFileInfo;
 
     class Compiler implements CompilerInterface
@@ -39,28 +43,30 @@
         private $package;
 
         /**
-         * @var ProjectConfiguration\BuildConfiguration|null
+         * @var string
          */
-        private $selected_build_configuration;
+        private $path;
 
         /**
          * @param ProjectConfiguration $project
+         * @param string $path
          */
-        public function __construct(ProjectConfiguration $project)
+        public function __construct(ProjectConfiguration $project, string $path)
         {
             $this->project = $project;
+            $this->path = $path;
         }
 
         /**
          * Prepares the PHP package by generating the Autoloader and detecting all components & resources
          * This function must be called before calling the build function, otherwise the operation will fail
          *
-         * @param string $path
          * @param string $build_configuration
          * @return void
          * @throws PackagePreparationFailedException
+         * @throws BuildConfigurationNotFoundException
          */
-        public function prepare(string $path, string $build_configuration=BuildConfigurationValues::DefaultConfiguration): void
+        public function prepare(string $build_configuration=BuildConfigurationValues::DefaultConfiguration): void
         {
             try
             {
@@ -72,21 +78,8 @@
                 throw new PackagePreparationFailedException($e->getMessage(), $e);
             }
 
-            // Auto-select the default build configuration
-            if($build_configuration == BuildConfigurationValues::DefaultConfiguration)
-            {
-                $build_configuration = $this->project->Build->DefaultConfiguration;
-            }
-
             // Select the build configuration
-            try
-            {
-                $this->selected_build_configuration = $this->project->Build->getBuildConfiguration($build_configuration);
-            }
-            catch (BuildConfigurationNotFoundException $e)
-            {
-                throw new PackagePreparationFailedException($e->getMessage(), $e);
-            }
+            $selected_build_configuration = $this->project->Build->getBuildConfiguration($build_configuration);
 
             // Create the package object
             $this->package = new Package();
@@ -95,9 +88,9 @@
 
             // Add both the defined constants from the build configuration and the global constants.
             // Global constants are overridden
-            $this->package->Header->RuntimeConstants = array_merge($this->selected_build_configuration->DefineConstants, $this->package->Header->RuntimeConstants);
+            $this->package->Header->RuntimeConstants = array_merge($selected_build_configuration->DefineConstants, $this->package->Header->RuntimeConstants);
             $this->package->Header->RuntimeConstants = array_merge($this->project->Build->DefineConstants, $this->package->Header->RuntimeConstants);
-            $this->package->Header->RuntimeConstants = Functions::compileConstants($this->package, $this->project);
+            $this->package->Header->RuntimeConstants = ConstantCompiler::compileRuntimeConstants($this->package, $this->project, time());
 
             $this->package->Header->CompilerExtension = $this->project->Project->Compiler;
             $this->package->Header->CompilerVersion = NCC_VERSION_NUMBER;
@@ -119,15 +112,8 @@
 
             // Include file components that can be compiled
             $DirectoryScanner->setIncludes(ComponentFileExtensions::Php);
-            $DirectoryScanner->setExcludes($this->selected_build_configuration->ExcludeFiles);
-
-            // Append trailing slash to the end of the path if it's not already there
-            if(substr($path, -1) !== DIRECTORY_SEPARATOR)
-            {
-                $path .= DIRECTORY_SEPARATOR;
-            }
-
-            $source_path = $path . $this->project->Build->SourcePath;
+            $DirectoryScanner->setExcludes($selected_build_configuration->ExcludeFiles);
+            $source_path = $this->path . $this->project->Build->SourcePath;
 
             // Scan for components first.
             Console::out('Scanning for components... ', false);
@@ -140,7 +126,7 @@
                     continue;
 
                 $Component = new Package\Component();
-                $Component->Name = Functions::removeBasename($item->getPathname(), $path);
+                $Component->Name = Functions::removeBasename($item->getPathname(), $this->path);
                 $this->package->Components[] = $Component;
             }
 
@@ -159,7 +145,7 @@
 
             // Ignore component files
             $DirectoryScanner->setExcludes(array_merge(
-                $this->selected_build_configuration->ExcludeFiles, ComponentFileExtensions::Php
+                $selected_build_configuration->ExcludeFiles, ComponentFileExtensions::Php
             ));
 
             Console::out('Scanning for resources... ', false);
@@ -171,7 +157,7 @@
                     continue;
 
                 $Resource = new Package\Resource();
-                $Resource->Name = Functions::removeBasename($item->getPathname(), $path);
+                $Resource->Name = Functions::removeBasename($item->getPathname(), $this->path);
                 $this->package->Resources[] = $Resource;
 
             }
@@ -187,146 +173,138 @@
         }
 
         /**
-         * Builds the package by parsing the AST contents of the components and resources
+         * Compiles the resources of the package
          *
-         * @param string $path
-         * @return string
+         * @return void
+         * @throws AccessDeniedException
          * @throws BuildException
+         * @throws FileNotFoundException
+         * @throws IOException
          */
-        public function build(string $path): string
+        public function compileResources(): void
         {
             if($this->package == null)
-            {
                 throw new BuildException('The prepare() method must be called before building the package');
-            }
 
-            // Append trailing slash to the end of the path if it's not already there
-            if(substr($path, -1) !== DIRECTORY_SEPARATOR)
-            {
-                $path .= DIRECTORY_SEPARATOR;
-            }
+            if(count($this->package->Resources) == 0)
+                return;
 
-            // Runtime variables
-            $components = [];
-            $resources = [];
+            // Process the resources
+            Console::out('Processing resources');
+            $total_items = count($this->package->Resources);
             $processed_items = 0;
-            $total_items = 0;
+            $resources = [];
 
-            if(count($this->package->Components) > 0)
+            foreach($this->package->Resources as $resource)
             {
-                Console::out('Compiling components');
-                $total_items = count($this->package->Components);
-
-                // Process the components and attempt to create an AST representation of the source
-                foreach($this->package->Components as $component)
+                if($total_items > 5)
                 {
-                    if($total_items > 5)
-                    {
-                        Console::inlineProgressBar($processed_items, $total_items);
-                    }
+                    Console::inlineProgressBar($processed_items, $total_items);
+                }
 
-                    $content = file_get_contents(Functions::correctDirectorySeparator($path . $component->Name));
-                    $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+                // Get the data and
+                $resource->Data = IO::fread(Functions::correctDirectorySeparator($this->path . $resource->Name));
+                $resource->Data = Base64::encode($resource->Data);
+                $resource->Name = str_replace($this->project->Build->SourcePath, (string)null, $resource->Name);
+                $resource->updateChecksum();
+                $resources[] = $resource;
+            }
 
-                    try
-                    {
-                        $stmts = $parser->parse($content);
-                        $encoded = json_encode($stmts);
+            // Update the resources
+            $this->package->Resources = $resources;
+        }
 
-                        if($encoded === false)
-                        {
-                            $component->DataType = ComponentDataType::b64encoded;
-                            $component->Data = Base64::encode($content);
-                            $component->Checksum = hash('sha1', $component->Data);
-                        }
-                        else
-                        {
-                            $component->DataType = ComponentDataType::AST;
-                            $component->Data = json_decode($encoded, true);
-                            $component->Checksum = null;
-                        }
-                    }
-                    catch(Error $e)
+        /**
+         * Compiles the components of the package
+         *
+         * @return void
+         * @throws AccessDeniedException
+         * @throws BuildException
+         * @throws FileNotFoundException
+         * @throws IOException
+         */
+        public function compileComponents(): void
+        {
+            if($this->package == null)
+                throw new BuildException('The prepare() method must be called before building the package');
+
+            if(count($this->package->Components) == 0)
+                return;
+
+            Console::out('Compiling components');
+            $total_items = count($this->package->Components);
+            $processed_items = 0;
+            $components = [];
+
+            // Process the components and attempt to create an AST representation of the source
+            foreach($this->package->Components as $component)
+            {
+                if($total_items > 5)
+                {
+                    Console::inlineProgressBar($processed_items, $total_items);
+                }
+
+                $content = IO::fread(Functions::correctDirectorySeparator($this->path . $component->Name));
+                $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+
+                try
+                {
+                    $stmts = $parser->parse($content);
+                    $encoded = json_encode($stmts);
+                    unset($stmts);
+
+                    if($encoded === false)
                     {
                         $component->DataType = ComponentDataType::b64encoded;
                         $component->Data = Base64::encode($content);
-                        $component->Checksum = hash('sha1', $component->Data);
-                        unset($e);
                     }
-
-                    $component->Name = str_replace($this->project->Build->SourcePath, (string)null, $component->Name);
-                    $components[] = $component;
-                    $processed_items += 1;
-                }
-
-                if(ncc::cliMode() && $total_items > 5)
-                {
-                    print(PHP_EOL);
-                }
-
-                // Update the components
-                $this->package->Components = $components;
-            }
-
-            if(count($this->package->Resources) > 0)
-            {
-                // Process the resources
-                Console::out('Processing resources');
-                $processed_items = 0;
-                $total_items = count($this->package->Resources);
-
-                foreach($this->package->Resources as $resource)
-                {
-                    if($total_items > 5)
+                    else
                     {
-                        Console::inlineProgressBar($processed_items, $total_items);
+                        $component->DataType = ComponentDataType::AST;
+                        $component->Data = json_decode($encoded, true);
                     }
-
-                    // Get the data and
-                    $resource->Data = file_get_contents(Functions::correctDirectorySeparator($path . $resource->Name));
-                    $resource->Data = Base64::encode($resource->Data);
-                    $resource->Checksum = hash('sha1', $resource->Data);
-                    $resource->Name = str_replace($this->project->Build->SourcePath, (string)null, $resource->Name);
-                    $resources[] = $resource;
+                }
+                catch(Exception $e)
+                {
+                    $component->DataType = ComponentDataType::b64encoded;
+                    $component->Data = Base64::encode($content);
+                    unset($e);
                 }
 
-                // Update the resources
-                $this->package->Resources = $resources;
+                unset($parser);
+
+                $component->Name = str_replace($this->project->Build->SourcePath, (string)null, $component->Name);
+                $component->updateChecksum();
+                $components[] = $component;
+                $processed_items += 1;
             }
 
-            if($total_items > 5)
+            if(ncc::cliMode() && $total_items > 5)
+            {
                 print(PHP_EOL);
-            Console::out($this->package->Assembly->Package . ' compiled successfully');
-
-            // Write the package to disk
-            $FileSystem = new Filesystem();
-
-            if($FileSystem->exists($path . $this->selected_build_configuration->OutputPath))
-            {
-                try
-                {
-                    $FileSystem->remove($path . $this->selected_build_configuration->OutputPath);
-                }
-                catch(IOException $e)
-                {
-                    throw new BuildException('Cannot delete directory \'' . $path . $this->selected_build_configuration->OutputPath . '\', ' . $e->getMessage(), $e);
-                }
             }
 
-            // Finally write the package to the disk
-            $FileSystem->mkdir($path . $this->selected_build_configuration->OutputPath);
-            $output_file = $path . $this->selected_build_configuration->OutputPath . DIRECTORY_SEPARATOR . $this->package->Assembly->Package . '.ncc';
-            $FileSystem->touch($output_file);
+            // Update the components
+            $this->package->Components = $components;
+        }
 
-            try
-            {
-                $this->package->save($output_file);
-            }
-            catch(Exception $e)
-            {
-                throw new BuildException('Cannot write to output file', $e);
-            }
+        /**
+         * @return void
+         * @throws AccessDeniedException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws UnsupportedRunnerException
+         */
+        public function compileExecutionPolicies(): void
+        {
+            PackageCompiler::compileExecutionPolicies($this->path, $this->project);
+        }
 
-            return $output_file;
+        /**
+         * @inheritDoc
+         */
+        public function getPackage(): ?Package
+        {
+            return $this->package;
         }
     }

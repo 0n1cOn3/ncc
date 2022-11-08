@@ -45,6 +45,8 @@
          */
         public $ExitHandlers;
 
+        // TODO: Implement validation function
+
         /**
          * Returns an array representation of the object
          *
@@ -57,8 +59,8 @@
                 ($bytecode ? Functions::cbc('name') : 'name') => $this->Name,
                 ($bytecode ? Functions::cbc('runner') : 'runner') => $this->Runner,
                 ($bytecode ? Functions::cbc('message') : 'message') => $this->Message,
-                ($bytecode ? Functions::cbc('exec') : 'exec') => $this->Execute->toArray($bytecode),
-                ($bytecode ? Functions::cbc('exit_handlers') : 'exit_handlers') => $this->ExitHandlers->toArray($bytecode),
+                ($bytecode ? Functions::cbc('exec') : 'exec') => $this->Execute?->toArray($bytecode),
+                ($bytecode ? Functions::cbc('exit_handlers') : 'exit_handlers') => $this->ExitHandlers?->toArray($bytecode),
             ];
         }
 
