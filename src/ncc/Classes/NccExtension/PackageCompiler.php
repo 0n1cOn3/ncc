@@ -13,6 +13,7 @@
     use ncc\ncc;
     use ncc\Objects\Package;
     use ncc\Objects\ProjectConfiguration;
+    use ncc\Objects\ProjectConfiguration\Assembly;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\Utilities\Console;
     use ncc\Utilities\Functions;
@@ -102,5 +103,68 @@
             }
 
             return $output_file;
+        }
+
+        /**
+         * Compiles the special formatted constants
+         *
+         * @param Package $package
+         * @param ProjectConfiguration $project_configuration
+         * @param int $timestamp
+         * @return array
+         */
+        public static function compileRuntimeConstants(Package $package, ProjectConfiguration $project_configuration, int $timestamp): array
+        {
+            $compiled_constants = [];
+            foreach($package->Header->RuntimeConstants as $name => $value)
+            {
+                $compiled_constants[$name] = self::regularConstants($value, $package, $timestamp);
+            }
+            return $compiled_constants;
+        }
+
+        /**
+         * Compiles the constants in the package object
+         *
+         * @param Package $package
+         * @param int $timestamp
+         * @return void
+         */
+        public static function compilePackageConstants(Package &$package, int $timestamp): void
+        {
+            $assembly = [];
+            foreach($package->Assembly->toArray() as $key => $value)
+            {
+                $assembly[$key] = self::regularConstants($value, $package, $timestamp);
+            }
+            $package->Assembly = Assembly::fromArray($assembly);
+
+            foreach($package->ExecutionUnits as $executionUnit)
+            {
+
+            }
+
+            unset($assembly);
+        }
+
+        /**
+         * Compiles regular constants
+         *
+         * @param string|null $value
+         * @param Package $package
+         * @param int $timestamp
+         * @return string|null
+         * @noinspection PhpUnnecessaryLocalVariableInspection
+         */
+        private static function regularConstants(?string $value, Package $package, int $timestamp): ?string
+        {
+            if($value == null)
+                return null;
+
+            $value = ConstantCompiler::compileAssemblyConstants($value, $package->Assembly);
+            $value = ConstantCompiler::compileBuildConstants($value);
+            $value = ConstantCompiler::compileDateTimeConstants($value, $timestamp);
+
+            return $value;
         }
     }
