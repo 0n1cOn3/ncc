@@ -4,6 +4,7 @@
 
     use ncc\Abstracts\Options\BuildConfigurationValues;
     use ncc\Exceptions\AccessDeniedException;
+    use ncc\Exceptions\BuildException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\UnsupportedRunnerException;
@@ -27,6 +28,18 @@
          * @return void
          */
         public function prepare(string $build_configuration=BuildConfigurationValues::DefaultConfiguration): void;
+
+        /**
+         * Executes the compile process in the correct order and returns the finalized Package object
+         *
+         * @return Package|null
+         * @throws AccessDeniedException
+         * @throws BuildException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws UnsupportedRunnerException
+         */
+        public function build(): ?Package;
 
         /**
          * Compiles the components of the package

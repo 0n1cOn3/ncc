@@ -9,7 +9,6 @@
     use ncc\Abstracts\ComponentFileExtensions;
     use ncc\Abstracts\ComponentDataType;
     use ncc\Abstracts\Options\BuildConfigurationValues;
-    use ncc\Classes\NccExtension\ConstantCompiler;
     use ncc\Classes\NccExtension\PackageCompiler;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\BuildConfigurationNotFoundException;
@@ -90,7 +89,7 @@
             // Global constants are overridden
             $this->package->Header->RuntimeConstants = array_merge($selected_build_configuration->DefineConstants, $this->package->Header->RuntimeConstants);
             $this->package->Header->RuntimeConstants = array_merge($this->project->Build->DefineConstants, $this->package->Header->RuntimeConstants);
-            $this->package->Header->RuntimeConstants = ConstantCompiler::compileRuntimeConstants($this->package, $this->project, time());
+            $this->package->Header->RuntimeConstants = PackageCompiler::compileRuntimeConstants($this->package, $this->project, time());
 
             $this->package->Header->CompilerExtension = $this->project->Project->Compiler;
             $this->package->Header->CompilerVersion = NCC_VERSION_NUMBER;
@@ -115,6 +114,7 @@
             $DirectoryScanner->setExcludes($selected_build_configuration->ExcludeFiles);
             $source_path = $this->path . $this->project->Build->SourcePath;
 
+            // TODO: Re-implement the scanning process outside the compiler, as this is will be redundant
             // Scan for components first.
             Console::out('Scanning for components... ', false);
             /** @var SplFileInfo $item */
@@ -170,6 +170,25 @@
             {
                 Console::out('No resources found');
             }
+        }
+
+        /**
+         * Executes the compile process in the correct order and returns the finalized Package object
+         *
+         * @return Package|null
+         * @throws AccessDeniedException
+         * @throws BuildException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws UnsupportedRunnerException
+         */
+        public function build(): ?Package
+        {
+            $this->compileExecutionPolicies();
+            $this->compileComponents();
+            $this->compileResources();
+
+            return $this->getPackage();
         }
 
         /**
@@ -307,4 +326,5 @@
         {
             return $this->package;
         }
+
     }

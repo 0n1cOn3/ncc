@@ -145,9 +145,7 @@
             try
             {
                 Console::out('Compiling package');
-                $Compiler->compileComponents();
-                $Compiler->compileResources();
-                $Compiler->compileExecutionPolicies();
+                $Compiler->build();
             }
             catch (Exception $e)
             {
