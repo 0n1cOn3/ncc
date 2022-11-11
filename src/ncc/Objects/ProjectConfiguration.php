@@ -120,6 +120,21 @@
         }
 
         /**
+         * @param string $name
+         * @return ExecutionPolicy|null
+         */
+        private function getExecutionPolicy(string $name): ?ExecutionPolicy
+        {
+            foreach($this->ExecutionPolicies as $executionPolicy)
+            {
+                if($executionPolicy->Name == $name)
+                    return $executionPolicy;
+            }
+
+            return null;
+        }
+
+        /**
          * Runs a check on the project configuration and determines what policies are required
          *
          * @param string $build_configuration
@@ -207,6 +222,49 @@
                     break;
             }
 
+            foreach($required_policies as $policy)
+            {
+                $execution_policy = $this->getExecutionPolicy($policy);
+                if($execution_policy->ExitHandlers !== null)
+                {
+                    if(
+                        $execution_policy->ExitHandlers->Success !== null &&
+                        $execution_policy->ExitHandlers->Success->Run !== null
+                    )
+                    {
+                        if(!in_array($execution_policy->ExitHandlers->Success->Run, $defined_polices))
+                            throw new UndefinedExecutionPolicyException('The execution policy \'' . $execution_policy->Name . '\' Success exit handler points to a undefined execution policy \'' . $execution_policy->ExitHandlers->Success->Run . '\'');
+
+                        if(!in_array($execution_policy->ExitHandlers->Success->Run, $required_policies))
+                            $required_policies[] = $execution_policy->ExitHandlers->Success->Run;
+                    }
+
+                    if(
+                        $execution_policy->ExitHandlers->Warning !== null &&
+                        $execution_policy->ExitHandlers->Warning->Run !== null
+                    )
+                    {
+                        if(!in_array($execution_policy->ExitHandlers->Warning->Run, $defined_polices))
+                            throw new UndefinedExecutionPolicyException('The execution policy \'' . $execution_policy->Name . '\' Warning exit handler points to a undefined execution policy \'' . $execution_policy->ExitHandlers->Warning->Run . '\'');
+
+                        if(!in_array($execution_policy->ExitHandlers->Warning->Run, $required_policies))
+                            $required_policies[] = $execution_policy->ExitHandlers->Warning->Run;
+                    }
+
+                    if(
+                        $execution_policy->ExitHandlers->Error !== null &&
+                        $execution_policy->ExitHandlers->Error->Run !== null
+                    )
+                    {
+                        if(!in_array($execution_policy->ExitHandlers->Error->Run, $defined_polices))
+                            throw new UndefinedExecutionPolicyException('The execution policy \'' . $execution_policy->Name . '\' Error exit handler points to a undefined execution policy \'' . $execution_policy->ExitHandlers->Error->Run . '\'');
+
+                        if(!in_array($execution_policy->ExitHandlers->Error->Run, $required_policies))
+                            $required_policies[] = $execution_policy->ExitHandlers->Error->Run;
+                    }
+                }
+
+            }
 
             return $required_policies;
         }
