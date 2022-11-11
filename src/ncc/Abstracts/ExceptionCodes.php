@@ -36,6 +36,7 @@
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedPackageException;
     use ncc\Exceptions\UnsupportedRunnerException;
+    use ncc\Exceptions\VersionNotFoundException;
 
     /**
      * @author Zi Xing Narrakas
@@ -229,6 +230,11 @@
         const UnsupportedRunnerException = -1736;
 
         /**
+         * @see VersionNotFoundException
+         */
+        const VersionNotFoundException = -1737;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -267,6 +273,7 @@
             self::ComponentDecodeException,
             self::ResourceChecksumException,
             self::IOException,
-            self::UnsupportedRunnerException
+            self::UnsupportedRunnerException,
+            self::VersionNotFoundException
         ];
     }
