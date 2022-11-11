@@ -32,6 +32,7 @@
     use ncc\Exceptions\ProjectAlreadyExistsException;
     use ncc\Exceptions\ResourceChecksumException;
     use ncc\Exceptions\RuntimeException;
+    use ncc\Exceptions\UndefinedExecutionPolicyException;
     use ncc\Exceptions\UnsupportedComponentTypeException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedPackageException;
@@ -235,6 +236,11 @@
         const VersionNotFoundException = -1737;
 
         /**
+         * @see UndefinedExecutionPolicyException
+         */
+        const UndefinedExecutionPolicyException = -1738;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -274,6 +280,7 @@
             self::ResourceChecksumException,
             self::IOException,
             self::UnsupportedRunnerException,
-            self::VersionNotFoundException
+            self::VersionNotFoundException,
+            self::UndefinedExecutionPolicyException
         ];
     }
