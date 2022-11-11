@@ -10,11 +10,9 @@
     class ExecutionUnit
     {
         /**
-         * The ID of the execution unit
-         *
-         * @var string
+         * @var string|null
          */
-        public $ID;
+        private $ID;
 
         /**
          * The execution policy for this execution unit
@@ -39,7 +37,6 @@
         public function toArray(bool $bytecode=false): array
         {
             return [
-                ($bytecode ? Functions::cbc('id') : 'id') => $this->ID,
                 ($bytecode ? Functions::cbc('execution_policy') : 'execution_policy') => $this->ExecutionPolicy->toArray($bytecode),
                 ($bytecode ? Functions::cbc('data') : 'data') => $this->Data,
             ];
@@ -55,10 +52,20 @@
         {
             $object = new self();
 
-            $object->ID = Functions::array_bc($data, 'id');
             $object->ExecutionPolicy = Functions::array_bc($data, 'execution_policy');
             $object->Data = Functions::array_bc($data, 'data');
 
             return $object;
         }
+
+        /**
+         * @return string
+         */
+        public function getID(): string
+        {
+            if($this->ID == null)
+                $this->ID = hash('sha1', $this->ExecutionPolicy->Name);
+            return $this->ID;
+        }
+
     }
