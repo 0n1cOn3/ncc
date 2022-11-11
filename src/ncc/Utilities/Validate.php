@@ -208,4 +208,25 @@
 
             return true;
         }
+
+        /**
+         * Validates the execution policy name
+         *
+         * @param string $input
+         * @return bool
+         */
+        public static function executionPolicyName(string $input): bool
+        {
+            if($input == null)
+            {
+                return false;
+            }
+
+            if(!preg_match(RegexPatterns::ExecutionPolicyName, $input))
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
