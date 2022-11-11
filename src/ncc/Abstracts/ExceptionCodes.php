@@ -15,6 +15,7 @@
     use ncc\Exceptions\InstallationException;
     use ncc\Exceptions\InvalidConstantNameException;
     use ncc\Exceptions\InvalidCredentialsEntryException;
+    use ncc\Exceptions\InvalidExecutionPolicyName;
     use ncc\Exceptions\InvalidPackageException;
     use ncc\Exceptions\InvalidPackageNameException;
     use ncc\Exceptions\InvalidProjectBuildConfiguration;
@@ -241,6 +242,11 @@
         const UndefinedExecutionPolicyException = -1738;
 
         /**
+         * @see InvalidExecutionPolicyName
+         */
+        const InvalidExecutionPolicyName = -1739;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -281,6 +287,7 @@
             self::IOException,
             self::UnsupportedRunnerException,
             self::VersionNotFoundException,
-            self::UndefinedExecutionPolicyException
+            self::UndefinedExecutionPolicyException,
+            self::InvalidExecutionPolicyName
         ];
     }
