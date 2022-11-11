@@ -53,6 +53,17 @@
         public $Timeout;
 
         /**
+         * Public Constructor
+         */
+        public function __construct()
+        {
+            $this->Tty = false;
+            $this->Silent = false;
+            $this->Timeout = null;
+            $this->WorkingDirectory = "%CWD%";
+        }
+
+        /**
          * Returns an array representation of the object
          *
          * @param bool $bytecode
