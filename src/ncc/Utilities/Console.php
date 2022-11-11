@@ -4,6 +4,9 @@
 
     use Exception;
     use ncc\Abstracts\ConsoleColors;
+    use ncc\CLI\Main;
+    use ncc\Exceptions\IOException;
+    use ncc\Exceptions\RuntimeException;
     use ncc\ncc;
 
     class Console
@@ -156,6 +159,7 @@
          * @param Exception $e
          * @param int|null $exit_code
          * @return void
+         * @throws RuntimeException
          */
         public static function outException(string $message, Exception $e, ?int $exit_code=null): void
         {
@@ -164,9 +168,10 @@
 
             if(strlen($message) > 0)
             {
-                self::out(self::formatColor('Error: ' . $message, ConsoleColors::Red));
+                self::out(self::formatColor('Error: ', ConsoleColors::Red) . $message);
             }
 
+            Console::out(PHP_EOL . '===== Exception Details =====');
             self::outExceptionDetails($e);
 
             if($exit_code !== null)
@@ -180,6 +185,7 @@
          *
          * @param Exception $e
          * @return void
+         * @throws RuntimeException
          */
         private static function outExceptionDetails(Exception $e): void
         {
@@ -189,6 +195,40 @@
             $trace_header = self::formatColor($e->getFile() . ':' . $e->getLine(), ConsoleColors::Magenta);
             $trace_error = self::formatColor('error: ', ConsoleColors::Red);
             self::out($trace_header . ' ' . $trace_error . $e->getMessage());
+
+            $trace = $e->getTrace();
+            if(count($trace) > 1)
+            {
+                self::out('Stack Trace:');
+                foreach($trace as $item)
+                {
+                    self::out( ' - ' . self::formatColor($item['file'], ConsoleColors::Red) . ':' . $item['line']);
+                }
+            }
+
+            if(Main::getArgs() !== null)
+            {
+                if(isset(Main::getArgs()['dbg-ex']))
+                {
+                    $dump = [
+                        'constants' => ncc::getConstants(),
+                        'exception' => Functions::exceptionToArray($e)
+                    ];
+
+                    try
+                    {
+                        IO::fwrite(getcwd() . DIRECTORY_SEPARATOR . time() . '.json', json_encode($dump, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+                    }
+                    catch (IOException $e)
+                    {
+                        self::outWarning('Cannot dump exception details, ' . $e->getMessage());
+                    }
+                }
+                else
+                {
+                    self::out('You can pass on \'--dbg-ex\' option to dump the exception details to a json file');
+                }
+            }
         }
 
         /**

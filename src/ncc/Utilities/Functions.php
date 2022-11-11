@@ -2,8 +2,8 @@
 
     namespace ncc\Utilities;
 
+    use Exception;
     use ncc\Abstracts\Runners;
-    use ncc\Abstracts\SpecialConstants\ProjectConstants;
     use ncc\Classes\PhpExtension\Runner;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
@@ -11,10 +11,7 @@
     use ncc\Exceptions\MalformedJsonException;
     use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Objects\CliHelpSection;
-    use ncc\Objects\Package;
     use ncc\Objects\Package\ExecutionUnit;
-    use ncc\Objects\ProjectConfiguration;
-    use ncc\Objects\ProjectConfiguration\Assembly;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
 
     /**
@@ -47,6 +44,7 @@
          * @param array $data
          * @param string $select
          * @return mixed|null
+         * @noinspection PhpMissingReturnTypeInspection
          */
         public static function array_bc(array $data, string $select)
         {
@@ -65,7 +63,9 @@
          * @param string $path
          * @param int $flags
          * @return mixed
+         * @throws AccessDeniedException
          * @throws FileNotFoundException
+         * @throws IOException
          * @throws MalformedJsonException
          * @noinspection PhpMissingReturnTypeInspection
          */
@@ -76,7 +76,7 @@
                 throw new FileNotFoundException($path);
             }
 
-            return self::loadJson(file_get_contents($path), $flags);
+            return self::loadJson(IO::fread($path), $flags);
         }
 
         /**
@@ -109,6 +109,7 @@
          * @return string
          * @throws MalformedJsonException
          * @noinspection PhpMissingParamTypeInspection
+         * @noinspection PhpUnusedLocalVariableInspection
          */
         public static function encodeJson($value, int $flags=0): string
         {
@@ -134,7 +135,7 @@
          * @return void
          * @throws MalformedJsonException
          */
-        public static function encodeJsonFile($value, string $path, int $flags=0)
+        public static function encodeJsonFile($value, string $path, int $flags=0): void
         {
             file_put_contents($path, self::encodeJson($value, $flags));
         }
@@ -171,16 +172,19 @@
          * @param string $copyright
          * @param bool $basic_ascii
          * @return string
+         * @throws AccessDeniedException
+         * @throws FileNotFoundException
+         * @throws IOException
          */
         public static function getBanner(string $version, string $copyright, bool $basic_ascii=false): string
         {
             if($basic_ascii)
             {
-                $banner = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'banner_basic');
+                $banner = IO::fread(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'banner_basic');
             }
             else
             {
-                $banner = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'banner_extended');
+                $banner = IO::fread(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'banner_extended');
             }
 
             $banner_version = str_pad($version, 21);
@@ -244,5 +248,30 @@
                 Runners::php => Runner::processUnit($path, $policy),
                 default => throw new UnsupportedRunnerException('The runner \'' . $policy->Runner . '\' is not supported'),
             };
+        }
+
+        /**
+         * Returns an array representation of the exception
+         *
+         * @param Exception $e
+         * @return array
+         */
+        public static function exceptionToArray(Exception $e): array
+        {
+            $exception = [
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => null,
+                'trace_string' => $e->getTraceAsString(),
+            ];
+
+            if($e->getPrevious() !== null)
+            {
+                $exception['trace'] = self::exceptionToArray($e);
+            }
+
+            return $exception;
         }
     }

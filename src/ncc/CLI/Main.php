@@ -1,5 +1,7 @@
 <?php
 
+    /** @noinspection PhpMissingFieldTypeInspection */
+
     namespace ncc\CLI;
 
     use Exception;
@@ -13,6 +15,11 @@
     class Main
     {
         /**
+         * @var array
+         */
+        private static $args;
+        
+        /**
          * Executes the main CLI process
          *
          * @param $argv
@@ -20,9 +27,9 @@
          */
         public static function start($argv): void
         {
-            $args = Resolver::parseArguments(implode(' ', $argv));
+            self::$args = Resolver::parseArguments(implode(' ', $argv));
 
-            if(isset($args['ncc-cli']))
+            if(isset(self::$args['ncc-cli']))
             {
                 // Initialize NCC
                 try
@@ -48,37 +55,49 @@
 
                 try
                 {
-                    switch(strtolower($args['ncc-cli']))
+                    switch(strtolower(self::$args['ncc-cli']))
                     {
                         default:
-                            Console::out('Unknown command ' . strtolower($args['ncc-cli']));
+                            Console::out('Unknown command ' . strtolower(self::$args['ncc-cli']));
                             exit(1);
 
                         case 'project':
-                            ProjectMenu::start($args);
+                            ProjectMenu::start(self::$args);
                             exit(0);
 
                         case 'build':
-                            BuildMenu::start($args);
+                            BuildMenu::start(self::$args);
                             exit(0);
 
                         case 'credential':
-                            CredentialMenu::start($args);
+                            CredentialMenu::start(self::$args);
+                            exit(0);
+
+                        case 'package':
+                            PackageManagerMenu::start(self::$args);
                             exit(0);
 
                         case '1':
                         case 'help':
-                            HelpMenu::start($args);
+                            HelpMenu::start(self::$args);
                             exit(0);
                     }
                 }
                 catch(Exception $e)
                 {
-                    Console::outException('Error: ' . $e->getMessage() . ' (Code: ' . $e->getCode() . ')', $e, 1);
+                    Console::outException($e->getMessage() . ' (Code: ' . $e->getCode() . ')', $e, 1);
                     exit(1);
                 }
 
             }
+        }
+
+        /**
+         * @return mixed
+         */
+        public static function getArgs()
+        {
+            return self::$args;
         }
 
     }

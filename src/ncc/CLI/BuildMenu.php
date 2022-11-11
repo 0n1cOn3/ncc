@@ -134,7 +134,7 @@
             try
             {
                 Console::out('Preparing package');
-                $Compiler->prepare($project_path);
+                $Compiler->prepare($build_configuration);
             }
             catch (Exception $e)
             {
