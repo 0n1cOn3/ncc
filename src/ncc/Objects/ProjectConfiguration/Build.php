@@ -67,6 +67,20 @@
         public $DefineConstants;
 
         /**
+         * An array of execution policies to execute pre build
+         *
+         * @var string[]
+         */
+        public $PreBuild;
+
+        /**
+         * An array of execution policies to execute post build
+         *
+         * @var string[]
+         */
+        public $PostBuild;
+
+        /**
          * An array of dependencies that are required by default
          *
          * @var Dependency[]
@@ -188,6 +202,8 @@
             $ReturnResults[($bytecode ? Functions::cbc('scope') : 'scope')] = $this->Scope;
             $ReturnResults[($bytecode ? Functions::cbc('main') : 'main')] = $this->Main;
             $ReturnResults[($bytecode ? Functions::cbc('define_constants') : 'define_constants')] = $this->DefineConstants;
+            $ReturnResults[($bytecode ? Functions::cbc('pre_build') : 'pre_build')] = $this->PreBuild;
+            $ReturnResults[($bytecode ? Functions::cbc('post_build') : 'post_build')] = $this->PostBuild;
             $ReturnResults[($bytecode ? Functions::cbc('dependencies') : 'dependencies')] = [];
 
             foreach($this->Dependencies as $dependency)
@@ -222,6 +238,8 @@
             $BuildObject->Scope = Functions::array_bc($data, 'scope');
             $BuildObject->Main = Functions::array_bc($data, 'main');
             $BuildObject->DefineConstants = (Functions::array_bc($data, 'define_constants') ?? []);
+            $BuildObject->PreBuild = (Functions::array_bc($data, 'pre_build') ?? []);
+            $BuildObject->PostBuild = (Functions::array_bc($data, 'post_build') ?? []);
 
             if(Functions::array_bc($data, 'dependencies') !== null)
             {
