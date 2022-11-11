@@ -4,19 +4,11 @@
 
     namespace ncc\Objects\PackageLock;
 
-    use ncc\Objects\Package\MainExecutionPolicy;
-    use ncc\Objects\ProjectConfiguration\Compiler;
+    use ncc\Exceptions\VersionNotFoundException;
     use ncc\Utilities\Functions;
 
     class PackageEntry
     {
-        /**
-         * The compiler extension used for the package
-         *
-         * @var Compiler
-         */
-        public $Compiler;
-
         /**
          * The name of the package that's installed
          *
@@ -27,14 +19,9 @@
         /**
          * An array of installed versions for this package
          *
-         * @var PackageEntry[]
+         * @var VersionEntry[]
          */
         public $Versions;
-
-        /**
-         * @var MainExecutionPolicy
-         */
-        public $MainExecutionPolicy;
 
         /**
          * Public Constructor
@@ -42,6 +29,30 @@
         public function __construct()
         {
             $this->Versions = [];
+        }
+
+        /**
+         * Searches and returns a version of the package
+         *
+         * @param string $version
+         * @param bool $throw_exception
+         * @return VersionEntry|null
+         * @throws VersionNotFoundException
+         */
+        public function getVersion(string $version, bool $throw_exception=false): ?VersionEntry
+        {
+            foreach($this->Versions as $versionEntry)
+            {
+                if($versionEntry->Version == $version)
+                {
+                    return $versionEntry;
+                }
+            }
+
+            if($throw_exception)
+                throw new VersionNotFoundException('The version entry is not found');
+
+            return null;
         }
 
         /**
@@ -59,10 +70,8 @@
             }
 
             return [
-                ($bytecode ? Functions::cbc('compiler')  : 'compiler')  => $this->Compiler->toArray($bytecode),
                 ($bytecode ? Functions::cbc('name')  : 'name')  => $this->Name,
                 ($bytecode ? Functions::cbc('versions')  : 'versions')  => $versions,
-                ($bytecode ? Functions::cbc('main_execution_policy')  : 'main_execution_policy')  => $this->MainExecutionPolicy?->toArray($bytecode),
             ];
         }
 
@@ -76,11 +85,9 @@
         {
             $object = new self();
 
-            $object->Compiler = Compiler::fromArray(Functions::array_bc($data, 'compiler'));
             $object->Name = Functions::array_bc($data, 'name');
-            $object->MainExecutionPolicy = Functions::array_bc($data, 'main_execution_policy');
-
             $versions = Functions::array_bc($data, 'versions');
+
             if($versions !== null)
             {
                 foreach($versions as $_datum)
@@ -88,9 +95,6 @@
                     $object->Versions[] = DependencyEntry::fromArray($_datum);
                 }
             }
-
-            if($object->MainExecutionPolicy !== null)
-                $object->MainExecutionPolicy = MainExecutionPolicy::fromArray($object->MainExecutionPolicy);
 
             return $object;
         }
