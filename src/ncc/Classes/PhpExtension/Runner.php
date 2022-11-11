@@ -6,7 +6,6 @@
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;
     use ncc\Interfaces\RunnerInterface;
-    use ncc\Objects\InstallationPaths;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
     use ncc\Utilities\Base64;
@@ -27,27 +26,25 @@
         {
             $execution_unit = new ExecutionUnit();
             $target_file = $path;
-            var_dump($target_file);
             if(!file_exists($target_file) && !is_file($target_file))
                 throw new FileNotFoundException($target_file);
             $policy->Execute->Target = null;
             $execution_unit->ExecutionPolicy = $policy;
             $execution_unit->Data = Base64::encode(IO::fread($target_file));
-            $execution_unit->ID = hash('sha1', $policy->Name, true);
 
             return $execution_unit;
         }
 
         /**
          * @param ExecutionUnit $unit
-         * @param InstallationPaths $paths
+         * @param string $path
          * @return string
          * @throws IOException
          */
-        public static function installUnit(ExecutionUnit $unit, InstallationPaths $paths): string
+        public static function installUnit(ExecutionUnit $unit, string $path): string
         {
-            $script_path = $paths->getBinPath() . DIRECTORY_SEPARATOR . $unit->ID . '.php';
-            $bin_path = $paths->getBinPath() . DIRECTORY_SEPARATOR . $unit->ID . '.bin';
+            $script_path = $path . DIRECTORY_SEPARATOR . $unit->getID() . '.php';
+            $bin_path = $path . DIRECTORY_SEPARATOR . $unit->getID() . '.bin';
             IO::fwrite($script_path, $unit->Data);
             $unit->Data = $script_path;
             IO::fwrite($bin_path, ZiProto::encode($unit->toArray(true)));

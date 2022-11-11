@@ -27,9 +27,9 @@
          * Installs the execution unit onto the system
          *
          * @param ExecutionUnit $unit
-         * @param InstallationPaths $paths
+         * @param string $path
          * @return string
          * @throws IOException
          */
-        public static function installUnit(ExecutionUnit $unit, InstallationPaths $paths): string;
+        public static function installUnit(ExecutionUnit $unit, string $path): string;
     }
