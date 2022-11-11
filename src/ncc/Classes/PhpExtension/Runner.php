@@ -6,10 +6,12 @@
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;
     use ncc\Interfaces\RunnerInterface;
+    use ncc\Objects\InstallationPaths;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
     use ncc\Utilities\Base64;
     use ncc\Utilities\IO;
+    use ncc\ZiProto\ZiProto;
 
     class Runner implements RunnerInterface
     {
@@ -34,5 +36,22 @@
             $execution_unit->ID = hash('sha1', $policy->Name, true);
 
             return $execution_unit;
+        }
+
+        /**
+         * @param ExecutionUnit $unit
+         * @param InstallationPaths $paths
+         * @return string
+         * @throws IOException
+         */
+        public static function installUnit(ExecutionUnit $unit, InstallationPaths $paths): string
+        {
+            $script_path = $paths->getBinPath() . DIRECTORY_SEPARATOR . $unit->ID . '.php';
+            $bin_path = $paths->getBinPath() . DIRECTORY_SEPARATOR . $unit->ID . '.bin';
+            IO::fwrite($script_path, $unit->Data);
+            $unit->Data = $script_path;
+            IO::fwrite($bin_path, ZiProto::encode($unit->toArray(true)));
+
+            return $bin_path;
         }
     }
