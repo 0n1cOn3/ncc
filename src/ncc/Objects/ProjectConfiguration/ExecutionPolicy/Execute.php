@@ -38,6 +38,13 @@
         public $Silent;
 
         /**
+         * Indicates if the process should run in Tty mode (Overrides Silent mode)
+         *
+         * @var bool|null
+         */
+        public $Tty;
+
+        /**
          * The number of seconds to wait before giving up on the process, will automatically execute the error handler
          * if one is set.
          *
@@ -58,6 +65,7 @@
                 ($bytecode ? Functions::cbc('working_directory') : 'working_directory') => $this->WorkingDirectory,
                 ($bytecode ? Functions::cbc('options') : 'options') => $this->Options,
                 ($bytecode ? Functions::cbc('silent') : 'silent') => $this->Silent,
+                ($bytecode ? Functions::cbc('tty') : 'tty') => $this->Tty,
                 ($bytecode ? Functions::cbc('timeout') : 'timeout') => $this->Timeout
             ];
         }
@@ -76,6 +84,7 @@
             $object->WorkingDirectory = Functions::array_bc($data, 'working_directory');
             $object->Options = Functions::array_bc($data, 'options');
             $object->Silent = Functions::array_bc($data, 'silent');
+            $object->Tty = Functions::array_bc($data, 'tty');
             $object->Timeout = Functions::array_bc($data, 'timeout');
 
             return $object;
