@@ -2,7 +2,6 @@
 
     namespace ncc\CLI;
 
-
     use ncc\Managers\PackageManager;
     use ncc\Objects\CliHelpSection;
     use ncc\Utilities\Console;
@@ -30,7 +29,7 @@
         {
             $path = ($args['path'] ?? $args['p']);
             $package_manager = new PackageManager();
-            $package_manager->install($path);
+            var_dump($package_manager->install($path));
         }
 
         /**
