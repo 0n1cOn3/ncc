@@ -37,6 +37,13 @@
         public $ExecutionUnits;
 
         /**
+         * The main execution policy for this version entry if applicable
+         *
+         * @var string|null
+         */
+        public $MainExecutionPolicy;
+
+        /**
          * Public Constructor
          */
         public function __construct()
@@ -70,6 +77,7 @@
                 ($bytecode ? Functions::cbc('compiler')  : 'compiler')  => $this->Compiler->toArray($bytecode),
                 ($bytecode ? Functions::cbc('dependencies')  : 'dependencies')  => $dependencies,
                 ($bytecode ? Functions::cbc('execution_units')  : 'execution_units')  => $execution_units,
+                ($bytecode ? Functions::cbc('main_execution_policy')  : 'main_execution_policy')  => $this->MainExecutionPolicy,
             ];
         }
 
@@ -84,6 +92,7 @@
             $object = new self();
             $object->Version = Functions::array_bc($data, 'version');
             $object->Compiler = Compiler::fromArray(Functions::array_bc($data, 'compiler'));
+            $object->MainExecutionPolicy = Compiler::fromArray(Functions::array_bc($data, 'main_execution_policy'));
 
             $dependencies = Functions::array_bc($data, 'dependencies');
             if($dependencies !== null)

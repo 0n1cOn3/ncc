@@ -20,7 +20,6 @@
     use ncc\Objects\Package\Resource;
     use ncc\Objects\ProjectConfiguration\Assembly;
     use ncc\Objects\ProjectConfiguration\Dependency;
-    use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
     use ncc\Utilities\Functions;
     use ncc\Utilities\IO;
     use ncc\ZiProto\ZiProto;
@@ -58,7 +57,7 @@
         /**
          * The Main Execution Policy object for the package if the package is an executable package.
          *
-         * @var ExecutionPolicy|null
+         * @var string|null
          */
         public $MainExecutionPolicy;
 
@@ -293,7 +292,7 @@
                 ($bytecode ? Functions::cbc('header') : 'header') => $this->Header->toArray($bytecode),
                 ($bytecode ? Functions::cbc('assembly') : 'assembly') => $this->Assembly->toArray($bytecode),
                 ($bytecode ? Functions::cbc('dependencies') : 'dependencies') => $_dependencies,
-                ($bytecode ? Functions::cbc('main_execution_policy') : 'main_execution_policy') => $this->MainExecutionPolicy?->toArray($bytecode),
+                ($bytecode ? Functions::cbc('main_execution_policy') : 'main_execution_policy') => $this->MainExecutionPolicy,
                 ($bytecode ? Functions::cbc('installer') : 'installer') => $this->Installer?->toArray($bytecode),
                 ($bytecode ? Functions::cbc('execution_units') : 'execution_units') => $_execution_units,
                 ($bytecode ? Functions::cbc('resources') : 'resources') => $_resources,
@@ -318,8 +317,6 @@
                 $object->Assembly = Assembly::fromArray($object->Assembly);
 
             $object->MainExecutionPolicy = Functions::array_bc($data, 'main_execution_policy');
-            if($object->MainExecutionPolicy !== null)
-                $object->MainExecutionPolicy = ExecutionPolicy::fromArray($object->MainExecutionPolicy);
 
             $object->Installer = Functions::array_bc($data, 'installer');
             if($object->Installer !== null)

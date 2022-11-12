@@ -124,6 +124,7 @@
             $version->Version = $package->Assembly->Version;
             $version->Compiler = $package->Header->CompilerExtension;
             $version->ExecutionUnits = $package->ExecutionUnits;
+            $version->MainExecutionPolicy = $package->MainExecutionPolicy;
 
             foreach($package->Dependencies as $dependency)
             {
