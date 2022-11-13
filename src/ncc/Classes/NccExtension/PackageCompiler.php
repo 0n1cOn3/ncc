@@ -3,13 +3,21 @@
     namespace ncc\Classes\NccExtension;
 
     use Exception;
+    use ncc\Abstracts\CompilerExtensions;
     use ncc\Abstracts\Options\BuildConfigurationValues;
+    use ncc\Classes\PhpExtension\Compiler;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\BuildConfigurationNotFoundException;
     use ncc\Exceptions\BuildException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;
+    use ncc\Exceptions\MalformedJsonException;
+    use ncc\Exceptions\PackagePreparationFailedException;
+    use ncc\Exceptions\ProjectConfigurationNotFoundException;
+    use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedRunnerException;
+    use ncc\Interfaces\CompilerInterface;
+    use ncc\Managers\ProjectManager;
     use ncc\ncc;
     use ncc\Objects\Package;
     use ncc\Objects\ProjectConfiguration;
@@ -20,6 +28,48 @@
 
     class PackageCompiler
     {
+        /**
+         * Compiles the project into a package
+         *
+         * @param ProjectManager $manager
+         * @param string $build_configuration
+         * @return string
+         * @throws AccessDeniedException
+         * @throws BuildConfigurationNotFoundException
+         * @throws BuildException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws MalformedJsonException
+         * @throws PackagePreparationFailedException
+         * @throws ProjectConfigurationNotFoundException
+         * @throws UnsupportedCompilerExtensionException
+         * @throws UnsupportedRunnerException
+         */
+        public static function compile(ProjectManager $manager, string $build_configuration=BuildConfigurationValues::DefaultConfiguration): string
+        {
+            $configuration = $manager->getProjectConfiguration();
+
+            // Select the correct compiler for the specified extension
+            switch(strtolower($configuration->Project->Compiler->Extension))
+            {
+                case CompilerExtensions::PHP:
+                    /** @var CompilerInterface $Compiler */
+                    $Compiler = new Compiler($configuration, $manager->getProjectPath());
+                    break;
+
+                default:
+                    throw new UnsupportedCompilerExtensionException('The compiler extension \'' . $configuration->Project->Compiler->Extension . '\' is not supported');
+            }
+
+            $build_configuration = $configuration->Build->getBuildConfiguration($build_configuration)->Name;
+            $Compiler->prepare($build_configuration);
+            $Compiler->build();
+
+            return PackageCompiler::writePackage(
+                $manager->getProjectPath(), $Compiler->getPackage(), $configuration, $build_configuration
+            );
+        }
+
         /**
          * Compiles the execution policies of the package
          *
