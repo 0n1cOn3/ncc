@@ -5,6 +5,7 @@
     namespace ncc\CLI;
 
     use Exception;
+    use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\NccBuildFlags;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\RuntimeException;
@@ -18,6 +19,11 @@
          * @var array
          */
         private static $args;
+
+        /**
+         * @var string|null
+         */
+        private static $log_level;
         
         /**
          * Executes the main CLI process
@@ -51,6 +57,25 @@
                 if(in_array(NccBuildFlags::Unstable, NCC_VERSION_FLAGS))
                 {
                     Console::outWarning('This is an unstable build of NCC, expect some features to not work as expected');
+                }
+
+                if(isset(self::$args['l']) || isset(self::$args['log-level']))
+                {
+                    switch((self::$args['l'] ?? self::$args['log-level']))
+                    {
+                        case LogLevel::Silent:
+                        case LogLevel::Fatal:
+                        case LogLevel::Error:
+                        case LogLevel::Warning:
+                        case LogLevel::Info:
+                        case LogLevel::Debug:
+                        case LogLevel::Verbose:
+                            self::$log_level = (self::$args['l'] ?? self::$args['log-level']);
+                            break;
+
+                        default:
+                            Console::outWarning('Unknown log level: ' . (self::$args['l'] ?? self::$args['log-level']) . ', using \'info\'');
+                    }
                 }
 
                 try
@@ -98,6 +123,14 @@
         public static function getArgs()
         {
             return self::$args;
+        }
+
+        /**
+         * @return string|null
+         */
+        public static function getLogLevel(): ?string
+        {
+            return self::$log_level;
         }
 
     }
