@@ -2,6 +2,7 @@
 
     namespace ncc\Utilities;
 
+    use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\Scopes;
 
     class Resolver
@@ -134,5 +135,90 @@
         public static function resolveConstantHash(string $scope, string $name): string
         {
             return hash('haval128,3', self::resolveFullConstantName($scope, $name));
+        }
+
+        /**
+         * Checks if the input level matches the current level
+         *
+         * @param string $input
+         * @param string $current_level
+         * @return bool
+         */
+        public static function checkLogLevel(string $input, string $current_level): bool
+        {
+            $input = strtolower($input);
+            if(!Validate::checkLogLevel($input))
+                return false;
+
+            $current_level = strtolower($current_level);
+            if(!Validate::checkLogLevel($current_level))
+                return false;
+
+            switch($input)
+            {
+                case LogLevel::Verbose:
+                    $levels = [
+                        LogLevel::Verbose,
+                        LogLevel::Debug,
+                        LogLevel::Info,
+                        LogLevel::Warning,
+                        LogLevel::Fatal,
+                        LogLevel::Error
+                    ];
+                    if(in_array($current_level, $levels))
+                        return true;
+                    return false;
+
+                case LogLevel::Debug:
+                    $levels = [
+                        LogLevel::Debug,
+                        LogLevel::Info,
+                        LogLevel::Warning,
+                        LogLevel::Fatal,
+                        LogLevel::Error
+                    ];
+                    if(in_array($current_level, $levels))
+                        return true;
+                    return false;
+
+                case LogLevel::Info:
+                    $levels = [
+                        LogLevel::Info,
+                        LogLevel::Warning,
+                        LogLevel::Fatal,
+                        LogLevel::Error
+                    ];
+                    if(in_array($current_level, $levels))
+                        return true;
+                    return false;
+
+                case LogLevel::Warning:
+                    $levels = [
+                        LogLevel::Warning,
+                        LogLevel::Fatal,
+                        LogLevel::Error
+                    ];
+                    if(in_array($current_level, $levels))
+                        return true;
+                    return false;
+
+                case LogLevel::Error:
+                    $levels = [
+                        LogLevel::Fatal,
+                        LogLevel::Error
+                    ];
+                    if(in_array($current_level, $levels))
+                        return true;
+                    return false;
+
+                case LogLevel::Fatal:
+                    if($current_level == LogLevel::Fatal)
+                        return true;
+                    return false;
+
+                default:
+                case LogLevel::Silent:
+                    return false;
+            }
         }
     }

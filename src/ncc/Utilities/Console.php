@@ -4,6 +4,7 @@
 
     use Exception;
     use ncc\Abstracts\ConsoleColors;
+    use ncc\Abstracts\LogLevel;
     use ncc\CLI\Main;
     use ncc\ncc;
 
@@ -88,6 +89,9 @@
             if(!ncc::cliMode())
                 return;
 
+            if(Main::getLogLevel() !== null && !Resolver::checkLogLevel(LogLevel::Info, Main::getLogLevel()))
+                return;
+
             if($newline)
             {
                 print($message . PHP_EOL);
@@ -96,6 +100,43 @@
 
             print($message);
         }
+
+        /**
+         * Output debug message
+         *
+         * @param string $message
+         * @param bool $newline
+         * @return void
+         */
+        public static function outDebug(string $message, bool $newline=true): void
+        {
+            if(!ncc::cliMode())
+                return;
+
+            if(Main::getLogLevel() !== null && !Resolver::checkLogLevel(LogLevel::Debug, Main::getLogLevel()))
+                return;
+
+            self::out(self::formatColor('DBG: ', ConsoleColors::LightMagenta) . $message, $newline);
+        }
+
+        /**
+         * Output debug message
+         *
+         * @param string $message
+         * @param bool $newline
+         * @return void
+         */
+        public static function outVerbose(string $message, bool $newline=true): void
+        {
+            if(!ncc::cliMode())
+                return;
+
+            if(Main::getLogLevel() !== null && !Resolver::checkLogLevel(LogLevel::Verbose, Main::getLogLevel()))
+                return;
+
+            self::out(self::formatColor(' - ', ConsoleColors::LightCyan) . $message, $newline);
+        }
+
 
         /**
          * Formats the text to have a different color and returns the formatted value
@@ -127,6 +168,9 @@
             if(!ncc::cliMode())
                 return;
 
+            if(Main::getLogLevel() !== null && !Resolver::checkLogLevel(LogLevel::Warning, Main::getLogLevel()))
+                return;
+
             self::out(self::formatColor('Warning: ', ConsoleColors::Yellow) . $message, $newline);
         }
 
@@ -141,6 +185,9 @@
         public static function outError(string $message, bool $newline=true, ?int $exit_code=null): void
         {
             if(!ncc::cliMode())
+                return;
+
+            if(Main::getLogLevel() !== null && !Resolver::checkLogLevel(LogLevel::Error, Main::getLogLevel()))
                 return;
 
             self::out(self::formatColor(ConsoleColors::Red, 'Error: ') . $message, $newline);
@@ -164,7 +211,7 @@
             if(!ncc::cliMode())
                 return;
 
-            if(strlen($message) > 0)
+            if(strlen($message) > 0 && !Resolver::checkLogLevel(LogLevel::Error, Main::getLogLevel()))
             {
                 self::out(self::formatColor('Error: ', ConsoleColors::Red) . $message);
             }

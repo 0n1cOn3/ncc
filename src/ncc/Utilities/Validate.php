@@ -2,6 +2,7 @@
 
     namespace ncc\Utilities;
 
+    use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\RegexPatterns;
     use ncc\Abstracts\Scopes;
 
@@ -226,6 +227,20 @@
             {
                 return false;
             }
+
+            return true;
+        }
+
+        /**
+         * Determines if the given log level is valid or not
+         *
+         * @param string $input
+         * @return bool
+         */
+        public static function checkLogLevel(string $input): bool
+        {
+            if(!in_array(strtolower($input), LogLevel::All))
+                return false;
 
             return true;
         }
