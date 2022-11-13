@@ -5,8 +5,6 @@
     use Exception;
     use ncc\Abstracts\ConsoleColors;
     use ncc\CLI\Main;
-    use ncc\Exceptions\IOException;
-    use ncc\Exceptions\RuntimeException;
     use ncc\ncc;
 
     class Console
@@ -47,6 +45,7 @@
                 $status_bar.="=";
             }
 
+            /** @noinspection PhpRedundantOptionalArgumentInspection */
             $disp=number_format($perc*100, 0);
 
             $status_bar.=" ] $disp%  $value/$total";
@@ -159,7 +158,6 @@
          * @param Exception $e
          * @param int|null $exit_code
          * @return void
-         * @throws RuntimeException
          */
         public static function outException(string $message, Exception $e, ?int $exit_code=null): void
         {
@@ -185,7 +183,6 @@
          *
          * @param Exception $e
          * @return void
-         * @throws RuntimeException
          */
         private static function outExceptionDetails(Exception $e): void
         {
@@ -210,16 +207,15 @@
             {
                 if(isset(Main::getArgs()['dbg-ex']))
                 {
-                    $dump = [
-                        'constants' => ncc::getConstants(),
-                        'exception' => Functions::exceptionToArray($e)
-                    ];
-
                     try
                     {
+                        $dump = [
+                            'constants' => ncc::getConstants(),
+                            'exception' => Functions::exceptionToArray($e)
+                        ];
                         IO::fwrite(getcwd() . DIRECTORY_SEPARATOR . time() . '.json', json_encode($dump, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
                     }
-                    catch (IOException $e)
+                    catch (Exception $e)
                     {
                         self::outWarning('Cannot dump exception details, ' . $e->getMessage());
                     }
