@@ -31,6 +31,7 @@
     use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackageParsingException;
     use ncc\Exceptions\ProjectAlreadyExistsException;
+    use ncc\Exceptions\ProjectConfigurationNotFoundException;
     use ncc\Exceptions\ResourceChecksumException;
     use ncc\Exceptions\RuntimeException;
     use ncc\Exceptions\UndefinedExecutionPolicyException;
@@ -247,6 +248,11 @@
         const InvalidExecutionPolicyName = -1739;
 
         /**
+         * @see ProjectConfigurationNotFoundException
+         */
+        const ProjectConfigurationNotFoundException = -1740;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -288,6 +294,7 @@
             self::UnsupportedRunnerException,
             self::VersionNotFoundException,
             self::UndefinedExecutionPolicyException,
-            self::InvalidExecutionPolicyName
+            self::InvalidExecutionPolicyName,
+            self::ProjectConfigurationNotFoundException
         ];
     }
