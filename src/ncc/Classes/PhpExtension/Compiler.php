@@ -84,6 +84,7 @@
             $this->package = new Package();
             $this->package->Assembly = $this->project->Assembly;
             $this->package->Dependencies = $this->project->Build->Dependencies;
+            $this->package->MainExecutionPolicy = $this->project->Build->Main;
 
             // Add both the defined constants from the build configuration and the global constants.
             // Global constants are overridden
