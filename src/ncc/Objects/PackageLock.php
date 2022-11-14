@@ -63,7 +63,12 @@
                 $package_entry->addVersion($package, true);
                 $this->Packages[$package->Assembly->Package] = $package_entry;
                 $this->update();
+
+                return;
             }
+
+            $this->Packages[$package->Assembly->Package]->addVersion($package, true);
+            $this->update();
         }
 
         /**
