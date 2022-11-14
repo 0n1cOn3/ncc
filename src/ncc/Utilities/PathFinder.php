@@ -145,6 +145,19 @@
         }
 
         /**
+         * Returns the path where Runner bin files are located and installed
+         *
+         * @param string $scope
+         * @param bool $win32
+         * @return string
+         * @throws InvalidScopeException
+         */
+        public static function getRunnerPath(string $scope=Scopes::Auto, bool $win32=false): string
+        {
+            return self::getDataPath($scope, $win32) . DIRECTORY_SEPARATOR . 'runners';
+        }
+
+        /**
          * Returns the path where temporary files are stored
          *
          * @param string $scope
