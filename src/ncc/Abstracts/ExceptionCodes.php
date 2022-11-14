@@ -11,6 +11,7 @@
     use ncc\Exceptions\ComponentVersionNotFoundException;
     use ncc\Exceptions\ConstantReadonlyException;
     use ncc\Exceptions\DirectoryNotFoundException;
+    use ncc\Exceptions\ExecutionUnitNotFoundException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\InstallationException;
     use ncc\Exceptions\InvalidConstantNameException;
@@ -27,12 +28,14 @@
     use ncc\Exceptions\InvalidVersionNumberException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
+    use ncc\Exceptions\NoAvailableUnitsException;
     use ncc\Exceptions\NoUnitsFoundException;
     use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackageParsingException;
     use ncc\Exceptions\ProjectAlreadyExistsException;
     use ncc\Exceptions\ProjectConfigurationNotFoundException;
     use ncc\Exceptions\ResourceChecksumException;
+    use ncc\Exceptions\RunnerExecutionException;
     use ncc\Exceptions\RuntimeException;
     use ncc\Exceptions\UndefinedExecutionPolicyException;
     use ncc\Exceptions\UnsupportedComponentTypeException;
@@ -253,6 +256,21 @@
         const ProjectConfigurationNotFoundException = -1740;
 
         /**
+         * @see RunnerExecutionException
+         */
+        const RunnerExecutionException = -1741;
+
+        /**
+         * @see NoAvailableUnitsException
+         */
+        const NoAvailableUnitsException = -1742;
+
+        /**
+         * @see ExecutionUnitNotFoundException
+         */
+        const ExecutionUnitNotFoundException = -1743;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -295,6 +313,9 @@
             self::VersionNotFoundException,
             self::UndefinedExecutionPolicyException,
             self::InvalidExecutionPolicyName,
-            self::ProjectConfigurationNotFoundException
+            self::ProjectConfigurationNotFoundException,
+            self::RunnerExecutionException,
+            self::NoAvailableUnitsException,
+            self::ExecutionUnitNotFoundException
         ];
     }
