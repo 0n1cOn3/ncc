@@ -244,4 +244,18 @@
 
             return true;
         }
+
+        /**
+         * Determines if given input exceeds the path length limit
+         *
+         * @param string $input
+         * @return bool
+         */
+        public static function exceedsPathLength(string $input): bool
+        {
+            if(strlen($input) > 4096)
+                return true;
+
+            return false;
+        }
     }
