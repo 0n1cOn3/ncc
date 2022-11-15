@@ -147,6 +147,10 @@
                 Runners::php => Runner::getFileExtension(),
                 default => throw new UnsupportedRunnerException('The runner \'' . $unit->ExecutionPolicy->Runner . '\' is not supported'),
             };
+
+            if($filesystem->exists($bin_file))
+                $filesystem->remove($bin_file);
+
             IO::fwrite($bin_file, $unit->Data);
             $execution_pointers->addUnit($unit, $bin_file);
             IO::fwrite($package_config_path, ZiProto::encode($execution_pointers->toArray(true)));
