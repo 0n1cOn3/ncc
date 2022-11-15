@@ -1,12 +1,21 @@
 <?php
 
-    namespace ncc\Utilities;
+        /** @noinspection PhpMissingFieldTypeInspection */
+
+        namespace ncc\Utilities;
 
     use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\Scopes;
 
     class Resolver
     {
+        /**
+         * The cache value of the User ID
+         *
+         * @var string|null
+         */
+        private static $UserIdCache;
+
         /**
          * @param string|null $input
          * @return string
@@ -21,10 +30,13 @@
 
             $input = strtoupper($input);
 
+            if(self::$UserIdCache == null)
+                self::$UserIdCache = posix_getuid();
+
             // Resolve the scope if it's set to automatic
             if($input == Scopes::Auto)
             {
-                if(posix_getuid() == 0)
+                if(self::$UserIdCache == 0)
                 {
                     $input = Scopes::System;
                 }
@@ -35,7 +47,7 @@
             }
 
             // Auto-Correct the scope if the current user ID is 0
-            if($input == Scopes::User && posix_getuid() == 0)
+            if($input == Scopes::User && self::$UserIdCache == 0)
             {
                 $input = Scopes::System;
             }
@@ -46,9 +58,12 @@
         /**
          * Parse arguments
          *
-         * @param array|string [$message] input arguments
+         * @param array|string $message [$message] input arguments
          * @param int $max_arguments
          * @return array Configs Key/Value
+         * @noinspection RegExpRedundantEscape
+         * @noinspection RegExpSimplifiable
+         * @noinspection PhpMissingParamTypeInspection
          */
         public static function parseArguments($message=null, int $max_arguments=1000): array
         {
