@@ -5,9 +5,12 @@
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;
+    use ncc\Exceptions\RunnerExecutionException;
+    use ncc\Objects\ExecutionPointers\ExecutionPointer;
     use ncc\Objects\InstallationPaths;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
+    use ncc\ThirdParty\Symfony\Process\Process;
 
     interface RunnerInterface
     {
@@ -24,12 +27,18 @@
         public static function processUnit(string $path, ExecutionPolicy $policy): ExecutionUnit;
 
         /**
-         * Installs the execution unit onto the system
+         * Returns the file extension to use for the target file
          *
-         * @param ExecutionUnit $unit
-         * @param string $path
          * @return string
-         * @throws IOException
          */
-        public static function installUnit(ExecutionUnit $unit, string $path): string;
+        public static function getFileExtension(): string;
+
+        /**
+         * Prepares a process object for the execution pointer
+         *
+         * @param ExecutionPointer $pointer
+         * @return Process
+         * @throws RunnerExecutionException
+         */
+        public static function prepareProcess(ExecutionPointer $pointer): Process;
     }

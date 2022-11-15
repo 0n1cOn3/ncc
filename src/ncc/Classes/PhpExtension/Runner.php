@@ -5,12 +5,15 @@
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;
+    use ncc\Exceptions\RunnerExecutionException;
     use ncc\Interfaces\RunnerInterface;
+    use ncc\Objects\ExecutionPointers\ExecutionPointer;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
+    use ncc\ThirdParty\Symfony\Process\ExecutableFinder;
+    use ncc\ThirdParty\Symfony\Process\Process;
     use ncc\Utilities\Base64;
     use ncc\Utilities\IO;
-    use ncc\ZiProto\ZiProto;
 
     class Runner implements RunnerInterface
     {
@@ -36,19 +39,29 @@
         }
 
         /**
-         * @param ExecutionUnit $unit
-         * @param string $path
+         * Returns the file extension to use for the target file
+         *
          * @return string
-         * @throws IOException
          */
-        public static function installUnit(ExecutionUnit $unit, string $path): string
+        public static function getFileExtension(): string
         {
-            $script_path = $path . DIRECTORY_SEPARATOR . $unit->getID() . '.php';
-            $bin_path = $path . DIRECTORY_SEPARATOR . $unit->getID() . '.bin';
-            IO::fwrite($script_path, $unit->Data);
-            $unit->Data = $script_path;
-            IO::fwrite($bin_path, ZiProto::encode($unit->toArray(true)));
+            return '.php';
+        }
 
-            return $bin_path;
+        /**
+         * @param ExecutionPointer $pointer
+         * @return Process
+         * @throws RunnerExecutionException
+         */
+        public static function prepareProcess(ExecutionPointer $pointer): Process
+        {
+            $php_bin = new ExecutableFinder();
+            $php_bin = $php_bin->find('php');
+            if($php_bin == null)
+                throw new RunnerExecutionException('Cannot locate PHP executable');
+
+            if($pointer->ExecutionPolicy->Execute->Options !== null && count($pointer->ExecutionPolicy->Execute->Options) > 0)
+                return new Process(array_merge([$php_bin, $pointer->FilePointer], $pointer->ExecutionPolicy->Execute->Options));
+            return new Process([$php_bin, $pointer->FilePointer]);
         }
     }
