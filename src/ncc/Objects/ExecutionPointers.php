@@ -4,9 +4,9 @@
 
     namespace ncc\Objects;
 
+    use ncc\Exceptions\FileNotFoundException;
     use ncc\Objects\ExecutionPointers\ExecutionPointer;
     use ncc\Objects\Package\ExecutionUnit;
-    use ncc\Objects\ProjectConfiguration\Assembly;
     use ncc\Utilities\Validate;
 
     class ExecutionPointers
@@ -27,12 +27,13 @@
         private $Pointers;
 
         /**
-         * @param Assembly $assembly
+         * @param string|null $package
+         * @param string|null $version
          */
-        public function __construct(Assembly $assembly)
+        public function __construct(?string $package=null, ?string $version=null)
         {
-            $this->Package = $assembly->Package;
-            $this->Version = $assembly->Version;
+            $this->Package = $package;
+            $this->Version = $version;
             $this->Pointers = [];
         }
 
@@ -43,10 +44,13 @@
          * @param bool $overwrite
          * @return bool
          */
-        public function addUnit(ExecutionUnit $unit, bool $overwrite=true): bool
+        public function addUnit(ExecutionUnit $unit, string $bin_file, bool $overwrite=true): bool
         {
-            if(Validate::exceedsPathLength($unit->Data))
+            if(Validate::exceedsPathLength($bin_file))
                 return false;
+
+            if(!file_exists($bin_file))
+                throw new FileNotFoundException('The file ' . $unit->Data . ' does not exist, cannot add unit \'' . $unit->ExecutionPolicy->Name . '\'');
 
             if($overwrite)
             {
@@ -57,7 +61,7 @@
                 return false;
             }
 
-            $this->Pointers[] = new ExecutionPointer($unit);
+            $this->Pointers[] = new ExecutionPointer($unit, $bin_file);
             return true;
         }
 
@@ -129,5 +133,39 @@
         public function getPackage(): string
         {
             return $this->Package;
+        }
+
+        /**
+         * Returns an array representation of the object
+         *
+         * @param bool $bytecode
+         * @return array
+         */
+        public function toArray(bool  $bytecode=false): array
+        {
+            $pointers = [];
+            foreach($this->Pointers as $pointer)
+            {
+                $pointers[] = $pointer->toArray($bytecode);
+            }
+            return $pointers;
+        }
+
+        /**
+         * Constructs object from an array representation
+         *
+         * @param array $data
+         * @return ExecutionPointers
+         */
+        public static function fromArray(array $data): self
+        {
+            $object = new self();
+
+            foreach($data as $datum)
+            {
+                $object->Pointers[] = ExecutionPointer::fromArray($datum);
+            }
+
+            return $object;
         }
     }
