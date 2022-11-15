@@ -34,14 +34,14 @@
          *
          * @param ExecutionUnit|null $unit
          */
-        public function __construct(?ExecutionUnit $unit=null)
+        public function __construct(?ExecutionUnit $unit=null, ?string $bin_file=null)
         {
             if($unit == null)
                 return;
 
             $this->ID = $unit->getID();
             $this->ExecutionPolicy = $unit->ExecutionPolicy;
-            $this->FilePointer = $unit->Data;
+            $this->FilePointer = $bin_file;
         }
 
         /**
