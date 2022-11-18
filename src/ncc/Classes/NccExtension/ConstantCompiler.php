@@ -5,7 +5,7 @@
     use ncc\Abstracts\SpecialConstants\BuildConstants;
     use ncc\Abstracts\SpecialConstants\DateTimeConstants;
     use ncc\Abstracts\SpecialConstants\InstallConstants;
-    use ncc\Abstracts\SpecialConstants\ProjectConstants;
+    use ncc\Abstracts\SpecialConstants\AssemblyConstants;
     use ncc\Objects\InstallationPaths;
     use ncc\Objects\Package;
     use ncc\Objects\ProjectConfiguration;
@@ -26,15 +26,15 @@
             if($input == null)
                 return null;
 
-            $input = str_replace(ProjectConstants::AssemblyName, $assembly->Name, $input);
-            $input = str_replace(ProjectConstants::AssemblyPackage, $assembly->Package, $input);
-            $input = str_replace(ProjectConstants::AssemblyDescription, $assembly->Description, $input);
-            $input = str_replace(ProjectConstants::AssemblyCompany, $assembly->Company, $input);
-            $input = str_replace(ProjectConstants::AssemblyProduct, $assembly->Product, $input);
-            $input = str_replace(ProjectConstants::AssemblyCopyright, $assembly->Copyright, $input);
-            $input = str_replace(ProjectConstants::AssemblyTrademark, $assembly->Trademark, $input);
-            $input = str_replace(ProjectConstants::AssemblyVersion, $assembly->Version, $input);
-            $input = str_replace(ProjectConstants::AssemblyUid, $assembly->UUID, $input);
+            $input = str_replace(AssemblyConstants::AssemblyName, $assembly->Name, $input);
+            $input = str_replace(AssemblyConstants::AssemblyPackage, $assembly->Package, $input);
+            $input = str_replace(AssemblyConstants::AssemblyDescription, $assembly->Description, $input);
+            $input = str_replace(AssemblyConstants::AssemblyCompany, $assembly->Company, $input);
+            $input = str_replace(AssemblyConstants::AssemblyProduct, $assembly->Product, $input);
+            $input = str_replace(AssemblyConstants::AssemblyCopyright, $assembly->Copyright, $input);
+            $input = str_replace(AssemblyConstants::AssemblyTrademark, $assembly->Trademark, $input);
+            $input = str_replace(AssemblyConstants::AssemblyVersion, $assembly->Version, $input);
+            $input = str_replace(AssemblyConstants::AssemblyUid, $assembly->UUID, $input);
 
             return $input;
         }

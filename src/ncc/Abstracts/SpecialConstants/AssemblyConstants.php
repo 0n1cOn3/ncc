@@ -2,7 +2,7 @@
 
     namespace ncc\Abstracts\SpecialConstants;
 
-    abstract class ProjectConstants
+    abstract class AssemblyConstants
     {
         /**
          * Assembly's Name Property
