@@ -6,10 +6,9 @@
 
     use Exception;
     use ncc\Abstracts\CompilerExtensions;
-    use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
     use ncc\Classes\PhpExtension\Installer;
-    use ncc\Classes\PhpExtension\Runner;
+    use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\InstallationException;
     use ncc\Exceptions\InvalidScopeException;
@@ -34,11 +33,6 @@
         private $PackagesPath;
 
         /**
-         * @var string
-         */
-        private $PackageLockPath;
-
-        /**
          * @var PackageLock|null
          */
         private $PackageLockManager;
@@ -50,8 +44,6 @@
         public function __construct()
         {
             $this->PackagesPath = PathFinder::getPackagesPath(Scopes::System);
-            $this->PackageLockPath = PathFinder::getPackageLock(Scopes::System);
-
             $this->PackageLockManager = new PackageLockManager();
             $this->PackageLockManager->load();
         }
@@ -67,7 +59,7 @@
          * @throws PackageParsingException
          * @throws UnsupportedCompilerExtensionException
          * @throws UnsupportedRunnerException
-         * @throws IOException
+         * @throws AccessDeniedException
          */
         public function install(string $input): string
         {
@@ -81,10 +73,19 @@
                 CompilerExtensions::PHP => new Installer($package),
                 default => throw new UnsupportedCompilerExtensionException('The compiler extension \'' . $extension . '\' is not supported'),
             };
+            $execution_pointer_manager = new ExecutionPointerManager();
 
             Console::out('Installing ' . $package->Assembly->Package);
+
             // 3 For preInstall, postInstall & initData methods
             $steps = (3 + count($package->Components) + count ($package->Resources) + count ($package->ExecutionUnits));
+
+            // Include the Execution units
+            if($package->Installer?->PreInstall !== null)
+                $steps += count($package->Installer->PreInstall);
+            if($package->Installer?->PostInstall!== null)
+                $steps += count($package->Installer->PostInstall);
+
             $current_steps = 0;
 
             try
@@ -105,11 +106,28 @@
                 $installer->preInstall($installation_paths);
                 $current_steps += 1;
                 Console::inlineProgressBar($current_steps, $steps);
-
             }
             catch (Exception $e)
             {
                 throw new InstallationException('Pre installation stage failed, ' . $e->getMessage(), $e);
+            }
+
+            if($package->Installer?->PreInstall !== null && count($package->Installer->PreInstall) > 0)
+            {
+                foreach($package->Installer->PreInstall as $unit_name)
+                {
+                    try
+                    {
+                        $execution_pointer_manager->temporaryExecute($package, $unit_name);
+                    }
+                    catch(Exception $e)
+                    {
+                        Console::outWarning('Cannot execute unit ' . $unit_name . ', ' . $e->getMessage());
+                    }
+
+                    $current_steps += 1;
+                    Console::inlineProgressBar($current_steps, $steps);
+                }
             }
 
             // Process & Install the components
@@ -158,14 +176,12 @@
             // TODO: Implement symlink support
             if(count($package->ExecutionUnits) > 0)
             {
+                $execution_pointer_manager = new ExecutionPointerManager();
                 $unit_paths = [];
+
                 foreach($package->ExecutionUnits as $executionUnit)
                 {
-                    $unit_paths[$executionUnit->ExecutionPolicy->Name] = match ($executionUnit->ExecutionPolicy->Runner) {
-                        Runners::php => Runner::installUnit($executionUnit, $installation_paths->getBinPath()),
-                        default => throw new UnsupportedRunnerException('The runner \'' . $executionUnit->ExecutionPolicy->Runner . ' is not supported'),
-                    };
-
+                    $execution_pointer_manager->addUnit($package->Assembly->Package, $package->Assembly->Version, $executionUnit);
                     $current_steps += 1;
                     Console::inlineProgressBar($current_steps, $steps);
                 }
@@ -183,6 +199,24 @@
             catch (Exception $e)
             {
                 throw new InstallationException('Post installation stage failed, ' . $e->getMessage(), $e);
+            }
+
+            if($package->Installer?->PostInstall !== null && count($package->Installer->PostInstall) > 0)
+            {
+                foreach($package->Installer->PostInstall as $unit_name)
+                {
+                    try
+                    {
+                        $execution_pointer_manager->temporaryExecute($package, $unit_name);
+                    }
+                    catch(Exception $e)
+                    {
+                        Console::outWarning('Cannot execute unit ' . $unit_name . ', ' . $e->getMessage());
+                    }
+
+                    $current_steps += 1;
+                    Console::inlineProgressBar($current_steps, $steps);
+                }
             }
 
 
@@ -238,7 +272,6 @@
             if($this->PackageLockManager == null)
             {
                 $this->PackageLockManager = new PackageManager();
-                $this->PackageLockManager->load();
             }
 
             return $this->PackageLockManager;
