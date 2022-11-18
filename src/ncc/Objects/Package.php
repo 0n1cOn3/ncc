@@ -142,6 +142,23 @@
         }
 
         /**
+         * Attempts to find the execution unit with the given name
+         *
+         * @param string $name
+         * @return ExecutionUnit|null
+         */
+        public function getExecutionUnit(string $name): ?ExecutionUnit
+        {
+            foreach($this->ExecutionUnits as $unit)
+            {
+                if($unit->ExecutionPolicy->Name == $name)
+                    return $unit;
+            }
+
+            return null;
+        }
+
+        /**
          * Writes the package contents to disk
          *
          * @param string $output_path
