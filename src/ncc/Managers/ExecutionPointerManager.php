@@ -17,6 +17,7 @@
     use ncc\Exceptions\RunnerExecutionException;
     use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Objects\ExecutionPointers;
+    use ncc\Objects\Package;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy\ExitHandle;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
@@ -126,10 +127,6 @@
             $package_bin_path = $this->RunnerPath . DIRECTORY_SEPARATOR . $package_id;
 
             $filesystem = new Filesystem();
-            if(!$filesystem->exists($package_bin_path))
-            {
-                $filesystem->mkdir($package_bin_path);
-            }
 
             // Either load or create the pointers file
             if(!$filesystem->exists($package_config_path))
@@ -141,12 +138,17 @@
                 $execution_pointers = ExecutionPointers::fromArray(ZiProto::decode(IO::fread($package_config_path)));
             }
 
-
             $bin_file = $package_bin_path . DIRECTORY_SEPARATOR . hash('haval128,4', $unit->ExecutionPolicy->Name);
             $bin_file .= match ($unit->ExecutionPolicy->Runner) {
                 Runners::php => Runner::getFileExtension(),
                 default => throw new UnsupportedRunnerException('The runner \'' . $unit->ExecutionPolicy->Runner . '\' is not supported'),
             };
+
+            if($filesystem->exists($bin_file) && $temporary)
+                return;
+
+            if(!$filesystem->exists($package_bin_path))
+                $filesystem->mkdir($package_bin_path);
 
             if($filesystem->exists($bin_file))
                 $filesystem->remove($bin_file);
@@ -205,9 +207,7 @@
 
             // Delete the single execution pointer file
             if($filesystem->exists($unit->FilePointer))
-            {
                 $filesystem->remove($unit->FilePointer);
-            }
 
             return $results;
         }
@@ -330,6 +330,53 @@
                     $this->handleExit($package, $version, $unit->ExecutionPolicy->ExitHandlers->Error, $process);
                 }
             }
+        }
+
+        /**
+         * Temporarily executes a
+         *
+         * @param Package $package
+         * @param string $unit_name
+         * @return void
+         * @throws AccessDeniedException
+         * @throws ExecutionUnitNotFoundException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws NoAvailableUnitsException
+         * @throws RunnerExecutionException
+         * @throws UnsupportedRunnerException
+         */
+        public function temporaryExecute(Package $package, string $unit_name): void
+        {
+            // First get the execution unit from the package.
+            $unit = $package->getExecutionUnit($unit_name);
+
+            // Get the required units
+            $required_units = [];
+            if($unit->ExecutionPolicy->ExitHandlers !== null)
+            {
+                $required_unit = $unit->ExecutionPolicy?->ExitHandlers?->Success?->Run;
+                if($required_unit !== null)
+                    $required_units[] = $required_unit;
+
+                $required_unit = $unit->ExecutionPolicy?->ExitHandlers?->Warning?->Run;
+                if($required_unit !== null)
+                    $required_units[] = $required_unit;
+
+                $required_unit = $unit->ExecutionPolicy?->ExitHandlers?->Error?->Run;
+                if($required_unit !== null)
+                    $required_units = $required_unit;
+            }
+
+            // Install the units temporarily
+            $this->addUnit($package->Assembly->Package, $package->Assembly->Version, $unit, true);
+            foreach($required_units as $r_unit)
+            {
+                $this->addUnit($package->Assembly->Package, $package->Assembly->Version, $r_unit, true);
+            }
+
+            $this->executeUnit($package->Assembly->Package, $package->Assembly->Version, $unit_name);
+            $this->cleanTemporaryUnits();
         }
 
         /**
