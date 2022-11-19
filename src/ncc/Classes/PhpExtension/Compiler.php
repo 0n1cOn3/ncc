@@ -8,6 +8,7 @@
     use FilesystemIterator;
     use ncc\Abstracts\ComponentFileExtensions;
     use ncc\Abstracts\ComponentDataType;
+    use ncc\Abstracts\ConstantReferences;
     use ncc\Abstracts\Options\BuildConfigurationValues;
     use ncc\Classes\NccExtension\PackageCompiler;
     use ncc\Exceptions\AccessDeniedException;
@@ -88,9 +89,12 @@
 
             // Add both the defined constants from the build configuration and the global constants.
             // Global constants are overridden
-            $this->package->Header->RuntimeConstants = array_merge($selected_build_configuration->DefineConstants, $this->package->Header->RuntimeConstants);
-            $this->package->Header->RuntimeConstants = array_merge($this->project->Build->DefineConstants, $this->package->Header->RuntimeConstants);
-            $this->package->Header->RuntimeConstants = PackageCompiler::compileRuntimeConstants($this->package, $this->project, time());
+            $this->package->Header->RuntimeConstants = [];
+            $this->package->Header->RuntimeConstants = array_merge(
+                $selected_build_configuration->DefineConstants,
+                $this->project->Build->DefineConstants,
+                $this->package->Header->RuntimeConstants
+            );
 
             $this->package->Header->CompilerExtension = $this->project->Project->Compiler;
             $this->package->Header->CompilerVersion = NCC_VERSION_NUMBER;
@@ -188,6 +192,12 @@
             $this->compileExecutionPolicies();
             $this->compileComponents();
             $this->compileResources();
+
+            PackageCompiler::compilePackageConstants($this->package, [
+                ConstantReferences::Assembly => $this->project->Assembly,
+                ConstantReferences::Build => null,
+                ConstantReferences::DateTime => time()
+            ]);
 
             return $this->getPackage();
         }

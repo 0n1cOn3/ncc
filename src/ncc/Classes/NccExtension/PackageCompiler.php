@@ -4,6 +4,7 @@
 
     use Exception;
     use ncc\Abstracts\CompilerExtensions;
+    use ncc\Abstracts\ConstantReferences;
     use ncc\Abstracts\Options\BuildConfigurationValues;
     use ncc\Classes\PhpExtension\Compiler;
     use ncc\Exceptions\AccessDeniedException;
@@ -50,6 +51,7 @@
             $configuration = $manager->getProjectConfiguration();
 
             // Select the correct compiler for the specified extension
+            /** @noinspection PhpSwitchCanBeReplacedWithMatchExpressionInspection */
             switch(strtolower($configuration->Project->Compiler->Extension))
             {
                 case CompilerExtensions::PHP:
@@ -159,17 +161,22 @@
          * Compiles the special formatted constants
          *
          * @param Package $package
-         * @param ProjectConfiguration $project_configuration
          * @param int $timestamp
          * @return array
          */
-        public static function compileRuntimeConstants(Package $package, ProjectConfiguration $project_configuration, int $timestamp): array
+        public static function compileRuntimeConstants(Package $package, int $timestamp): array
         {
             $compiled_constants = [];
+
             foreach($package->Header->RuntimeConstants as $name => $value)
             {
-                $compiled_constants[$name] = self::regularConstants($value, $package, $timestamp);
+                $compiled_constants[$name] = self::compileConstants($value, [
+                    ConstantReferences::Assembly => $package->Assembly,
+                    ConstantReferences::DateTime => $timestamp,
+                    ConstantReferences::Build => null
+                ]);
             }
+
             return $compiled_constants;
         }
 
@@ -177,43 +184,112 @@
          * Compiles the constants in the package object
          *
          * @param Package $package
-         * @param int $timestamp
+         * @param array $refs
          * @return void
          */
-        public static function compilePackageConstants(Package &$package, int $timestamp): void
+        public static function compilePackageConstants(Package &$package, array $refs): void
         {
-            $assembly = [];
-            foreach($package->Assembly->toArray() as $key => $value)
+            if($package->Assembly !== null)
             {
-                $assembly[$key] = self::regularConstants($value, $package, $timestamp);
+                $assembly = [];
+                foreach($package->Assembly->toArray() as $key => $value)
+                {
+                    $assembly[$key] = self::compileConstants($value, $refs);
+                }
+                $package->Assembly = Assembly::fromArray($assembly);
+                unset($assembly);
             }
-            $package->Assembly = Assembly::fromArray($assembly);
 
-            foreach($package->ExecutionUnits as $executionUnit)
+            if($package->ExecutionUnits !== null && count($package->ExecutionUnits) > 0)
             {
-
+                $units = [];
+                foreach($package->ExecutionUnits as $executionUnit)
+                {
+                    $units[] = self::compileExecutionUnitConstants($executionUnit, $refs);
+                }
+                $package->ExecutionUnits = $units;
+                unset($units);
             }
-
-            unset($assembly);
         }
 
         /**
-         * Compiles regular constants
+         * Compiles the constants in a given execution unit
+         *
+         * @param Package\ExecutionUnit $unit
+         * @param array $refs
+         * @return Package\ExecutionUnit
+         */
+        public static function compileExecutionUnitConstants(Package\ExecutionUnit $unit, array $refs): Package\ExecutionUnit
+        {
+            $unit->ExecutionPolicy->Message = self::compileConstants($unit->ExecutionPolicy->Message, $refs);
+
+            if($unit->ExecutionPolicy->ExitHandlers !== null)
+            {
+                if($unit->ExecutionPolicy->ExitHandlers->Success !== null)
+                {
+                    $unit->ExecutionPolicy->ExitHandlers->Success->Message = self::compileConstants($unit->ExecutionPolicy->ExitHandlers->Success->Message, $refs);
+                }
+
+                if($unit->ExecutionPolicy->ExitHandlers->Error !== null)
+                {
+                    $unit->ExecutionPolicy->ExitHandlers->Error->Message = self::compileConstants($unit->ExecutionPolicy->ExitHandlers->Error->Message, $refs);
+                }
+
+                if($unit->ExecutionPolicy->ExitHandlers->Warning !== null)
+                {
+                    $unit->ExecutionPolicy->ExitHandlers->Warning->Error = self::compileConstants($unit->ExecutionPolicy->ExitHandlers->Warning->Message, $refs);
+                }
+            }
+
+            if($unit->ExecutionPolicy->Execute !== null)
+            {
+                if($unit->ExecutionPolicy->Execute->Target !== null)
+                {
+                    $unit->ExecutionPolicy->Execute->Target = self::compileConstants($unit->ExecutionPolicy->Execute->Target, $refs);
+                }
+
+                if($unit->ExecutionPolicy->Execute->WorkingDirectory !== null)
+                {
+                    $unit->ExecutionPolicy->Execute->WorkingDirectory = self::compileConstants($unit->ExecutionPolicy->Execute->WorkingDirectory, $refs);
+                }
+
+                if($unit->ExecutionPolicy->Execute->Options !== null && count($unit->ExecutionPolicy->Execute->Options) > 0)
+                {
+                    $options = [];
+                    foreach($unit->ExecutionPolicy->Execute->Options as $key=>$value)
+                    {
+                        $options[self::compileConstants($key, $refs)] = self::compileConstants($value, $refs);
+                    }
+                    $unit->ExecutionPolicy->Execute->Options = $options;
+                }
+            }
+
+            return $unit;
+        }
+
+        /**
+         * Compiles multiple types of constants
          *
          * @param string|null $value
-         * @param Package $package
-         * @param int $timestamp
+         * @param array $refs
          * @return string|null
-         * @noinspection PhpUnnecessaryLocalVariableInspection
          */
-        private static function regularConstants(?string $value, Package $package, int $timestamp): ?string
+        public static function compileConstants(?string $value, array $refs): ?string
         {
             if($value == null)
                 return null;
 
-            $value = ConstantCompiler::compileAssemblyConstants($value, $package->Assembly);
-            $value = ConstantCompiler::compileBuildConstants($value);
-            $value = ConstantCompiler::compileDateTimeConstants($value, $timestamp);
+            if(isset($refs[ConstantReferences::Assembly]))
+                $value = ConstantCompiler::compileAssemblyConstants($value, $refs[ConstantReferences::Assembly]);
+
+            if(isset($refs[ConstantReferences::Build]))
+                $value = ConstantCompiler::compileBuildConstants($value);
+
+            if(isset($refs[ConstantReferences::DateTime]))
+                $value = ConstantCompiler::compileDateTimeConstants($value, $refs[ConstantReferences::DateTime]);
+
+            if(isset($refs[ConstantReferences::Install]))
+                $value = ConstantCompiler::compileInstallConstants($value, $refs[ConstantReferences::Install]);
 
             return $value;
         }

@@ -6,7 +6,9 @@
 
     use Exception;
     use ncc\Abstracts\CompilerExtensions;
+    use ncc\Abstracts\ConstantReferences;
     use ncc\Abstracts\Scopes;
+    use ncc\Classes\NccExtension\PackageCompiler;
     use ncc\Classes\PhpExtension\Installer;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
@@ -74,6 +76,9 @@
                 default => throw new UnsupportedCompilerExtensionException('The compiler extension \'' . $extension . '\' is not supported'),
             };
             $execution_pointer_manager = new ExecutionPointerManager();
+            PackageCompiler::compilePackageConstants($package, [
+                ConstantReferences::Install => $installation_paths
+            ]);
 
             Console::out('Installing ' . $package->Assembly->Package);
 
