@@ -213,7 +213,7 @@
 
             if(strlen($message) > 0 && !Resolver::checkLogLevel(LogLevel::Error, Main::getLogLevel()))
             {
-                self::out(self::formatColor('Error: ', ConsoleColors::Red) . $message);
+                self::out(PHP_EOL . self::formatColor('Error: ', ConsoleColors::Red) . $message);
             }
 
             Console::out(PHP_EOL . '===== Exception Details =====');
@@ -260,7 +260,7 @@
                             'constants' => ncc::getConstants(),
                             'exception' => Functions::exceptionToArray($e)
                         ];
-                        IO::fwrite(getcwd() . DIRECTORY_SEPARATOR . time() . '.json', json_encode($dump, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+                        IO::fwrite(getcwd() . DIRECTORY_SEPARATOR . time() . '.json', json_encode($dump, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), 0777);
                     }
                     catch (Exception $e)
                     {
