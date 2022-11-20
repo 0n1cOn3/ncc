@@ -155,12 +155,17 @@
         /**
          * Checks if the input level matches the current level
          *
-         * @param string $input
-         * @param string $current_level
+         * @param string|null $input
+         * @param string|null $current_level
          * @return bool
          */
-        public static function checkLogLevel(string $input, string $current_level): bool
+        public static function checkLogLevel(?string $input, ?string $current_level): bool
         {
+            if($input == null)
+                return false;
+            if($current_level == null)
+                return false;
+
             $input = strtolower($input);
             if(!Validate::checkLogLevel($input))
                 return false;
