@@ -121,7 +121,7 @@
 
             // TODO: Re-implement the scanning process outside the compiler, as this is will be redundant
             // Scan for components first.
-            Console::out('Scanning for components... ', false);
+            Console::out('Scanning for components... ');
             /** @var SplFileInfo $item */
             /** @noinspection PhpRedundantOptionalArgumentInspection */
             foreach($DirectoryScanner($source_path, True) as $item)
@@ -133,6 +133,8 @@
                 $Component = new Package\Component();
                 $Component->Name = Functions::removeBasename($item->getPathname(), $this->path);
                 $this->package->Components[] = $Component;
+
+                Console::outVerbose(sprintf('found component %s', $Component->Name));
             }
 
             if(count($this->package->Components) > 0)
@@ -153,7 +155,7 @@
                 $selected_build_configuration->ExcludeFiles, ComponentFileExtensions::Php
             ));
 
-            Console::out('Scanning for resources... ', false);
+            Console::out('Scanning for resources... ');
             /** @var SplFileInfo $item */
             foreach($DirectoryScanner($source_path) as $item)
             {
@@ -165,6 +167,7 @@
                 $Resource->Name = Functions::removeBasename($item->getPathname(), $this->path);
                 $this->package->Resources[] = $Resource;
 
+                Console::outVerbose(sprintf('found resource %s', $Resource->Name));
             }
 
             if(count($this->package->Resources) > 0)
