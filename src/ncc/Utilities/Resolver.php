@@ -174,30 +174,30 @@
             if(!Validate::checkLogLevel($current_level))
                 return false;
 
-            switch($input)
+            switch($current_level)
             {
-                case LogLevel::Verbose:
-                    $levels = [
-                        LogLevel::Verbose,
-                        LogLevel::Debug,
-                        LogLevel::Info,
-                        LogLevel::Warning,
-                        LogLevel::Fatal,
-                        LogLevel::Error
-                    ];
-                    if(in_array($current_level, $levels))
-                        return true;
-                    return false;
-
                 case LogLevel::Debug:
                     $levels = [
                         LogLevel::Debug,
+                        LogLevel::Verbose,
                         LogLevel::Info,
                         LogLevel::Warning,
                         LogLevel::Fatal,
                         LogLevel::Error
                     ];
-                    if(in_array($current_level, $levels))
+                    if(in_array($input, $levels))
+                        return true;
+                    return false;
+
+                case LogLevel::Verbose:
+                    $levels = [
+                        LogLevel::Verbose,
+                        LogLevel::Info,
+                        LogLevel::Warning,
+                        LogLevel::Fatal,
+                        LogLevel::Error
+                    ];
+                    if(in_array($input, $levels))
                         return true;
                     return false;
 
@@ -208,7 +208,7 @@
                         LogLevel::Fatal,
                         LogLevel::Error
                     ];
-                    if(in_array($current_level, $levels))
+                    if(in_array($input, $levels))
                         return true;
                     return false;
 
@@ -218,7 +218,7 @@
                         LogLevel::Fatal,
                         LogLevel::Error
                     ];
-                    if(in_array($current_level, $levels))
+                    if(in_array($input, $levels))
                         return true;
                     return false;
 
@@ -227,12 +227,12 @@
                         LogLevel::Fatal,
                         LogLevel::Error
                     ];
-                    if(in_array($current_level, $levels))
+                    if(in_array($input, $levels))
                         return true;
                     return false;
 
                 case LogLevel::Fatal:
-                    if($current_level == LogLevel::Fatal)
+                    if($input == LogLevel::Fatal)
                         return true;
                     return false;
 
