@@ -83,8 +83,6 @@
             if($length == null)
             {
                 $length = $file->getSize();
-                if(!$length)
-                    throw new IOException(sprintf('Cannot determine file size for %s', $uri));
             }
             return $file->fread($length);
         }
