@@ -54,14 +54,9 @@
                 // Define CLI stuff
                 define('NCC_CLI_MODE', 1);
 
-                if(in_array(NccBuildFlags::Unstable, NCC_VERSION_FLAGS))
-                {
-                    Console::outWarning('This is an unstable build of NCC, expect some features to not work as expected');
-                }
-
                 if(isset(self::$args['l']) || isset(self::$args['log-level']))
                 {
-                    switch((self::$args['l'] ?? self::$args['log-level']))
+                    switch(strtolower(self::$args['l'] ?? self::$args['log-level']))
                     {
                         case LogLevel::Silent:
                         case LogLevel::Fatal:
@@ -70,16 +65,23 @@
                         case LogLevel::Info:
                         case LogLevel::Debug:
                         case LogLevel::Verbose:
-                            self::$log_level = (self::$args['l'] ?? self::$args['log-level']);
+                            self::$log_level = strtolower(self::$args['l'] ?? self::$args['log-level']);
                             break;
 
                         default:
                             Console::outWarning('Unknown log level: ' . (self::$args['l'] ?? self::$args['log-level']) . ', using \'info\'');
+                            self::$log_level = LogLevel::Info;
+                            break;
                     }
                 }
                 else
                 {
                     self::$log_level = LogLevel::Info;
+                }
+
+                if(in_array(NccBuildFlags::Unstable, NCC_VERSION_FLAGS))
+                {
+                    Console::outWarning('This is an unstable build of NCC, expect some features to not work as expected');
                 }
 
                 try
