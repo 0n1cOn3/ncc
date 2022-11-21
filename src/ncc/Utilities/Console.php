@@ -25,6 +25,20 @@
             if(!ncc::cliMode())
                 return;
 
+            if(Main::getLogLevel() !== null)
+            {
+                switch(Main::getLogLevel())
+                {
+                    case LogLevel::Verbose:
+                    case LogLevel::Debug:
+                    case LogLevel::Silent:
+                        return;
+
+                    default:
+                        break;
+                }
+            }
+
             static $start_time;
 
             // if we go over our bound, just ignore it
