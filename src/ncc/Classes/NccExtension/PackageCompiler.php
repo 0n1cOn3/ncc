@@ -5,8 +5,10 @@
     use Exception;
     use ncc\Abstracts\CompilerExtensions;
     use ncc\Abstracts\ConstantReferences;
+    use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\Options\BuildConfigurationValues;
     use ncc\Classes\PhpExtension\Compiler;
+    use ncc\CLI\Main;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\BuildConfigurationNotFoundException;
     use ncc\Exceptions\BuildException;
@@ -26,6 +28,7 @@
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\Utilities\Console;
     use ncc\Utilities\Functions;
+    use ncc\Utilities\Resolver;
 
     class PackageCompiler
     {
@@ -49,6 +52,14 @@
         public static function compile(ProjectManager $manager, string $build_configuration=BuildConfigurationValues::DefaultConfiguration): string
         {
             $configuration = $manager->getProjectConfiguration();
+
+            if(Main::getLogLevel() !== null && Resolver::checkLogLevel(LogLevel::Debug, Main::getLogLevel()))
+            {
+                foreach($configuration->Assembly->toArray() as $prop => $value)
+                    Console::outDebug(sprintf('assembly.%s: %s', $prop, $value));
+                foreach($configuration->Project->Compiler->toArray() as $prop => $value)
+                    Console::outDebug(sprintf('compiler.%s: %s', $prop, $value));
+            }
 
             // Select the correct compiler for the specified extension
             /** @noinspection PhpSwitchCanBeReplacedWithMatchExpressionInspection */
