@@ -25,7 +25,7 @@
 
         public function __construct(?Dependency $dependency=null)
         {
-            if(!$dependency)
+            if($dependency !== null)
             {
                 $this->PackageName = $dependency->Name;
                 $this->Version = $dependency->Version;

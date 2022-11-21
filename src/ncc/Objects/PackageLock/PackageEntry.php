@@ -146,6 +146,12 @@
             $latest_version = null;
             foreach($this->Versions as $version)
             {
+                $version = $version->Version;
+                if($latest_version == null)
+                {
+                    $latest_version = $version;
+                    continue;
+                }
                 if(VersionComparator::compareVersion($version, $latest_version))
                     $latest_version = $version;
             }
@@ -187,9 +193,9 @@
         public function toArray(bool $bytecode=false): array
         {
             $versions = [];
-            foreach($this->Versions as $dependency)
+            foreach($this->Versions as $version)
             {
-                $versions[] = $dependency->toArray($bytecode);
+                $versions[] = $version->toArray($bytecode);
             }
 
             return [
@@ -217,7 +223,7 @@
             {
                 foreach($versions as $_datum)
                 {
-                    $object->Versions[] = DependencyEntry::fromArray($_datum);
+                    $object->Versions[] = VersionEntry::fromArray($_datum);
                 }
             }
 

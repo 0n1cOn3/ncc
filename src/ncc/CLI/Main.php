@@ -77,6 +77,10 @@
                             Console::outWarning('Unknown log level: ' . (self::$args['l'] ?? self::$args['log-level']) . ', using \'info\'');
                     }
                 }
+                else
+                {
+                    self::$log_level = LogLevel::Info;
+                }
 
                 try
                 {

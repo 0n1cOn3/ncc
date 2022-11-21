@@ -24,12 +24,12 @@
     use ncc\ThirdParty\nikic\PhpParser\Comment;
     use ncc\ThirdParty\nikic\PhpParser\Node;
     use ncc\ThirdParty\nikic\PhpParser\NodeDumper;
+    use ncc\ThirdParty\nikic\PhpParser\PrettyPrinter\Standard;
     use ncc\ThirdParty\theseer\Autoload\CollectorException;
     use ncc\ThirdParty\theseer\Autoload\CollectorResult;
     use ncc\ThirdParty\theseer\Autoload\Config;
     use ncc\ThirdParty\theseer\Autoload\Factory;
     use ncc\Utilities\Base64;
-    use ncc\Utilities\Console;
     use ncc\Utilities\IO;
     use ReflectionClass;
     use ReflectionException;
@@ -81,15 +81,15 @@
                 case ComponentDataType::AST:
                     try
                     {
-                        $decoded_component = $this->decodeRecursive($component->Data);
+                        $stmts = $this->decodeRecursive($component->Data);
                     }
                     catch (Exception $e)
                     {
                         throw new ComponentDecodeException('Cannot decode component: ' . $component->Name . ', ' . $e->getMessage(), $e);
                     }
 
-                    $dumper = new NodeDumper();
-                    return $dumper->dump($decoded_component);
+                    $prettyPrinter = new Standard();
+                    return $prettyPrinter->prettyPrintFile($stmts);
 
                 case ComponentDataType::b64encoded:
                    return Base64::decode($component->Data);
@@ -114,9 +114,6 @@
          */
         public function postInstall(InstallationPaths $installationPaths): void
         {
-            Console::out('Generating autoloader');
-            Console::out('theseer\autoload - Copyright (c) 2010-2016 Arne Blankerts <arne@blankerts.de> and Contributors');
-            Console::out('theseer\DirectoryScanner - Copyright (c) 2009-2014 Arne Blankerts <arne@blankerts.de> All rights reserved.');
             $autoload_path = $installationPaths->getBinPath() . DIRECTORY_SEPARATOR . 'autoload.php';
             $autoload_src = $this->generateAutoload($installationPaths->getSourcePath(), $autoload_path);
             IO::fwrite($autoload_path, $autoload_src);
@@ -152,13 +149,10 @@
                     {
                         return $this->decodeComment($value);
                     }
-
                     return $this->decodeNode($value);
                 }
-
                 return $this->decodeArray($value);
             }
-
             return $value;
         }
 
@@ -182,11 +176,10 @@
          * @return Node
          * @throws ReflectionException
          */
-        private function decodeNode(array $value): Node
+        private function decodeNode(array $value) : Node
         {
             $nodeType = $value['nodeType'];
-
-            if(!is_string($nodeType))
+            if (!is_string($nodeType))
             {
                 throw new RuntimeException('Node type must be a string');
             }
@@ -195,8 +188,7 @@
             /** @var Node $node */
             $node = $reflectionClass->newInstanceWithoutConstructor();
 
-            if (isset($value['attributes']))
-            {
+            if (isset($value['attributes'])) {
                 if (!is_array($value['attributes']))
                 {
                     throw new RuntimeException('Attributes must be an array');
@@ -205,8 +197,7 @@
                 $node->setAttributes($this->decodeArray($value['attributes']));
             }
 
-            foreach ($value as $name => $subNode)
-            {
+            foreach ($value as $name => $subNode) {
                 if ($name === 'nodeType' || $name === 'attributes')
                 {
                     continue;
@@ -222,10 +213,9 @@
          * @param array $value
          * @return Comment
          */
-        private function decodeComment(array $value): Comment
+        private function decodeComment(array $value) : Comment
         {
             $className = $value['nodeType'] === 'Comment' ? Comment::class : Comment\Doc::class;
-
             if (!isset($value['text']))
             {
                 throw new RuntimeException('Comment must have text');
@@ -243,14 +233,13 @@
          * @return ReflectionClass
          * @throws ReflectionException
          */
-        private function reflectionClassFromNodeType(string $nodeType): ReflectionClass
+        private function reflectionClassFromNodeType(string $nodeType) : ReflectionClass
         {
             if (!isset($this->reflectionClassCache[$nodeType]))
             {
                 $className = $this->classNameFromNodeType($nodeType);
                 $this->reflectionClassCache[$nodeType] = new ReflectionClass($className);
             }
-
             return $this->reflectionClassCache[$nodeType];
         }
 
@@ -258,9 +247,9 @@
          * @param string $nodeType
          * @return string
          */
-        private function classNameFromNodeType(string $nodeType): string
+        private function classNameFromNodeType(string $nodeType) : string
         {
-            $className = 'PhpParser\\Node\\' . strtr($nodeType, '_', '\\');
+            $className = 'ncc\\ThirdParty\\nikic\\PhpParser\\Node\\' . strtr($nodeType, '_', '\\');
             if (class_exists($className))
             {
                 return $className;
@@ -274,7 +263,6 @@
 
             throw new RuntimeException("Unknown node type \"$nodeType\"");
         }
-
 
         /**
          * Processes the project and generates the autoloader source code.
@@ -293,11 +281,12 @@
             // Construct configuration
             $configuration = new Config([$src]);
             $configuration->setFollowSymlinks(false); // Don't follow symlinks, it won't work on some systems.
-            $configuration->setTrusting(false); // Paranoid
+            $configuration->setTrusting(true); // Paranoid
             $configuration->setOutputFile($output);
             $configuration->setStaticMode(false);
             // Official PHP file extensions that are missing from the default configuration (whatever)
             $configuration->setInclude(ComponentFileExtensions::Php);
+            $configuration->setQuietMode(true);
 
             // Construct factory
             $factory = new Factory();
@@ -310,14 +299,6 @@
             if(!$result->hasUnits())
             {
                 throw new NoUnitsFoundException('No units were found in the project');
-            }
-
-            if(!$result->hasDuplicates())
-            {
-                foreach($result->getDuplicates() as $unit => $files)
-                {
-                    Console::outWarning((count($files) -1). ' duplicate unit(s) detected in the project: ' . $unit);
-                }
             }
 
             $template = IO::fread($configuration->getTemplate());

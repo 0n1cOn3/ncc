@@ -306,11 +306,11 @@
                 $_execution_units[] = $unit->toArray($bytecode);
 
             return [
-                ($bytecode ? Functions::cbc('header') : 'header') => $this->Header->toArray($bytecode),
-                ($bytecode ? Functions::cbc('assembly') : 'assembly') => $this->Assembly->toArray($bytecode),
+                ($bytecode ? Functions::cbc('header') : 'header') => $this?->Header?->toArray($bytecode),
+                ($bytecode ? Functions::cbc('assembly') : 'assembly') => $this?->Assembly?->toArray($bytecode),
                 ($bytecode ? Functions::cbc('dependencies') : 'dependencies') => $_dependencies,
-                ($bytecode ? Functions::cbc('main_execution_policy') : 'main_execution_policy') => $this->MainExecutionPolicy,
-                ($bytecode ? Functions::cbc('installer') : 'installer') => $this->Installer?->toArray($bytecode),
+                ($bytecode ? Functions::cbc('main_execution_policy') : 'main_execution_policy') => $this?->MainExecutionPolicy,
+                ($bytecode ? Functions::cbc('installer') : 'installer') => $this?->Installer?->toArray($bytecode),
                 ($bytecode ? Functions::cbc('execution_units') : 'execution_units') => $_execution_units,
                 ($bytecode ? Functions::cbc('resources') : 'resources') => $_resources,
                 ($bytecode ? Functions::cbc('components') : 'components') => $_components

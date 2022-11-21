@@ -92,7 +92,7 @@
             $object = new self();
             $object->Version = Functions::array_bc($data, 'version');
             $object->Compiler = Compiler::fromArray(Functions::array_bc($data, 'compiler'));
-            $object->MainExecutionPolicy = Compiler::fromArray(Functions::array_bc($data, 'main_execution_policy'));
+            $object->MainExecutionPolicy = Functions::array_bc($data, 'main_execution_policy');
 
             $dependencies = Functions::array_bc($data, 'dependencies');
             if($dependencies !== null)

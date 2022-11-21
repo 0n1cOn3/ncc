@@ -61,6 +61,7 @@
             {
                 $package_entry = new PackageEntry();
                 $package_entry->addVersion($package, true);
+                $package_entry->Name = $package->Assembly->Package;
                 $this->Packages[$package->Assembly->Package] = $package_entry;
                 $this->update();
 
@@ -122,16 +123,16 @@
          */
         public function toArray(bool $bytecode): array
         {
-            $packages = [];
-            foreach($this->Packages as $package)
+            $package_entries = [];
+            foreach($this->Packages as $entry)
             {
-                $packages[] = $package->toArray($bytecode);
+                $package_entries[] = $entry->toArray($bytecode);
             }
 
             return [
                 ($bytecode ? Functions::cbc('package_lock_version')  : 'package_lock_version') => $this->PackageLockVersion,
                 ($bytecode ? Functions::cbc('last_updated_timestamp') : 'last_updated_timestamp') => $this->LastUpdatedTimestamp,
-                ($bytecode ? Functions::cbc('packages') : 'packages') => $packages
+                ($bytecode ? Functions::cbc('packages') : 'packages') => $package_entries
              ];
         }
 
@@ -150,7 +151,8 @@
             {
                 foreach($packages as $_datum)
                 {
-                    $object->Packages[] = Package::fromArray($_datum);
+                    $entry = PackageEntry::fromArray($_datum);
+                    $object->Packages[$entry->Name] = $entry;
                 }
             }
 

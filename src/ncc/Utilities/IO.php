@@ -84,6 +84,12 @@
             {
                 $length = $file->getSize();
             }
+
+            if($length == 0)
+            {
+                return (string)null;
+            }
+
             return $file->fread($length);
         }
     }

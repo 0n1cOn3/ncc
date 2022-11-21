@@ -21,7 +21,7 @@
     use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Objects\InstallationPaths;
     use ncc\Objects\Package;
-    use ncc\Objects\PackageLock;
+    use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\Utilities\Console;
     use ncc\Utilities\IO;
     use ncc\Utilities\PathFinder;
@@ -35,7 +35,7 @@
         private $PackagesPath;
 
         /**
-         * @var PackageLock|null
+         * @var PackageLockManager|null
          */
         private $PackageLockManager;
 
@@ -55,13 +55,14 @@
          *
          * @param string $input
          * @return string
+         * @throws AccessDeniedException
          * @throws FileNotFoundException
          * @throws IOException
          * @throws InstallationException
+         * @throws PackageLockException
          * @throws PackageParsingException
          * @throws UnsupportedCompilerExtensionException
          * @throws UnsupportedRunnerException
-         * @throws AccessDeniedException
          */
         public function install(string $input): string
         {
@@ -82,8 +83,8 @@
 
             Console::out('Installing ' . $package->Assembly->Package);
 
-            // 3 For preInstall, postInstall & initData methods
-            $steps = (3 + count($package->Components) + count ($package->Resources) + count ($package->ExecutionUnits));
+            // 4 For Directory Creation, preInstall, postInstall & initData methods
+            $steps = (4 + count($package->Components) + count ($package->Resources) + count ($package->ExecutionUnits));
 
             // Include the Execution units
             if($package->Installer?->PreInstall !== null)
@@ -92,6 +93,21 @@
                 $steps += count($package->Installer->PostInstall);
 
             $current_steps = 0;
+            $filesystem = new Filesystem();
+
+            try
+            {
+                $filesystem->mkdir($installation_paths->getInstallationPath());
+                $filesystem->mkdir($installation_paths->getBinPath());
+                $filesystem->mkdir($installation_paths->getDataPath());
+                $filesystem->mkdir($installation_paths->getSourcePath());
+                $current_steps += 1;
+                Console::inlineProgressBar($current_steps, $steps);
+            }
+            catch(Exception $e)
+            {
+                throw new InstallationException('Error while creating directory, ' . $e->getMessage(), $e);
+            }
 
             try
             {
@@ -144,6 +160,9 @@
                     if($data !== null)
                     {
                         $component_path = $installation_paths->getSourcePath() . DIRECTORY_SEPARATOR . $component->Name;
+                        $component_dir = dirname($component_path);
+                        if(!$filesystem->exists($component_dir))
+                            $filesystem->mkdir($component_dir);
                         IO::fwrite($component_path, $data);
                     }
                 }
@@ -165,6 +184,9 @@
                     if($data !== null)
                     {
                         $resource_path = $installation_paths->getSourcePath() . DIRECTORY_SEPARATOR . $resource->Name;
+                        $resource_dir = dirname($resource_path);
+                        if(!$filesystem->exists($resource_dir))
+                            $filesystem->mkdir($resource_dir);
                         IO::fwrite($resource_path, $data);
                     }
                 }
@@ -224,9 +246,8 @@
                 }
             }
 
-
-            $this->PackageLockManager->addPackage($package);
-
+            $this->PackageLockManager->getPackageLock()->addPackage($package);
+            $this->PackageLockManager->save();
             return $package->Assembly->Package;
         }
 
@@ -270,9 +291,9 @@
         }
 
         /**
-         * @return PackageLock|null
+         * @return PackageLockManager|null
          */
-        public function getPackageLockManager(): ?PackageLock
+        public function getPackageLockManager(): ?PackageLockManager
         {
             if($this->PackageLockManager == null)
             {

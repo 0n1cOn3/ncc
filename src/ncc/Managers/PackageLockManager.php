@@ -12,6 +12,7 @@
     use ncc\Exceptions\PackageLockException;
     use ncc\Objects\PackageLock;
     use ncc\Utilities\IO;
+    use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
     use ncc\ZiProto\ZiProto;
 
@@ -32,21 +33,16 @@
          */
         public function __construct()
         {
-            if(file_exists($this->PackageLockPath) && is_file($this->PackageLockPath))
+            /** @noinspection PhpUnhandledExceptionInspection */
+            $this->PackageLockPath = PathFinder::getPackageLock(Scopes::System);
+
+            try
             {
-                try
-                {
-                    $this->PackageLock = PackageLock::fromArray(ZiProto::decode(IO::fread($this->PackageLockPath)));
-                }
-                /** @noinspection PhpUnusedLocalVariableInspection */
-                catch(Exception $e)
-                {
-                    $this->PackageLock = new PackageLock();
-                }
+                $this->load();
             }
-            else
+            catch (PackageLockException $e)
             {
-                $this->PackageLock = new PackageLock();
+                unset($e);
             }
         }
 
@@ -62,7 +58,15 @@
             {
                 try
                 {
-                    $this->PackageLock = PackageLock::fromArray(ZiProto::decode(IO::fread($this->PackageLockPath)));
+                    $data = IO::fread($this->PackageLockPath);
+                    if(strlen($data) > 0)
+                    {
+                        $this->PackageLock = PackageLock::fromArray(ZiProto::decode($data));
+                    }
+                    else
+                    {
+                        $this->PackageLock = new PackageLock();
+                    }
                 }
                 catch(Exception $e)
                 {
@@ -91,16 +95,13 @@
             if(Resolver::resolveScope() !== Scopes::System)
                 throw new AccessDeniedException('Cannot write to PackageLock, insufficient permissions');
 
-            if(file_exists($this->PackageLockPath) && is_writable($this->PackageLockPath))
+            try
             {
-                try
-                {
-                    IO::fwrite($this->PackageLockPath, ZiProto::encode($this->PackageLock->toArray(true)));
-                }
-                catch(IOException $e)
-                {
-                    throw new PackageLockException('Cannot save the package lock file to disk', $e);
-                }
+                IO::fwrite($this->PackageLockPath, ZiProto::encode($this->PackageLock->toArray(true)));
+            }
+            catch(IOException $e)
+            {
+                throw new PackageLockException('Cannot save the package lock file to disk', $e);
             }
 
         }
