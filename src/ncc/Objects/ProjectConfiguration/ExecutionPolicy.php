@@ -4,6 +4,7 @@
 
     namespace ncc\Objects\ProjectConfiguration;
 
+    use ncc\Objects\InstallationPaths;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy\Execute;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy\ExitHandlers;
     use ncc\Utilities\Functions;
@@ -45,7 +46,15 @@
          */
         public $ExitHandlers;
 
-        // TODO: Implement validation function
+        /**
+         * @param bool $throw_exception
+         * @return bool
+         */
+        public function validate(bool $throw_exception=True): bool
+        {
+            // TODO: Implement validation method
+            return true;
+        }
 
         /**
          * Returns an array representation of the object
