@@ -148,7 +148,7 @@
             if(Main::getLogLevel() !== null && !Resolver::checkLogLevel(LogLevel::Verbose, Main::getLogLevel()))
                 return;
 
-            self::out(self::formatColor(' - ', ConsoleColors::LightCyan) . $message, $newline);
+            self::out(self::formatColor('VRB: ', ConsoleColors::LightCyan) . $message, $newline);
         }
 
 
