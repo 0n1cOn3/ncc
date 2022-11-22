@@ -16,9 +16,9 @@
          *
          * @param $key
          * @param $value
-         * @return string
+         * @return mixed
          */
-        public static function set($key, $value): string
+        public static function set($key, $value)
         {
             self::$cache[$key] = $value;
             return $value;
