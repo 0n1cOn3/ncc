@@ -11,6 +11,11 @@
     class Console
     {
         /**
+         * @var int
+         */
+        private static $largestTickLength = 0;
+
+        /**
          * Inline Progress bar, created by dealnews.com.
          *
          * @param int $value
@@ -92,19 +97,52 @@
         }
 
         /**
+         * Appends a verbose prefix to the message
+         *
+         * @param string $log_level
+         * @param string $input
+         * @return string
+         */
+        private static function setPrefix(string $log_level, string $input): string
+        {
+            $input = match ($log_level) {
+                LogLevel::Verbose => self::formatColor('VRB:', ConsoleColors::LightCyan) . " $input",
+                LogLevel::Debug => self::formatColor('DBG:', ConsoleColors::LightMagenta) . " $input",
+                LogLevel::Info => self::formatColor('INF:', ConsoleColors::White) . " $input",
+                LogLevel::Warning => self::formatColor('WRN:', ConsoleColors::Yellow) . " $input",
+                LogLevel::Error => self::formatColor('ERR:', ConsoleColors::LightRed) . " $input",
+                LogLevel::Fatal => self::formatColor('FTL:', ConsoleColors::LightRed) . " $input",
+                default => self::formatColor('MSG:', ConsoleColors::Default) . " $input",
+            };
+
+            $tick_time = (string)microtime(true);
+            if(strlen($tick_time) > self::$largestTickLength)
+                self::$largestTickLength = strlen($tick_time);
+            if(strlen($tick_time) < self::$largestTickLength)
+                /** @noinspection PhpRedundantOptionalArgumentInspection */
+                $tick_time = str_pad($tick_time, (strlen($tick_time) + (self::$largestTickLength - strlen($tick_time))), ' ', STR_PAD_RIGHT);
+
+            return '[' . $tick_time . ' - ' . date('TH:i:sP') . '] ' . $input;
+        }
+
+        /**
          * Simple output function
          *
          * @param string $message
          * @param bool $newline
+         * @param bool $no_prefix
          * @return void
          */
-        public static function out(string $message, bool $newline=true): void
+        public static function out(string $message, bool $newline=true, bool $no_prefix=false): void
         {
             if(!ncc::cliMode())
                 return;
 
             if(Main::getLogLevel() !== null && !Resolver::checkLogLevel(LogLevel::Info, Main::getLogLevel()))
                 return;
+
+            if(Main::getLogLevel() !== null && Resolver::checkLogLevel(LogLevel::Verbose, Main::getLogLevel()) && !$no_prefix)
+                $message = self::setPrefix(LogLevel::Info, $message);
 
             if($newline)
             {
@@ -130,7 +168,22 @@
             if(Main::getLogLevel() !== null && !Resolver::checkLogLevel(LogLevel::Debug, Main::getLogLevel()))
                 return;
 
-            self::out(self::formatColor('DBG: ', ConsoleColors::LightMagenta) . $message, $newline);
+            $backtrace = null;
+            if(function_exists('debug_backtrace'))
+                $backtrace = debug_backtrace();
+            $trace_msg = null;
+            if($backtrace !== null && isset($backtrace[1]))
+            {
+                $trace_msg = Console::formatColor($backtrace[1]['class'], ConsoleColors::LightGray);
+                $trace_msg .= $backtrace[1]['type'];
+                $trace_msg .= Console::formatColor($backtrace[1]['function'] . '()', ConsoleColors::LightGreen);
+                $trace_msg .= ' > ';
+            }
+
+            /** @noinspection PhpUnnecessaryStringCastInspection */
+            $message = self::setPrefix(LogLevel::Debug, (string)$trace_msg . $message);
+
+            self::out($message, $newline, true);
         }
 
         /**
@@ -148,7 +201,7 @@
             if(Main::getLogLevel() !== null && !Resolver::checkLogLevel(LogLevel::Verbose, Main::getLogLevel()))
                 return;
 
-            self::out(self::formatColor('VRB: ', ConsoleColors::LightCyan) . $message, $newline);
+            self::out(self::setPrefix(LogLevel::Verbose, $message), $newline, true);
         }
 
 
@@ -185,6 +238,12 @@
             if(Main::getLogLevel() !== null && !Resolver::checkLogLevel(LogLevel::Warning, Main::getLogLevel()))
                 return;
 
+            if(Main::getLogLevel() !== null && Resolver::checkLogLevel(LogLevel::Verbose, Main::getLogLevel()))
+            {
+                self::out(self::setPrefix(LogLevel::Warning, $message), $newline, true);
+                return;
+            }
+
             self::out(self::formatColor('Warning: ', ConsoleColors::Yellow) . $message, $newline);
         }
 
@@ -204,7 +263,14 @@
             if(Main::getLogLevel() !== null && !Resolver::checkLogLevel(LogLevel::Error, Main::getLogLevel()))
                 return;
 
-            self::out(self::formatColor(ConsoleColors::Red, 'Error: ') . $message, $newline);
+            if(Main::getLogLevel() !== null && Resolver::checkLogLevel(LogLevel::Verbose, Main::getLogLevel()))
+            {
+                self::out(self::setPrefix(LogLevel::Error, $message), $newline, true);
+            }
+            else
+            {
+                self::out(self::formatColor(ConsoleColors::Red, 'Error: ') . $message, $newline);
+            }
 
             if($exit_code !== null)
             {
