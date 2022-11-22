@@ -287,6 +287,8 @@
          *
          * @param string $package
          * @return PackageEntry|null
+         * @throws PackageLockException
+         * @throws PackageLockException
          */
         public function getPackage(string $package): ?PackageEntry
         {
@@ -300,6 +302,7 @@
          * @param string $version
          * @return VersionEntry|null
          * @throws VersionNotFoundException
+         * @throws PackageLockException
          */
         public function getPackageVersion(string $package, string $version): ?VersionEntry
         {
@@ -312,6 +315,7 @@
          * @param string $package
          * @return VersionEntry|null
          * @throws VersionNotFoundException
+         * @throws PackageLockException
          */
         public function getLatestVersion(string $package): ?VersionEntry
         {
@@ -322,6 +326,8 @@
          * Returns an array of all packages and their installed versions
          *
          * @return array
+         * @throws PackageLockException
+         * @throws PackageLockException
          */
         public function getInstalledPackages(): array
         {
