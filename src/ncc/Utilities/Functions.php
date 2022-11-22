@@ -34,7 +34,11 @@
          */
         public static function cbc(string $input): string
         {
-            return hash('crc32', $input, true);
+            $cache = RuntimeCache::get("cbc_$input");
+            if($cache !== null)
+                return $cache;
+
+            return RuntimeCache::set("cbc_$input", hash('crc32', $input, true));
         }
 
         /**
@@ -273,5 +277,19 @@
             }
 
             return $exception;
+        }
+
+        /**
+         * Takes the input bytes and converts it to a readable unit representation
+         *
+         * @param int $bytes
+         * @param int $decimals
+         * @return string
+         */
+        public static function b2u(int $bytes, int $decimals=2): string
+        {
+            $size = array('B','kB','MB','GB','TB','PB','EB','ZB','YB');
+            $factor = floor((strlen($bytes) - 1) / 3);
+            return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$size[$factor];
         }
     }
