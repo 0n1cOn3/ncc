@@ -133,6 +133,19 @@
         }
 
         /**
+         * Returns an array of all packages and their installed versions
+         *
+         * @return array
+         */
+        public function getPackages(): array
+        {
+            $results = [];
+            foreach($this->Packages as $package => $entry)
+                $results[$package] = $entry->getVersions();
+            return $results;
+        }
+
+        /**
          * Returns an array representation of the object
          *
          * @param bool $bytecode
