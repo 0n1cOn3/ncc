@@ -17,6 +17,7 @@
     use ncc\Exceptions\InstallationException;
     use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\IOException;
+    use ncc\Exceptions\PackageAlreadyInstalledException;
     use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackageParsingException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
@@ -65,10 +66,12 @@
          * @throws FileNotFoundException
          * @throws IOException
          * @throws InstallationException
+         * @throws PackageAlreadyInstalledException
          * @throws PackageLockException
          * @throws PackageParsingException
          * @throws UnsupportedCompilerExtensionException
          * @throws UnsupportedRunnerException
+         * @throws VersionNotFoundException
          */
         public function install(string $input): string
         {
@@ -80,6 +83,10 @@
                 throw new FileNotFoundException('The specified file \'' . $input .' \' does not exist or is not readable.');
 
             $package = Package::load($input);
+
+            if($this->getPackageVersion($package->Assembly->Name, $package->Assembly->Version) !== null)
+                throw new PackageAlreadyInstalledException('The package ' . $package->Assembly->Name . '==' . $package->Assembly->Version . ' is already installed');
+
             $extension = $package->Header->CompilerExtension->Extension;
             $installation_paths = new InstallationPaths($this->PackagesPath . DIRECTORY_SEPARATOR . $package->Assembly->Package . '==' . $package->Assembly->Version);
             $installer = match ($extension) {
