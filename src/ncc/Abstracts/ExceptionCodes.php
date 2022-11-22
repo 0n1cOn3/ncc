@@ -30,6 +30,7 @@
     use ncc\Exceptions\MalformedJsonException;
     use ncc\Exceptions\NoAvailableUnitsException;
     use ncc\Exceptions\NoUnitsFoundException;
+    use ncc\Exceptions\PackageAlreadyInstalledException;
     use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackageParsingException;
     use ncc\Exceptions\ProjectAlreadyExistsException;
@@ -271,6 +272,11 @@
         const ExecutionUnitNotFoundException = -1743;
 
         /**
+         * @see PackageAlreadyInstalledException
+         */
+        const PackageAlreadyInstalledException = -1744;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -316,6 +322,7 @@
             self::ProjectConfigurationNotFoundException,
             self::RunnerExecutionException,
             self::NoAvailableUnitsException,
-            self::ExecutionUnitNotFoundException
+            self::ExecutionUnitNotFoundException,
+            self::PackageAlreadyInstalledException
         ];
     }
