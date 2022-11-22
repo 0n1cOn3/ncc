@@ -78,7 +78,7 @@
 
             $package = Package::load($input);
             $extension = $package->Header->CompilerExtension->Extension;
-            $installation_paths = new InstallationPaths($this->PackagesPath . DIRECTORY_SEPARATOR . $extension . DIRECTORY_SEPARATOR . $package->Assembly->Package);
+            $installation_paths = new InstallationPaths($this->PackagesPath . DIRECTORY_SEPARATOR . $package->Assembly->Package);
             $installer = match ($extension) {
                 CompilerExtensions::PHP => new Installer($package),
                 default => throw new UnsupportedCompilerExtensionException('The compiler extension \'' . $extension . '\' is not supported'),
