@@ -69,6 +69,9 @@
          */
         public function install(string $input): string
         {
+            if(Resolver::resolveScope() !== Scopes::System)
+                throw new AccessDeniedException('Insufficient permission to install packages');
+
             Console::outVerbose(sprintf('Installing %s', $input));
             if(!file_exists($input) || !is_file($input) || !is_readable($input))
                 throw new FileNotFoundException('The specified file \'' . $input .' \' does not exist or is not readable.');
