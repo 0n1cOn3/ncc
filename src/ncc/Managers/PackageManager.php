@@ -273,8 +273,9 @@
                 }
             }
 
-            $this->PackageLockManager->getPackageLock()->addPackage($package);
-            $this->PackageLockManager->save();
+            $this->getPackageLockManager()->getPackageLock()->addPackage($package);
+            $this->getPackageLockManager()->save();
+
             return $package->Assembly->Package;
         }
 
