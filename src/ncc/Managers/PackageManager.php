@@ -319,6 +319,16 @@
         }
 
         /**
+         * Returns an array of all packages and their installed versions
+         *
+         * @return array
+         */
+        public function getInstalledPackages(): array
+        {
+            return $this->getPackageLockManager()->getPackageLock()->getPackages();
+        }
+
+        /**
          * @param Package $package
          * @param InstallationPaths $paths
          * @throws InstallationException
@@ -363,7 +373,7 @@
         {
             if($this->PackageLockManager == null)
             {
-                $this->PackageLockManager = new PackageManager();
+                $this->PackageLockManager = new PackageLockManager();
             }
 
             return $this->PackageLockManager;
