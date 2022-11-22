@@ -44,6 +44,13 @@
         public $MainExecutionPolicy;
 
         /**
+         * The path where the package is located
+         *
+         * @var string
+         */
+        public $Location;
+
+        /**
          * Public Constructor
          */
         public function __construct()
@@ -78,6 +85,7 @@
                 ($bytecode ? Functions::cbc('dependencies')  : 'dependencies')  => $dependencies,
                 ($bytecode ? Functions::cbc('execution_units')  : 'execution_units')  => $execution_units,
                 ($bytecode ? Functions::cbc('main_execution_policy')  : 'main_execution_policy')  => $this->MainExecutionPolicy,
+                ($bytecode ? Functions::cbc('location')  : 'location')  => $this->Location,
             ];
         }
 
@@ -93,6 +101,7 @@
             $object->Version = Functions::array_bc($data, 'version');
             $object->Compiler = Compiler::fromArray(Functions::array_bc($data, 'compiler'));
             $object->MainExecutionPolicy = Functions::array_bc($data, 'main_execution_policy');
+            $object->Location = Functions::array_bc($data, 'location');
 
             $dependencies = Functions::array_bc($data, 'dependencies');
             if($dependencies !== null)
