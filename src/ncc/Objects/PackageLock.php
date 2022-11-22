@@ -53,14 +53,15 @@
 
         /**
          * @param Package $package
+         * @param string $install_path
          * @return void
          */
-        public function addPackage(Package $package): void
+        public function addPackage(Package $package, string $install_path): void
         {
             if(!isset($this->Packages[$package->Assembly->Package]))
             {
                 $package_entry = new PackageEntry();
-                $package_entry->addVersion($package, true);
+                $package_entry->addVersion($package, $install_path, true);
                 $package_entry->Name = $package->Assembly->Package;
                 $this->Packages[$package->Assembly->Package] = $package_entry;
                 $this->update();
@@ -113,6 +114,22 @@
             }
 
             return false;
+        }
+
+        /**
+         * Gets an existing package entry, returns null if no such entry exists
+         *
+         * @param string $package
+         * @return PackageEntry|null
+         */
+        public function getPackage(string $package): ?PackageEntry
+        {
+            if(isset($this->Packages[$package]))
+            {
+                return $this->Packages[$package];
+            }
+
+            return null;
         }
 
         /**
