@@ -21,8 +21,11 @@
     use ncc\Exceptions\PackageParsingException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedRunnerException;
+    use ncc\Exceptions\VersionNotFoundException;
     use ncc\Objects\InstallationPaths;
     use ncc\Objects\Package;
+    use ncc\Objects\PackageLock\PackageEntry;
+    use ncc\Objects\PackageLock\VersionEntry;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\Utilities\Console;
     use ncc\Utilities\IO;
@@ -78,7 +81,7 @@
 
             $package = Package::load($input);
             $extension = $package->Header->CompilerExtension->Extension;
-            $installation_paths = new InstallationPaths($this->PackagesPath . DIRECTORY_SEPARATOR . $package->Assembly->Package);
+            $installation_paths = new InstallationPaths($this->PackagesPath . DIRECTORY_SEPARATOR . $package->Assembly->Package . '==' . $package->Assembly->Version);
             $installer = match ($extension) {
                 CompilerExtensions::PHP => new Installer($package),
                 default => throw new UnsupportedCompilerExtensionException('The compiler extension \'' . $extension . '\' is not supported'),
@@ -273,10 +276,62 @@
                 }
             }
 
-            $this->getPackageLockManager()->getPackageLock()->addPackage($package);
+            $this->getPackageLockManager()->getPackageLock()->addPackage($package, $installation_paths->getInstallationPath());
             $this->getPackageLockManager()->save();
 
             return $package->Assembly->Package;
+        }
+
+        /**
+         * Returns an existing package entry, returns null if no such entry exists
+         *
+         * @param string $package
+         * @return PackageEntry|null
+         * @throws PackageLockException
+         * @throws PackageLockException
+         */
+        public function getPackage(string $package): ?PackageEntry
+        {
+            return $this->getPackageLockManager()->getPackageLock()->getPackage($package);
+        }
+
+        /**
+         * Returns an existing version entry, returns null if no such entry exists
+         *
+         * @param string $package
+         * @param string $version
+         * @return VersionEntry|null
+         * @throws VersionNotFoundException
+         * @throws PackageLockException
+         */
+        public function getPackageVersion(string $package, string $version): ?VersionEntry
+        {
+            return $this->getPackage($package)?->getVersion($version);
+        }
+
+        /**
+         * Returns the latest version of the package, or null if there is no entry
+         *
+         * @param string $package
+         * @return VersionEntry|null
+         * @throws VersionNotFoundException
+         * @throws PackageLockException
+         */
+        public function getLatestVersion(string $package): ?VersionEntry
+        {
+            return $this->getPackage($package)?->getVersion($this->getPackage($package)?->getLatestVersion());
+        }
+
+        /**
+         * Returns an array of all packages and their installed versions
+         *
+         * @return array
+         * @throws PackageLockException
+         * @throws PackageLockException
+         */
+        public function getInstalledPackages(): array
+        {
+            return $this->getPackageLockManager()->getPackageLock()->getPackages();
         }
 
         /**
@@ -315,17 +370,16 @@
                     throw new InstallationException('Cannot write to file \'' . $file . '\', ' . $e->getMessage(), $e);
                 }
             }
-
         }
 
         /**
          * @return PackageLockManager|null
          */
-        public function getPackageLockManager(): ?PackageLockManager
+        private function getPackageLockManager(): ?PackageLockManager
         {
             if($this->PackageLockManager == null)
             {
-                $this->PackageLockManager = new PackageManager();
+                $this->PackageLockManager = new PackageLockManager();
             }
 
             return $this->PackageLockManager;

@@ -120,9 +120,12 @@
 
         /**
          * @return PackageLock|null
+         * @throws PackageLockException
          */
         public function getPackageLock(): ?PackageLock
         {
+            if($this->PackageLock == null)
+                $this->load();
             return $this->PackageLock;
         }
     }

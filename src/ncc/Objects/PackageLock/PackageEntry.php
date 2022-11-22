@@ -102,10 +102,11 @@
          * false.
          *
          * @param Package $package
+         * @param string $install_path
          * @param bool $overwrite
          * @return bool
          */
-        public function addVersion(Package $package, bool $overwrite=false): bool
+        public function addVersion(Package $package, string $install_path, bool $overwrite=false): bool
         {
             try
             {
@@ -125,6 +126,7 @@
             $version->Compiler = $package->Header->CompilerExtension;
             $version->ExecutionUnits = $package->ExecutionUnits;
             $version->MainExecutionPolicy = $package->MainExecutionPolicy;
+            $version->Location = $install_path;
 
             foreach($package->Dependencies as $dependency)
             {
