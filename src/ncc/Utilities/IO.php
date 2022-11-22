@@ -29,6 +29,7 @@
                 throw new IOException(sprintf('Attempted to write data to a directory instead of a file: (%s)', $uri));
             }
 
+            Console::outDebug(sprintf('writing %s of data to %s', Functions::b2u(strlen($data)), $uri));
             $file = new SplFileObject($uri, $mode);
 
             if (!$file->flock(LOCK_EX | LOCK_NB))
@@ -90,6 +91,7 @@
                 return (string)null;
             }
 
+            Console::outDebug(sprintf('reading %s', $uri));
             return $file->fread($length);
         }
     }
