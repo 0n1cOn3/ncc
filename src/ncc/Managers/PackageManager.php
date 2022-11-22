@@ -7,9 +7,11 @@
     use Exception;
     use ncc\Abstracts\CompilerExtensions;
     use ncc\Abstracts\ConstantReferences;
+    use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\Scopes;
     use ncc\Classes\NccExtension\PackageCompiler;
     use ncc\Classes\PhpExtension\Installer;
+    use ncc\CLI\Main;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\InstallationException;
@@ -25,6 +27,7 @@
     use ncc\Utilities\Console;
     use ncc\Utilities\IO;
     use ncc\Utilities\PathFinder;
+    use ncc\Utilities\Resolver;
     use ncc\ZiProto\ZiProto;
 
     class PackageManager
@@ -66,6 +69,7 @@
          */
         public function install(string $input): string
         {
+            Console::outVerbose(sprintf('Installing %s', $input));
             if(!file_exists($input) || !is_file($input) || !is_readable($input))
                 throw new FileNotFoundException('The specified file \'' . $input .' \' does not exist or is not readable.');
 
@@ -80,6 +84,21 @@
             PackageCompiler::compilePackageConstants($package, [
                 ConstantReferences::Install => $installation_paths
             ]);
+
+            Console::outVerbose(sprintf('Successfully parsed %s', $package->Assembly->Package));
+
+            if(Resolver::checkLogLevel(LogLevel::Debug, Main::getLogLevel()))
+            {
+                Console::outDebug(sprintf('installer.install_path: %s', $installation_paths->getInstallationPath()));
+                Console::outDebug(sprintf('installer.data_path:    %s', $installation_paths->getDataPath()));
+                Console::outDebug(sprintf('installer.bin_path:     %s', $installation_paths->getBinPath()));
+                Console::outDebug(sprintf('installer.src_path:     %s', $installation_paths->getSourcePath()));
+
+                foreach($package->Assembly->toArray() as $prop => $value)
+                    Console::outDebug(sprintf('assembly.%s: %s', $prop, ($value ?? 'n/a')));
+                foreach($package->Header->CompilerExtension->toArray() as $prop => $value)
+                    Console::outDebug(sprintf('header.compiler.%s: %s', $prop, ($value ?? 'n/a')));
+            }
 
             Console::out('Installing ' . $package->Assembly->Package);
 
@@ -112,6 +131,7 @@
             try
             {
                 self::initData($package, $installation_paths);
+                Console::outDebug(sprintf('saving shadow package to %s', $installation_paths->getDataPath() . DIRECTORY_SEPARATOR . 'pkg'));
                 $package->save($installation_paths->getDataPath() . DIRECTORY_SEPARATOR . 'pkg');
                 $current_steps += 1;
                 Console::inlineProgressBar($current_steps, $steps);
@@ -154,6 +174,8 @@
             // Process & Install the components
             foreach($package->Components as $component)
             {
+                Console::outDebug(sprintf('processing component %s (%s)', $component->Name, $component->DataType));
+
                 try
                 {
                     $data = $installer->processComponent($component);
@@ -178,6 +200,8 @@
             // Process & Install the resources
             foreach($package->Resources as $resource)
             {
+                Console::outDebug(sprintf('processing resource %s', $resource->Name));
+
                 try
                 {
                     $data = $installer->processResource($resource);

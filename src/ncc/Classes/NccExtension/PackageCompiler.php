@@ -56,9 +56,9 @@
             if(Main::getLogLevel() !== null && Resolver::checkLogLevel(LogLevel::Debug, Main::getLogLevel()))
             {
                 foreach($configuration->Assembly->toArray() as $prop => $value)
-                    Console::outDebug(sprintf('assembly.%s: %s', $prop, $value));
+                    Console::outDebug(sprintf('assembly.%s: %s', $prop, ($value ?? 'n/a')));
                 foreach($configuration->Project->Compiler->toArray() as $prop => $value)
-                    Console::outDebug(sprintf('compiler.%s: %s', $prop, $value));
+                    Console::outDebug(sprintf('compiler.%s: %s', $prop, ($value ?? 'n/a')));
             }
 
             // Select the correct compiler for the specified extension

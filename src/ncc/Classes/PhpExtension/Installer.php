@@ -30,6 +30,7 @@
     use ncc\ThirdParty\theseer\Autoload\Config;
     use ncc\ThirdParty\theseer\Autoload\Factory;
     use ncc\Utilities\Base64;
+    use ncc\Utilities\Console;
     use ncc\Utilities\IO;
     use ReflectionClass;
     use ReflectionException;
@@ -130,7 +131,7 @@
         {
             if(!$resource->validateChecksum())
                 throw new ResourceChecksumException('Checksum validation failed for resource ' . $resource->Name . ', the package may be corrupted.');
-            return $resource->Data;
+            return Base64::decode($resource->Data);
         }
 
         /**

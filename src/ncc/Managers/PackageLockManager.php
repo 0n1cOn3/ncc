@@ -11,6 +11,7 @@
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\PackageLockException;
     use ncc\Objects\PackageLock;
+    use ncc\Utilities\Console;
     use ncc\Utilities\IO;
     use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
@@ -58,6 +59,7 @@
             {
                 try
                 {
+                    Console::outDebug('reading package lock file');
                     $data = IO::fread($this->PackageLockPath);
                     if(strlen($data) > 0)
                     {

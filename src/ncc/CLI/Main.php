@@ -79,6 +79,13 @@
                     self::$log_level = LogLevel::Info;
                 }
 
+                if(Resolver::checkLogLevel(self::$log_level, LogLevel::Debug))
+                {
+                    Console::outDebug('Debug logging enabled');
+                    Console::outDebug(sprintf('consts: %s', json_encode(ncc::getConstants(), JSON_UNESCAPED_SLASHES)));
+                    Console::outDebug(sprintf('args: %s', json_encode(self::$args, JSON_UNESCAPED_SLASHES)));
+                }
+
                 if(in_array(NccBuildFlags::Unstable, NCC_VERSION_FLAGS))
                 {
                     Console::outWarning('This is an unstable build of NCC, expect some features to not work as expected');
@@ -132,10 +139,12 @@
         }
 
         /**
-         * @return string|null
+         * @return string
          */
-        public static function getLogLevel(): ?string
+        public static function getLogLevel(): string
         {
+            if(self::$log_level == null)
+                self::$log_level = LogLevel::Info;
             return self::$log_level;
         }
 

@@ -241,6 +241,8 @@
                 $resource->Name = str_replace($this->project->Build->SourcePath, (string)null, $resource->Name);
                 $resource->updateChecksum();
                 $resources[] = $resource;
+
+                Console::outDebug(sprintf('processed resource %s', $resource->Name));
             }
 
             // Update the resources
@@ -310,6 +312,8 @@
                 $component->updateChecksum();
                 $components[] = $component;
                 $processed_items += 1;
+
+                Console::outDebug(sprintf('processed component %s (%s)', $component->Name, $component->DataType));
             }
 
             if(ncc::cliMode() && $total_items > 5)
