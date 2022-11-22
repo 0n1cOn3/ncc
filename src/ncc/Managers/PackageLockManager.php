@@ -15,6 +15,7 @@
     use ncc\Utilities\IO;
     use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
+    use ncc\Utilities\RuntimeCache;
     use ncc\ZiProto\ZiProto;
 
     class PackageLockManager
@@ -55,6 +56,12 @@
          */
         public function load(): void
         {
+            if(RuntimeCache::get($this->PackageLockPath) !== null)
+            {
+                $this->PackageLock = RuntimeCache::get($this->PackageLockPath);
+                return;
+            }
+
             if(file_exists($this->PackageLockPath) && is_file($this->PackageLockPath))
             {
                 try
@@ -79,6 +86,8 @@
             {
                 $this->PackageLock = new PackageLock();
             }
+
+            RuntimeCache::set($this->PackageLockPath, $this->PackageLock);
         }
 
         /**
@@ -100,6 +109,7 @@
             try
             {
                 IO::fwrite($this->PackageLockPath, ZiProto::encode($this->PackageLock->toArray(true)));
+                RuntimeCache::set($this->PackageLockPath, $this->PackageLock);
             }
             catch(IOException $e)
             {
