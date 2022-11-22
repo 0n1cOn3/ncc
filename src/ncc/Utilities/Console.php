@@ -215,6 +215,11 @@
          */
         public static function formatColor(string $input, string $color_code, bool $persist=true): string
         {
+            if(Main::getArgs() !== null && isset(Main::getArgs()['no-color']))
+            {
+                return $input;
+            }
+
             if($persist)
             {
                 return $color_code . $input . ConsoleColors::Default;
