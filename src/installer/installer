@@ -13,11 +13,7 @@
 <?PHP
 
     use ncc\Abstracts\ConsoleColors;
-    use ncc\Abstracts\Scopes;
-    use ncc\Exceptions\ComponentVersionNotFoundException;
     use ncc\Exceptions\FileNotFoundException;
-    use ncc\Exceptions\InvalidScopeException;
-    use ncc\Managers\CredentialManager;
     use ncc\ncc;
     use ncc\Objects\CliHelpSection;
     use ncc\ThirdParty\Symfony\Filesystem\Exception\IOException;
@@ -30,7 +26,6 @@
     use ncc\Utilities\Console;
     use ncc\Utilities\Functions;
     use ncc\Utilities\IO;
-    use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
     use ncc\Utilities\Validate;
     use ncc\ZiProto\ZiProto;
@@ -305,7 +300,7 @@
         {
             Console::out(Console::formatColor($full_name, ConsoleColors::Green) . ' Version: ' . Console::formatColor($component->getVersion(), ConsoleColors::LightMagenta));
         }
-        catch (ComponentVersionNotFoundException $e)
+        catch (Exception $e)
         {
             Console::outWarning('Cannot determine component version of ' . Console::formatColor($full_name, ConsoleColors::Green));
         }
@@ -614,27 +609,14 @@
         Console::inlineProgressBar($processed_items, $total_items);
     }
 
-    // Create credential store if needed
-    Console::out('Processing Credential Store');
-    $credential_manager = new CredentialManager();
-
     try
     {
-        $credential_manager->constructStore();
+        Functions::initializeFiles();
     }
-    catch (Exception $e)
+    catch(Exception $e)
     {
-        Console::outError('Cannot construct credential store, ' . $e->getMessage() . ' (Error Code: ' . $e->getCode() . ')');
-    }
-
-    try
-    {
-        $NCC_FILESYSTEM->touch([PathFinder::getPackageLock(Scopes::System)]);
-    }
-    catch (InvalidScopeException $e)
-    {
-        Console::outError('Cannot create package lock, ' . $e->getMessage(), true, 1);
-        return;
+        Console::outError('Cannot initialize NCC files, ' . $e->getMessage());
+        exit(1);
     }
 
     // Generate executable shortcut
