@@ -7,7 +7,6 @@
     use ncc\Abstracts\Scopes;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
-    use ncc\Exceptions\PackageLockException;
     use ncc\Managers\PackageManager;
     use ncc\Objects\CliHelpSection;
     use ncc\Objects\Package;
@@ -126,6 +125,12 @@
             if(!file_exists($path) || !is_file($path) || !is_readable($path))
                 throw new FileNotFoundException('The specified file \'' . $path .' \' does not exist or is not readable.');
 
+            $user_confirmation = false;
+            if(isset($args['y']) || isset($args['Y']))
+            {
+                $user_confirmation = (bool)($args['y'] ?? $args['Y']);
+            }
+
             try
             {
                 $package = Package::load($path);
@@ -186,7 +191,8 @@
                     Console::formatColor($package->Header->CompilerExtension->MinimumVersion, ConsoleColors::LightMagenta)
                 ));
 
-            $user_confirmation = Console::getBooleanInput(sprintf('Do you want to install %s', $package->Assembly->Package));
+            if(!$user_confirmation)
+                $user_confirmation = Console::getBooleanInput(sprintf('Do you want to install %s', $package->Assembly->Package));
 
             if($user_confirmation)
             {
