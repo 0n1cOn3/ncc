@@ -71,6 +71,7 @@
             }
             catch (Exception $e)
             {
+                unset($e);
                 Console::out('No packages installed');
                 exit(0);
             }
