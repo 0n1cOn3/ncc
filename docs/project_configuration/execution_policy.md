@@ -10,7 +10,7 @@ For instance, you can have a script that is executed before
 the build process starts, or in different installation stages
 when the user is installing your package you can have a unit
 run before or after the installation/uninstallation process
-starts.
+starts.#
 
 Use cases such as this allows you to properly implement
 and control your program's files & assets that are not
@@ -26,6 +26,9 @@ handled by NCC's compiler extensions.
     * [Object Properties](#object-properties)
     * [JSON Example](#json-example)
   * [ExecutionConfiguration Object](#executionconfiguration-object)
+    * [Object Properties](#object-properties)
+    * [JSON Example](#json-example)
+  * [ExitHandler Object](#exithandler-object)
     * [Object Properties](#object-properties)
     * [JSON Example](#json-example)
 <!-- TOC -->
@@ -116,5 +119,33 @@ building the project
   "silent": false,
   "tty": false,
   "timeout": 10
+}
+```
+
+
+------------------------------------------------------------
+
+## ExitHandler Object
+
+An exit handler is executed once the specified exit code is
+returned or the process exits with an error or normally, if
+an exit handler is specified it will be executed.
+
+### Object Properties
+
+| Property Name | Value Type         | Example Value | Description                                                                  |
+|---------------|--------------------|---------------|------------------------------------------------------------------------------|
+| `message`     | `string`           | Hello World!  | The message to display when the exit handler is triggered                    |
+| `end_process` | `boolean`, `null`  | False         | *optional* Kills the process after this exit handler is triggered            |
+| `run`         | `string`, `null`   | `null`        | *optional* A execution policy to execute once this exit handler is triggered |
+| `exit_code`   | `int`, `null`      | 1             | The exit code that triggers this exit handler                                |
+### JSON Example
+
+```json
+{
+  "message": "Hello World",
+  "end_process": false,
+  "run": null,
+  "exit_code": 1
 }
 ```
