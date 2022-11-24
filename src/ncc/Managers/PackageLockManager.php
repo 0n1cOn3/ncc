@@ -115,7 +115,28 @@
             {
                 throw new PackageLockException('Cannot save the package lock file to disk', $e);
             }
+        }
 
+        /**
+         * Constructs the package lock file if it doesn't exist
+         *
+         * @return void
+         * @throws AccessDeniedException
+         * @throws PackageLockException
+         */
+        public function constructLockFile(): void
+        {
+            try
+            {
+                $this->load();
+                return;
+            }
+            catch (PackageLockException $e)
+            {
+                unset($e);
+                $this->PackageLock = new PackageLock();
+                $this->save();
+            }
         }
 
         /**
