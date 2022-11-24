@@ -4,15 +4,20 @@
 
     use Exception;
     use ncc\Abstracts\Runners;
+    use ncc\Abstracts\Scopes;
     use ncc\Classes\PhpExtension\Runner;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
+    use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
     use ncc\Exceptions\UnsupportedRunnerException;
+    use ncc\Managers\CredentialManager;
+    use ncc\Managers\PackageLockManager;
     use ncc\Objects\CliHelpSection;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
+    use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
 
     /**
      * @author Zi Xing Narrakas
@@ -291,5 +296,79 @@
             $size = array('B','kB','MB','GB','TB','PB','EB','ZB','YB');
             $factor = floor((strlen($bytes) - 1) / 3);
             return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$size[$factor];
+        }
+
+        /**
+         * Initializes NCC files
+         *
+         * @return void
+         * @throws AccessDeniedException
+         * @throws InvalidScopeException
+         */
+        public static function initializeFiles(): void
+        {
+            if(Resolver::resolveScope() !== Scopes::System)
+                throw new AccessDeniedException('Cannot initialize NCC files, insufficient permissions');
+
+            Console::outVerbose('Initializing NCC files');
+
+            $filesystem = new Filesystem();
+            if(!$filesystem->exists(PathFinder::getDataPath(Scopes::System)))
+            {
+                Console::outDebug(sprintf('Initializing %s', PathFinder::getDataPath(Scopes::System)));
+                $filesystem->mkdir(PathFinder::getDataPath(Scopes::System), 0644);
+            }
+
+            if(!$filesystem->exists(PathFinder::getCachePath(Scopes::System)))
+            {
+                Console::outDebug(sprintf('Initializing %s', PathFinder::getCachePath(Scopes::System)));
+                /** @noinspection PhpRedundantOptionalArgumentInspection */
+                $filesystem->mkdir(PathFinder::getCachePath(Scopes::System), 0777);
+            }
+
+            if(!$filesystem->exists(PathFinder::getRunnerPath(Scopes::System)))
+            {
+                Console::outDebug(sprintf('Initializing %s', PathFinder::getRunnerPath(Scopes::System)));
+                /** @noinspection PhpRedundantOptionalArgumentInspection */
+                $filesystem->mkdir(PathFinder::getRunnerPath(Scopes::System), 0644);
+            }
+
+            if(!$filesystem->exists(PathFinder::getTmpPath(Scopes::System)))
+            {
+                Console::outDebug(sprintf('Initializing %s', PathFinder::getTmpPath(Scopes::System)));
+                /** @noinspection PhpRedundantOptionalArgumentInspection */
+                $filesystem->mkdir(PathFinder::getTmpPath(Scopes::System), 0777);
+            }
+
+            if(!$filesystem->exists(PathFinder::getPackagesPath(Scopes::System)))
+            {
+                Console::outDebug(sprintf('Initializing %s', PathFinder::getPackagesPath(Scopes::System)));
+                /** @noinspection PhpRedundantOptionalArgumentInspection */
+                $filesystem->mkdir(PathFinder::getPackagesPath(Scopes::System), 0644);
+            }
+
+            // Create credential store if needed
+            try
+            {
+                Console::outVerbose('Processing Credential Store');
+                $credential_manager = new CredentialManager();
+                $credential_manager->constructStore();
+            }
+            catch (Exception $e)
+            {
+                Console::outError('Cannot construct credential store, ' . $e->getMessage() . ' (Error Code: ' . $e->getCode() . ')');
+            }
+
+            // Create package lock if needed
+            try
+            {
+                Console::outVerbose('Processing Package Lock');
+                $package_manager = new PackageLockManager();
+                $package_manager->constructLockFile();
+            }
+            catch (Exception $e)
+            {
+                Console::outError('Cannot construct Package Lock, ' . $e->getMessage() . ' (Error Code: ' . $e->getCode() . ')');
+            }
         }
     }
