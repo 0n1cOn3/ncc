@@ -78,30 +78,32 @@
 
             foreach($installed_packages as $package => $versions)
             {
-                if(count($versions) > 0)
+                if(count($versions) == 0)
                 {
-                    foreach($versions as $version)
-                    {
-                        try
-                        {
-                            $package_version = $package_manager->getPackageVersion($package, $package);
-                            if($package_version == null)
-                                throw new Exception();
+                    continue;
+                }
 
-                            Console::out(sprintf('%s==%s (%s)',
-                                Console::formatColor($package, ConsoleColors::LightGreen),
-                                Console::formatColor($version, ConsoleColors::LightMagenta),
-                                $package_manager->getPackageVersion($package, $package)->Compiler->Extension
-                            ));
-                        }
-                        catch(Exception $e)
-                        {
-                            unset($e);
-                            Console::out(sprintf('%s==%s',
-                                Console::formatColor($package, ConsoleColors::LightGreen),
-                                Console::formatColor($version, ConsoleColors::LightMagenta)
-                            ));
-                        }
+                foreach($versions as $version)
+                {
+                    try
+                    {
+                        $package_version = $package_manager->getPackageVersion($package, $package);
+                        if($package_version == null)
+                            throw new Exception();
+
+                        Console::out(sprintf('%s==%s (%s)',
+                            Console::formatColor($package, ConsoleColors::LightGreen),
+                            Console::formatColor($version, ConsoleColors::LightMagenta),
+                            $package_manager->getPackageVersion($package, $package)->Compiler->Extension
+                        ));
+                    }
+                    catch(Exception $e)
+                    {
+                        unset($e);
+                        Console::out(sprintf('%s==%s',
+                            Console::formatColor($package, ConsoleColors::LightGreen),
+                            Console::formatColor($version, ConsoleColors::LightMagenta)
+                        ));
                     }
                 }
             }
