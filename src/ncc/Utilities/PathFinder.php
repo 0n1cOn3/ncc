@@ -158,19 +158,6 @@
         }
 
         /**
-         * Returns the path where temporary files are stored
-         *
-         * @param string $scope
-         * @param bool $win32
-         * @return string
-         * @throws InvalidScopeException
-         */
-        public static function getTmpPath(string $scope=Scopes::Auto, bool $win32=false): string
-        {
-            return self::getDataPath($scope, $win32) . DIRECTORY_SEPARATOR . 'tmp';
-        }
-
-        /**
          * Returns the package lock file
          *
          * @param string $scope

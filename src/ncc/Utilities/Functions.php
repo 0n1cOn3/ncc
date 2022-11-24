@@ -316,7 +316,7 @@
             if(!$filesystem->exists(PathFinder::getDataPath(Scopes::System)))
             {
                 Console::outDebug(sprintf('Initializing %s', PathFinder::getDataPath(Scopes::System)));
-                $filesystem->mkdir(PathFinder::getDataPath(Scopes::System), 0644);
+                $filesystem->mkdir(PathFinder::getDataPath(Scopes::System), 0755);
             }
 
             if(!$filesystem->exists(PathFinder::getCachePath(Scopes::System)))
@@ -330,21 +330,14 @@
             {
                 Console::outDebug(sprintf('Initializing %s', PathFinder::getRunnerPath(Scopes::System)));
                 /** @noinspection PhpRedundantOptionalArgumentInspection */
-                $filesystem->mkdir(PathFinder::getRunnerPath(Scopes::System), 0644);
-            }
-
-            if(!$filesystem->exists(PathFinder::getTmpPath(Scopes::System)))
-            {
-                Console::outDebug(sprintf('Initializing %s', PathFinder::getTmpPath(Scopes::System)));
-                /** @noinspection PhpRedundantOptionalArgumentInspection */
-                $filesystem->mkdir(PathFinder::getTmpPath(Scopes::System), 0777);
+                $filesystem->mkdir(PathFinder::getRunnerPath(Scopes::System), 0755);
             }
 
             if(!$filesystem->exists(PathFinder::getPackagesPath(Scopes::System)))
             {
                 Console::outDebug(sprintf('Initializing %s', PathFinder::getPackagesPath(Scopes::System)));
                 /** @noinspection PhpRedundantOptionalArgumentInspection */
-                $filesystem->mkdir(PathFinder::getPackagesPath(Scopes::System), 0644);
+                $filesystem->mkdir(PathFinder::getPackagesPath(Scopes::System), 0755);
             }
 
             // Create credential store if needed

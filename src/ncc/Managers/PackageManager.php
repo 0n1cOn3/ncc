@@ -129,10 +129,10 @@
 
             try
             {
-                $filesystem->mkdir($installation_paths->getInstallationPath());
-                $filesystem->mkdir($installation_paths->getBinPath());
-                $filesystem->mkdir($installation_paths->getDataPath());
-                $filesystem->mkdir($installation_paths->getSourcePath());
+                $filesystem->mkdir($installation_paths->getInstallationPath(), 0755);
+                $filesystem->mkdir($installation_paths->getBinPath(), 0755);
+                $filesystem->mkdir($installation_paths->getDataPath(), 0755);
+                $filesystem->mkdir($installation_paths->getSourcePath(), 0755);
                 $current_steps += 1;
                 Console::inlineProgressBar($current_steps, $steps);
             }

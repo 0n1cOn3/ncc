@@ -363,7 +363,6 @@
         }
     }
 
-
     // Determine the data path
     $skip_prompt = false;
     $data_dir_arg = getParameter($NCC_ARGS, 'data-dir');
@@ -484,31 +483,16 @@
         }
     }
 
-    // Create the required directories
-    $required_dirs = [
-        $NCC_INSTALL_PATH,
-        $NCC_DATA_PATH,
-        $NCC_DATA_PATH . DIRECTORY_SEPARATOR . 'packages',
-        $NCC_DATA_PATH . DIRECTORY_SEPARATOR . 'cache',
-        $NCC_DATA_PATH . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'repos',
-        $NCC_DATA_PATH . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'downloads',
-        $NCC_DATA_PATH . DIRECTORY_SEPARATOR . 'config',
-        $NCC_DATA_PATH . DIRECTORY_SEPARATOR . 'data',
-        $NCC_DATA_PATH . DIRECTORY_SEPARATOR . 'ext',
-    ];
+    $NCC_FILESYSTEM->mkdir($NCC_INSTALL_PATH, 0644);
 
-    $NCC_FILESYSTEM->mkdir($required_dirs, 0755);
-    $NCC_FILESYSTEM->chmod([$NCC_DATA_PATH . DIRECTORY_SEPARATOR . 'config'], 0777);
-    $NCC_FILESYSTEM->chmod([$NCC_DATA_PATH . DIRECTORY_SEPARATOR . 'cache'], 0777);
-
-    // Verify directories exist
-    foreach($required_dirs as $dir)
+    try
     {
-        if(!$NCC_FILESYSTEM->exists($dir))
-        {
-            Console::outError("Cannot create directory '$dir', please verify if you have write permissions to the directory.");
-            exit(1);
-        }
+        Functions::initializeFiles();
+    }
+    catch(Exception $e)
+    {
+        Console::outError('Cannot initialize NCC files, ' . $e->getMessage());
+        exit(1);
     }
 
     // Install composer
@@ -607,16 +591,6 @@
         }
 
         Console::inlineProgressBar($processed_items, $total_items);
-    }
-
-    try
-    {
-        Functions::initializeFiles();
-    }
-    catch(Exception $e)
-    {
-        Console::outError('Cannot initialize NCC files, ' . $e->getMessage());
-        exit(1);
     }
 
     // Generate executable shortcut

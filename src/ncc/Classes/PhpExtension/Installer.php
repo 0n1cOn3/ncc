@@ -23,14 +23,12 @@
     use ncc\Objects\Package\Component;
     use ncc\ThirdParty\nikic\PhpParser\Comment;
     use ncc\ThirdParty\nikic\PhpParser\Node;
-    use ncc\ThirdParty\nikic\PhpParser\NodeDumper;
     use ncc\ThirdParty\nikic\PhpParser\PrettyPrinter\Standard;
     use ncc\ThirdParty\theseer\Autoload\CollectorException;
     use ncc\ThirdParty\theseer\Autoload\CollectorResult;
     use ncc\ThirdParty\theseer\Autoload\Config;
     use ncc\ThirdParty\theseer\Autoload\Factory;
     use ncc\Utilities\Base64;
-    use ncc\Utilities\Console;
     use ncc\Utilities\IO;
     use ReflectionClass;
     use ReflectionException;

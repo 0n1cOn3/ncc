@@ -108,7 +108,7 @@
 
             try
             {
-                IO::fwrite($this->PackageLockPath, ZiProto::encode($this->PackageLock->toArray(true)));
+                IO::fwrite($this->PackageLockPath, ZiProto::encode($this->PackageLock->toArray(true)), 0755);
                 RuntimeCache::set($this->PackageLockPath, $this->PackageLock);
             }
             catch(IOException $e)
@@ -129,14 +129,14 @@
             try
             {
                 $this->load();
-                return;
             }
             catch (PackageLockException $e)
             {
                 unset($e);
                 $this->PackageLock = new PackageLock();
-                $this->save();
             }
+
+            $this->save();
         }
 
         /**
