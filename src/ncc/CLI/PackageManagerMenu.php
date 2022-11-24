@@ -7,6 +7,7 @@
     use ncc\Abstracts\Scopes;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
+    use ncc\Exceptions\PackageLockException;
     use ncc\Managers\PackageManager;
     use ncc\Objects\CliHelpSection;
     use ncc\Objects\Package;
@@ -38,8 +39,72 @@
                 }
             }
 
+            if(isset($args['list']))
+            {
+                try
+                {
+                    self::getInstallPackages();
+                    return;
+                }
+                catch(Exception $e)
+                {
+                    Console::outException('List Failed', $e, 1);
+                    return;
+                }
+            }
+
             self::displayOptions();
             exit(0);
+        }
+
+        /**
+         * Displays all installed packages
+         *
+         * @return void
+         */
+        private static function getInstallPackages(): void
+        {
+            $package_manager = new PackageManager();
+
+            try
+            {
+                $installed_packages = $package_manager->getInstalledPackages();
+            }
+            catch (Exception $e)
+            {
+                Console::out('No packages installed');
+                exit(0);
+            }
+
+            foreach($installed_packages as $package => $versions)
+            {
+                if(count($versions) > 0)
+                {
+                    foreach($versions as $version)
+                    {
+                        try
+                        {
+                            $package_version = $package_manager->getPackageVersion($package, $package);
+                            if($package_version == null)
+                                throw new Exception();
+
+                            Console::out(sprintf('%s==%s (%s)',
+                                Console::formatColor($package, ConsoleColors::LightGreen),
+                                Console::formatColor($version, ConsoleColors::LightMagenta),
+                                $package_manager->getPackageVersion($package, $package)->Compiler->Extension
+                            ));
+                        }
+                        catch(Exception $e)
+                        {
+                            unset($e);
+                            Console::out(sprintf('%s==%s',
+                                Console::formatColor($package, ConsoleColors::LightGreen),
+                                Console::formatColor($version, ConsoleColors::LightMagenta)
+                            ));
+                        }
+                    }
+                }
+            }
         }
 
         /**
@@ -88,7 +153,7 @@
                 Console::out('  Copyright: ' . Console::formatColor($package->Assembly->Copyright, ConsoleColors::LightGreen));
             if(!is_null($package->Assembly->Trademark))
                 Console::out('  Trademark: ' . Console::formatColor($package->Assembly->Trademark, ConsoleColors::LightGreen));
-            Console::out(PHP_EOL);
+            Console::out((string)null);
 
             if(count($package->Dependencies) > 0)
             {
@@ -148,6 +213,7 @@
             $options = [
                 new CliHelpSection(['help'], 'Displays this help menu about the value command'),
                 new CliHelpSection(['install', '--path', '-p'], 'Installs a specified NCC package file'),
+                new CliHelpSection(['list'], 'Lists all installed packages on the system'),
             ];
 
             $options_padding = Functions::detectParametersPadding($options) + 4;
