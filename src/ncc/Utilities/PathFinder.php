@@ -171,39 +171,6 @@
         }
 
         /**
-         * Returns the configuration file
-         *
-         * @param string $scope
-         * @param bool $win32
-         * @return string
-         * @throws InvalidScopeException
-         */
-        public static function getConfigurationFile(string $scope=Scopes::Auto, bool $win32=false): string
-        {
-            return self::getDataPath($scope, $win32) . DIRECTORY_SEPARATOR . 'config';
-        }
-
-        /**
-         * Returns an array of all the configuration files the current user can access (For global-cross referencing)
-         *
-         * @param bool $win32
-         * @return array
-         * @throws InvalidScopeException
-         */
-        public static function getConfigurationFiles(bool $win32=false): array
-        {
-            $results = [];
-            $results[] = self::getConfigurationFile(Scopes::System, $win32);
-
-            if(!in_array(self::getConfigurationFile(Scopes::User, $win32), $results))
-            {
-                $results[] = self::getConfigurationFile(Scopes::User, $win32);
-            }
-
-            return $results;
-        }
-
-        /**
          * Returns the package lock file
          *
          * @param string $scope
@@ -247,19 +214,5 @@
         public static function getExtensionPath(string $scope=Scopes::Auto, bool $win32=false): string
         {
             return self::getDataPath($scope, $win32) . DIRECTORY_SEPARATOR . 'ext';
-        }
-
-        /**
-         * Returns the file path where files for the given extension is stored
-         *
-         * @param string $extension_name
-         * @param string $scope
-         * @param bool $win32
-         * @return string
-         * @throws InvalidScopeException
-         */
-        public static function getNamedExtensionPath(string $extension_name, string $scope=Scopes::Auto, bool $win32=false): string
-        {
-            return self::getExtensionPath($scope, $win32) . DIRECTORY_SEPARATOR . Security::sanitizeFilename($extension_name);
         }
     }
