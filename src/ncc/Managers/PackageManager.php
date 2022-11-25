@@ -410,7 +410,7 @@
          * @throws PackageNotFoundException
          * @throws VersionNotFoundException
          */
-        public function uninstallPackage(string $package)
+        public function uninstallPackage(string $package): void
         {
             if(Resolver::resolveScope() !== Scopes::System)
                 throw new AccessDeniedException('Insufficient permission to uninstall packages');
