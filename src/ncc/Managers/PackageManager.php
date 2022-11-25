@@ -366,9 +366,12 @@
             if($version_entry == null)
                 throw new PackageNotFoundException(sprintf('The package %s==%s was not found', $package, $version));
 
+            Console::out(sprintf('Uninstalling %s==%s', $package, $version));
             Console::outVerbose(sprintf('Removing package %s==%s from PackageLock', $package, $version));
             if(!$this->getPackageLockManager()->getPackageLock()->removePackageVersion($package, $version))
                 Console::outDebug('warning: removing package from package lock failed');
+
+            $this->getPackageLockManager()->save();
 
             Console::outVerbose('Removing package files');
             $scanner = new DirectoryScanner();
