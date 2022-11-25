@@ -296,7 +296,7 @@
             if(!ncc::cliMode())
                 return;
 
-            if(strlen($message) > 0 && !Resolver::checkLogLevel(LogLevel::Error, Main::getLogLevel()))
+            if(strlen($message) > 0 && Resolver::checkLogLevel(LogLevel::Error, Main::getLogLevel()))
             {
                 self::out(PHP_EOL . self::formatColor('Error: ', ConsoleColors::Red) . $message);
             }
