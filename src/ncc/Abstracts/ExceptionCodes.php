@@ -32,6 +32,7 @@
     use ncc\Exceptions\NoUnitsFoundException;
     use ncc\Exceptions\PackageAlreadyInstalledException;
     use ncc\Exceptions\PackageLockException;
+    use ncc\Exceptions\PackageNotFoundException;
     use ncc\Exceptions\PackageParsingException;
     use ncc\Exceptions\ProjectAlreadyExistsException;
     use ncc\Exceptions\ProjectConfigurationNotFoundException;
@@ -277,6 +278,11 @@
         const PackageAlreadyInstalledException = -1744;
 
         /**
+         * @see PackageNotFoundException
+         */
+        const PackageNotFoundException = -1745;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -323,6 +329,7 @@
             self::RunnerExecutionException,
             self::NoAvailableUnitsException,
             self::ExecutionUnitNotFoundException,
-            self::PackageAlreadyInstalledException
+            self::PackageAlreadyInstalledException,
+            self::PackageNotFoundException
         ];
     }
