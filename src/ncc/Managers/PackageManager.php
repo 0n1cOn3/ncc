@@ -19,6 +19,7 @@
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\PackageAlreadyInstalledException;
     use ncc\Exceptions\PackageLockException;
+    use ncc\Exceptions\PackageNotFoundException;
     use ncc\Exceptions\PackageParsingException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedRunnerException;
@@ -28,11 +29,13 @@
     use ncc\Objects\PackageLock\PackageEntry;
     use ncc\Objects\PackageLock\VersionEntry;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
+    use ncc\ThirdParty\theseer\DirectoryScanner\DirectoryScanner;
     use ncc\Utilities\Console;
     use ncc\Utilities\IO;
     use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
     use ncc\ZiProto\ZiProto;
+    use SplFileInfo;
 
     class PackageManager
     {
@@ -339,6 +342,62 @@
         public function getInstalledPackages(): array
         {
             return $this->getPackageLockManager()->getPackageLock()->getPackages();
+        }
+
+        /**
+         * Uninstalls a package version
+         *
+         * @param string $package
+         * @param string $version
+         * @return void
+         * @throws AccessDeniedException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws PackageLockException
+         * @throws PackageNotFoundException
+         * @throws VersionNotFoundException
+         */
+        public function uninstallPackageVersion(string $package, string $version): void
+        {
+            if(Resolver::resolveScope() !== Scopes::System)
+                throw new AccessDeniedException('Insufficient permission to uninstall packages');
+
+            $version_entry = $this->getPackageVersion($package, $version);
+            if($version_entry == null)
+                throw new PackageNotFoundException(sprintf('The package %s==%s was not found', $package, $version));
+
+            Console::outVerbose(sprintf('Removing package %s==%s from PackageLock', $package, $version));
+            if(!$this->getPackageLockManager()->getPackageLock()->removePackageVersion($package, $version))
+                Console::outDebug('warning: removing package from package lock failed');
+
+            Console::outVerbose('Removing package files');
+            $scanner = new DirectoryScanner();
+            $filesystem = new Filesystem();
+
+            /** @var SplFileInfo $item */
+            /** @noinspection PhpRedundantOptionalArgumentInspection */
+            foreach($scanner($version_entry->Location, true) as $item)
+            {
+                if(is_file($item->getPath()))
+                {
+                    Console::outDebug(sprintf('deleting %s', $item->getPath()));
+                    $filesystem->remove($item->getPath());
+                }
+            }
+
+            $filesystem->remove($version_entry->Location);
+
+            if($version_entry->ExecutionUnits !== null && count($version_entry->ExecutionUnits) > 0)
+            {
+                Console::outVerbose('Uninstalling execution units');
+
+                $execution_pointer_manager = new ExecutionPointerManager();
+                foreach($version_entry->ExecutionUnits as $executionUnit)
+                {
+                    if(!$execution_pointer_manager->removeUnit($package, $version, $executionUnit->ExecutionPolicy->Name))
+                        Console::outDebug(sprintf('warning: removing execution unit %s failed', $executionUnit->ExecutionPolicy->Name));
+                }
+            }
         }
 
         /**
