@@ -151,7 +151,7 @@
          * @param bool $bytecode
          * @return array
          */
-        public function toArray(bool $bytecode): array
+        public function toArray(bool $bytecode=false): array
         {
             $package_entries = [];
             foreach($this->Packages as $entry)

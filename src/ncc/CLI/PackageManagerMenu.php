@@ -87,14 +87,14 @@
                 {
                     try
                     {
-                        $package_version = $package_manager->getPackageVersion($package, $package);
+                        $package_version = $package_manager->getPackageVersion($package, $version);
                         if($package_version == null)
                             throw new Exception();
 
                         Console::out(sprintf('%s==%s (%s)',
                             Console::formatColor($package, ConsoleColors::LightGreen),
                             Console::formatColor($version, ConsoleColors::LightMagenta),
-                            $package_manager->getPackageVersion($package, $package)->Compiler->Extension
+                            $package_manager->getPackageVersion($package, $version)->Compiler->Extension
                         ));
                     }
                     catch(Exception $e)
