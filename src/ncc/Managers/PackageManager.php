@@ -401,6 +401,39 @@
         }
 
         /**
+         * Uninstalls all versions of a package
+         *
+         * @param string $package
+         * @return void
+         * @throws AccessDeniedException
+         * @throws PackageLockException
+         * @throws PackageNotFoundException
+         * @throws VersionNotFoundException
+         */
+        public function uninstallPackage(string $package)
+        {
+            if(Resolver::resolveScope() !== Scopes::System)
+                throw new AccessDeniedException('Insufficient permission to uninstall packages');
+
+            $package_entry = $this->getPackage($package);
+            if($package_entry == null)
+                throw new PackageNotFoundException(sprintf('The package %s was not found', $package));
+
+            foreach($package_entry->getVersions() as $version)
+            {
+                $version_entry = $package_entry->getVersion($version);
+                try
+                {
+                    $this->uninstallPackageVersion($package, $version_entry->Version);
+                }
+                catch(Exception $e)
+                {
+                    Console::outDebug(sprintf('warning: unable to uninstall package %s==%s, %s (%s)', $package, $version_entry->Version, $e->getMessage(), $e->getCode()));
+                }
+            }
+        }
+
+        /**
          * @param Package $package
          * @param InstallationPaths $paths
          * @throws InstallationException
