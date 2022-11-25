@@ -324,7 +324,7 @@
             $trace_header = self::formatColor($e->getFile() . ':' . $e->getLine(), ConsoleColors::Magenta);
             $trace_error = self::formatColor('error: ', ConsoleColors::Red);
             self::out($trace_header . ' ' . $trace_error . $e->getMessage());
-
+            self::out(sprintf('Error code: %s', $e->getCode()));
             $trace = $e->getTrace();
             if(count($trace) > 1)
             {
