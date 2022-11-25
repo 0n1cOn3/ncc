@@ -7,6 +7,8 @@
     use ncc\Abstracts\Scopes;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
+    use ncc\Exceptions\PackageLockException;
+    use ncc\Exceptions\VersionNotFoundException;
     use ncc\Managers\PackageManager;
     use ncc\Objects\CliHelpSection;
     use ncc\Objects\Package;
@@ -34,6 +36,20 @@
                 catch (Exception $e)
                 {
                     Console::outException('Installation Failed', $e, 1);
+                    return;
+                }
+            }
+
+            if(isset($args['uninstall']))
+            {
+                try
+                {
+                    self::uninstallPackage($args);
+                    return;
+                }
+                catch (Exception $e)
+                {
+                    Console::outException('Uninstallation Failed', $e, 1);
                     return;
                 }
             }
@@ -200,16 +216,108 @@
                 try
                 {
                     $package_manager->install($path);
-                    return;
                 }
                 catch(Exception $e)
                 {
                     Console::outException('Installation Failed', $e, 1);
                 }
 
+                return;
             }
 
             Console::outError('User cancelled installation', true, 1);
+        }
+
+        /**
+         * Uninstalls a version of a package or all versions of a package
+         *
+         * @param $args
+         * @return void
+         * @throws VersionNotFoundException
+         */
+        private static function uninstallPackage($args): void
+        {
+            $selected_package = ($args['package'] ?? $args['pkg']);
+            $selected_version = null;
+            if(isset($args['v']))
+                $selected_version = $args['v'];
+            if(isset($args['version']))
+                $selected_version = $args['version'];
+
+            $user_confirmation = null;
+            // For undefined array key warnings
+            if(isset($args['y']) || isset($args['Y']))
+                $user_confirmation = (bool)($args['y'] ?? $args['Y']);
+
+            if($selected_package == null)
+                Console::outError('Missing argument \'package\'', true, 1);
+
+            $package_manager = new PackageManager();
+
+            try
+            {
+                $package_entry = $package_manager->getPackage($selected_package);
+            }
+            catch (PackageLockException $e)
+            {
+                Console::outException('PackageLock error', $e, 1);
+                return;
+            }
+
+            $version_entry = null;
+            if($version_entry !== null && $package_entry !== null)
+                /** @noinspection PhpUnhandledExceptionInspection */
+                /** @noinspection PhpRedundantOptionalArgumentInspection */
+                $version_entry = $package_entry->getVersion($version_entry, false);
+
+            if($package_entry == null)
+            {
+                Console::outError(sprintf('Package "%s" is not installed', $selected_package), true, 1);
+                return;
+            }
+
+            if($version_entry == null & $selected_version !== null)
+            {
+                Console::outError(sprintf('Package "%s==%s" is not installed', $selected_package, $selected_version), true, 1);
+                return;
+            }
+
+            if($user_confirmation == null)
+            {
+                if($selected_version !== null)
+                {
+                    if(!Console::getBooleanInput(sprintf('Do you want to uninstall %s==%s', $selected_package, $selected_version)))
+                    {
+                        Console::outError('User cancelled operation', true, 1);
+                        return;
+                    }
+                }
+                else
+                {
+                    if(!Console::getBooleanInput(sprintf('Do you want to uninstall all versions of %s', $selected_package)))
+                    {
+                        Console::outError('User cancelled operation', true, 1);
+                        return;
+                    }
+                }
+            }
+
+            try
+            {
+                if($selected_version !== null)
+                {
+                    $package_manager->uninstallPackageVersion($selected_package, $selected_version);
+                }
+                else
+                {
+                    $package_manager->uninstallPackage($selected_package);
+                }
+            }
+            catch(Exception $e)
+            {
+                Console::outException('Uninstallation failed', $e, 1);
+                return;
+            }
         }
 
         /**
