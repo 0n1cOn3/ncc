@@ -15,6 +15,7 @@
     use ncc\Managers\CredentialManager;
     use ncc\Managers\PackageLockManager;
     use ncc\Objects\CliHelpSection;
+    use ncc\Objects\ComposerJson;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
@@ -363,5 +364,20 @@
             {
                 Console::outError('Cannot construct Package Lock, ' . $e->getMessage() . ' (Error Code: ' . $e->getCode() . ')');
             }
+        }
+
+        /**
+         * Loads a composer json file and returns a ComposerJson object
+         *
+         * @param string $path
+         * @return ComposerJson
+         * @throws AccessDeniedException
+         * @throws FileNotFoundException
+         * @throws IOException
+         */
+        public static function loadComposerJson(string $path): ComposerJson
+        {
+            $json_contents = IO::fread($path);
+            return ComposerJson::fromArray(json_decode($json_contents, true));
         }
     }

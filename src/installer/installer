@@ -26,6 +26,7 @@
     use ncc\Utilities\Console;
     use ncc\Utilities\Functions;
     use ncc\Utilities\IO;
+    use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
     use ncc\Utilities\Validate;
     use ncc\ZiProto\ZiProto;
@@ -453,22 +454,6 @@
         }
     }
 
-    // Backup the configuration file
-    $config_backup = null;
-    if($NCC_FILESYSTEM->exists($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'ncc.yaml'))
-    {
-        Console::out('ncc.yaml will be updated');
-        try
-        {
-            $config_backup = IO::fread($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'ncc.yaml');
-        }
-        catch(Exception $e)
-        {
-            Console::outError($e->getMessage(), true, 1);
-            return;
-        }
-    }
-
     // Prepare installation
     if($NCC_FILESYSTEM->exists($NCC_INSTALL_PATH))
     {
@@ -718,6 +703,44 @@
         }
     }
 
+    // Overwrite automatic values created by the installer
+    $config_obj['ncc']['data_directory'] = $NCC_DATA_PATH;
+    $config_obj['php']['executable_path'] = $NCC_PHP_EXECUTABLE;
+    $config_obj['git']['executable_path'] = $NCC_EXECUTABLE_FINDER->find('git');
+    $config_obj['composer']['executable_path'] = $NCC_EXECUTABLE_FINDER->find('composer');
+
+    if($config_obj['git']['executable_path'] == null)
+    {
+        Console::outWarning('Cannot locate the executable path for \'git\', run \'ncc config --git.executable_path="GIT_PATH_HERE"\' as root to update the path');
+    }
+
+    if(!$update_composer)
+    {
+        Console::outWarning('Since composer is not installed alongside NCC, the installer will attempt to locate a install of composer on your system and configure NCC to use that');
+        $config_obj['composer']['enable_internal_composer'] = false;
+        if($config_obj['composer']['executable_path'] == null)
+        {
+            // TODO: Implement Configuration Tools
+            Console::outWarning('Cannot locate the executable path for \'composer\', run \'ncc config --composer.executable_path="composer.phar"\' as root to update the path');
+        }
+    }
+
+    // Backup the configuration file
+    $config_backup = null;
+
+    try
+    {
+        if ($NCC_FILESYSTEM->exists(PathFinder::getConfigurationFile()))
+        {
+            $config_backup = IO::fread(PathFinder::getConfigurationFile());
+        }
+    }
+    catch (Exception $e)
+    {
+        Console::outError($e->getMessage(), true, 1);
+        return;
+    }
+
     // Create/Update configuration file
     $config_obj = Yaml::parseFile(__DIR__ . DIRECTORY_SEPARATOR . 'default_config.yaml');
 
@@ -744,28 +767,6 @@
         }
     }
 
-    // Overwrite automatic values created by the installer
-    $config_obj['ncc']['data_directory'] = $NCC_DATA_PATH;
-    $config_obj['php']['executable_path'] = $NCC_PHP_EXECUTABLE;
-    $config_obj['git']['executable_path'] = $NCC_EXECUTABLE_FINDER->find('git');
-    $config_obj['composer']['executable_path'] = $NCC_EXECUTABLE_FINDER->find('composer');
-
-    if($config_obj['git']['executable_path'] == null)
-    {
-        Console::outWarning('Cannot locate the executable path for \'git\', run \'ncc config --git.executable_path="GIT_PATH_HERE"\' as root to update the path');
-    }
-
-    if(!$update_composer)
-    {
-        Console::outWarning('Since composer is not installed alongside NCC, the installer will attempt to locate a install of composer on your system and configure NCC to use that');
-        $config_obj['composer']['enable_internal_composer'] = false;
-        if($config_obj['composer']['executable_path'] == null)
-        {
-            // TODO: Implement Configuration Tools
-            Console::outWarning('Cannot locate the executable path for \'composer\', run \'ncc config --composer.executable_path="composer.phar"\' as root to update the path');
-        }
-    }
-
     if($config_backup == null)
     {
         Console::out('Generating ncc.yaml');
@@ -778,9 +779,9 @@
 
     try
     {
-        IO::fwrite($NCC_INSTALL_PATH . DIRECTORY_SEPARATOR . 'ncc.yaml', Yaml::dump($config_obj));
+        IO::fwrite(PathFinder::getConfigurationFile(), Yaml::dump($config_obj), 0755);
     }
-        catch (\ncc\Exceptions\IOException $e)
+        catch (Exception $e)
     {
         Console::outException($e->getMessage(), $e, 1);
         return;
