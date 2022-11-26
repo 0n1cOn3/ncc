@@ -380,4 +380,46 @@
             $json_contents = IO::fread($path);
             return ComposerJson::fromArray(json_decode($json_contents, true));
         }
+
+        /**
+         * Attempts to convert the value to a bool
+         *
+         * @param $value
+         * @return bool
+         */
+        public static function cbool($value): bool
+        {
+            if(is_null($value))
+                return false;
+            if(is_string($value))
+            {
+                switch(strtolower($value))
+                {
+                    case 'y':
+                    case 'yes':
+                    case 't':
+                    case 'true':
+                    case '1':
+                        return true;
+
+                    case 'n':
+                    case 'no':
+                    case 'f':
+                    case 'false':
+                    case '0':
+                        return false;
+                }
+            }
+
+            if(is_int($value))
+            {
+                if ($value == 0)
+                    return false;
+                if ($value == 1)
+                    return true;
+                return false;
+            }
+
+            return (bool)$value;
+        }
     }
