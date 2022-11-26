@@ -12,6 +12,7 @@
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
     use ncc\Exceptions\UnsupportedRunnerException;
+    use ncc\Managers\ConfigurationManager;
     use ncc\Managers\CredentialManager;
     use ncc\Managers\PackageLockManager;
     use ncc\Objects\CliHelpSection;
@@ -421,5 +422,17 @@
             }
 
             return (bool)$value;
+        }
+
+        /**
+         * Returns a property value from the configuration
+         *
+         * @param string $property
+         * @return mixed|null
+         */
+        public static function getConfigurationProperty(string $property)
+        {
+            $config_manager = new ConfigurationManager();
+            return $config_manager->getProperty($property);
         }
     }
