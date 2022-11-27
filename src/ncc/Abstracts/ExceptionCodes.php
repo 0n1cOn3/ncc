@@ -9,6 +9,7 @@
     use ncc\Exceptions\ComponentChecksumException;
     use ncc\Exceptions\ComponentDecodeException;
     use ncc\Exceptions\ComponentVersionNotFoundException;
+    use ncc\Exceptions\ComposerDisabledException;
     use ncc\Exceptions\ConstantReadonlyException;
     use ncc\Exceptions\DirectoryNotFoundException;
     use ncc\Exceptions\ExecutionUnitNotFoundException;
@@ -283,6 +284,11 @@
         const PackageNotFoundException = -1745;
 
         /**
+         * @see ComposerDisabledException
+         */
+        const ComposerDisabledException = -1746;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -330,6 +336,7 @@
             self::NoAvailableUnitsException,
             self::ExecutionUnitNotFoundException,
             self::PackageAlreadyInstalledException,
-            self::PackageNotFoundException
+            self::PackageNotFoundException,
+            self::ComposerDisabledException
         ];
     }
