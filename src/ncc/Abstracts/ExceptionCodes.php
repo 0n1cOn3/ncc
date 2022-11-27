@@ -10,6 +10,7 @@
     use ncc\Exceptions\ComponentDecodeException;
     use ncc\Exceptions\ComponentVersionNotFoundException;
     use ncc\Exceptions\ComposerDisabledException;
+    use ncc\Exceptions\ComposerException;
     use ncc\Exceptions\ComposerNotAvailableException;
     use ncc\Exceptions\ConstantReadonlyException;
     use ncc\Exceptions\DirectoryNotFoundException;
@@ -301,6 +302,11 @@
         const ComposerNotAvailableException = -1748;
 
         /**
+         * @see ComposerException
+         */
+        const ComposerException = -1749;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -351,6 +357,7 @@
             self::PackageNotFoundException,
             self::ComposerDisabledException,
             self::InternalComposerNotAvailable,
-            self::ComposerNotAvailableException
+            self::ComposerNotAvailableException,
+            self::ComposerException
         ];
     }
