@@ -15,6 +15,7 @@
     use ncc\Exceptions\ExecutionUnitNotFoundException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\InstallationException;
+    use ncc\Exceptions\InternalComposerNotAvailableException;
     use ncc\Exceptions\InvalidConstantNameException;
     use ncc\Exceptions\InvalidCredentialsEntryException;
     use ncc\Exceptions\InvalidExecutionPolicyName;
@@ -289,6 +290,11 @@
         const ComposerDisabledException = -1746;
 
         /**
+         * @see InternalComposerNotAvailableException
+         */
+        const InternalComposerNotAvailable = -1747;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -337,6 +343,7 @@
             self::ExecutionUnitNotFoundException,
             self::PackageAlreadyInstalledException,
             self::PackageNotFoundException,
-            self::ComposerDisabledException
+            self::ComposerDisabledException,
+            self::InternalComposerNotAvailable
         ];
     }
