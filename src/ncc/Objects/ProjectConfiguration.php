@@ -294,7 +294,7 @@
                 $results[($bytecode ? Functions::cbc('build') : 'build')] = $this->Build->toArray($bytecode);
             if($this->Installer !== null)
                 $results[($bytecode ? Functions::cbc('installer') : 'installer')] = $this->Installer->toArray($bytecode);
-            if($execution_policies !== null)
+            if($execution_policies !== null && count($executionPolicy) > 0)
                 $results[($bytecode ? Functions::cbc('execution_policies') : 'execution_policies')] = $execution_policies;
             return $results;
         }
