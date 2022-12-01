@@ -17,7 +17,7 @@
         public $ContentHash;
 
         /**
-         * @var ComposerJson
+         * @var ComposerJson[]|null
          */
         public $Packages;
 
@@ -65,6 +65,25 @@
          * @var string|null
          */
         public $PluginApiVersion;
+
+        /**
+         * Returns an existing package from the lock file
+         *
+         * @param string $name
+         * @return ComposerJson|null
+         */
+        public function getPackage(string $name): ?ComposerJson
+        {
+            foreach($this->Packages as $package)
+            {
+                if($package->Name == $name)
+                {
+                    return $package;
+                }
+            }
+
+            return null;
+        }
 
         /**
          * Returns an array representation of the object
