@@ -2,17 +2,22 @@
 
     namespace ncc\Abstracts;
 
-    abstract class DependencyPointerType
+    abstract class DependencySourceType
     {
+        /**
+         * The dependency pointer does not point to a package
+         */
+        const None = 'none';
+
         /**
          * Indicates if the dependency is statically linked and the
          * reference points to the file name of the dependency
          */
-        const RelativeFile = 'relative_file';
+        const StaticLinking = 'static';
 
         /**
          * Indicates if the pointer reference points to a remote source
          * to fetch the dependency from
          */
-        const RemoteSource = 'remote_source';
+        const RemoteSource = 'remote';
     }
