@@ -9,6 +9,7 @@
     use ncc\Abstracts\ComponentFileExtensions;
     use ncc\Abstracts\ComponentDataType;
     use ncc\Abstracts\ConstantReferences;
+    use ncc\Abstracts\DependencySourceType;
     use ncc\Abstracts\Options\BuildConfigurationValues;
     use ncc\Classes\NccExtension\PackageCompiler;
     use ncc\Exceptions\AccessDeniedException;
@@ -16,13 +17,17 @@
     use ncc\Exceptions\BuildException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;
+    use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackagePreparationFailedException;
     use ncc\Exceptions\UnsupportedRunnerException;
+    use ncc\Exceptions\VersionNotFoundException;
     use ncc\Interfaces\CompilerInterface;
+    use ncc\Managers\PackageLockManager;
     use ncc\ncc;
     use ncc\Objects\Package;
     use ncc\Objects\ProjectConfiguration;
     use ncc\ThirdParty\nikic\PhpParser\ParserFactory;
+    use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\ThirdParty\theseer\DirectoryScanner\DirectoryScanner;
     use ncc\Utilities\Base64;
     use ncc\Utilities\Console;
@@ -178,6 +183,71 @@
             {
                 Console::out('No resources found');
             }
+
+            $selected_dependencies = [];
+            if($this->project->Build->Dependencies !== null && count($this->project->Build->Dependencies) > 0)
+                $selected_dependencies = array_merge($selected_dependencies, $this->project->Build->Dependencies);
+            if($selected_build_configuration->Dependencies !== null && count($selected_build_configuration->Dependencies) > 0)
+                $selected_dependencies = array_merge($selected_dependencies, $selected_build_configuration->Dependencies);
+
+            // Process the dependencies
+            if(count($selected_dependencies) > 0)
+            {
+                $package_lock_manager = new PackageLockManager();
+                $filesystem = new Filesystem();
+
+                $lib_path = $selected_build_configuration->OutputPath . DIRECTORY_SEPARATOR . 'libs';
+                if($filesystem->exists($lib_path))
+                    $filesystem->remove($lib_path);
+                $filesystem->mkdir($lib_path);
+
+                Console::out('Scanning for dependencies... ');
+                foreach($selected_dependencies as $dependency)
+                {
+                    Console::outVerbose(sprintf('processing dependency %s', $dependency->Name));
+                    switch($dependency->SourceType)
+                    {
+                        case DependencySourceType::StaticLinking:
+
+                            try
+                            {
+                                $out_path = $lib_path . DIRECTORY_SEPARATOR . sprintf('%s=%s.lib', $dependency->Name, $dependency->Version);
+                                $package = $package_lock_manager->getPackageLock()->getPackage($dependency->Name);
+                                $version = $package->getVersion($dependency->Version);
+                                Console::outDebug(sprintf('copying shadow package %s=%s to %s', $dependency->Name, $dependency->Version, $out_path));
+                                $filesystem->copy($version->Location, $out_path);
+                                $dependency->Source = 'libs' . DIRECTORY_SEPARATOR . sprintf('%s=%s.lib', $dependency->Name, $dependency->Version);
+
+                            }
+                            catch (VersionNotFoundException $e)
+                            {
+                                throw new PackagePreparationFailedException('Static linking not possible, cannot find version ' . $dependency->Version . ' for dependency ' . $dependency->Name, $e);
+                            }
+                            catch (PackageLockException $e)
+                            {
+                                throw new PackagePreparationFailedException('Static linking not possible, cannot find package lock for dependency ' . $dependency->Name, $e);
+                            }
+
+                            break;
+
+                        default:
+                        case DependencySourceType::RemoteSource:
+                            break;
+                    }
+
+                    $this->package->Dependencies[] = $dependency;
+                }
+
+                if(count($this->package->Dependencies) > 0)
+                {
+                    Console::out(count($this->package->Dependencies) . ' dependency(ies) found');
+                }
+                else
+                {
+                    Console::out('No dependencies found');
+                }
+            }
+
         }
 
         /**
