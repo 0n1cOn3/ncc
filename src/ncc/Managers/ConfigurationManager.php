@@ -54,6 +54,7 @@
                 return;
             $configuration_contents = IO::fread(PathFinder::getConfigurationFile());
             $this->Configuration = Yaml::parse($configuration_contents);
+            RuntimeCache::set('ncc.yaml', $this->Configuration);
         }
 
         /**
@@ -74,6 +75,7 @@
 
             IO::fwrite(PathFinder::getConfigurationFile(), Yaml::dump($this->Configuration), 0755);
             RuntimeCache::set('ncc.yaml', $this->Configuration);
+            RuntimeCache::set('config_cache', []);
         }
 
         /**
@@ -307,8 +309,8 @@
                 case 'composer.options.no_cache':
                     $this->Configuration['composer']['options']['no_cache'] = Functions::cbool($value);
                     break;
-                case 'composer.options.verbose':
-                    $this->Configuration['composer']['options']['verbose'] = ((int)$value > 0 ? (int)$value : 1);
+                case 'composer.options.logging':
+                    $this->Configuration['composer']['options']['logging'] = ((int)$value > 0 ? (int)$value : 1);
                     break;
                 default:
                     return false;
