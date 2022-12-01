@@ -48,6 +48,7 @@
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedPackageException;
     use ncc\Exceptions\UnsupportedRunnerException;
+    use ncc\Exceptions\UserAbortedOperationException;
     use ncc\Exceptions\VersionNotFoundException;
 
     /**
@@ -307,6 +308,11 @@
         const ComposerException = -1749;
 
         /**
+         * @see UserAbortedOperationException
+         */
+        const UserAbortedOperationException = -1750;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -358,6 +364,7 @@
             self::ComposerDisabledException,
             self::InternalComposerNotAvailable,
             self::ComposerNotAvailableException,
-            self::ComposerException
+            self::ComposerException,
+            self::UserAbortedOperationException
         ];
     }
