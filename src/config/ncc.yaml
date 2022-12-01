@@ -69,8 +69,8 @@ composer:
     # Prevent use of the cache
     no_cache: false
 
-    # 1 normal output, 2 for more verbose output and 3 for debug output
-    verbose: 1
+    # 1 normal output, 2 for more verbose output and 3 for debug output, 4 to match NCC's logging level
+    logging: 1
 
   # NCC Composer Extension options
   extension:
