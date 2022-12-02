@@ -153,7 +153,7 @@
             foreach($this->ExecutionPolicies as $execution_policy)
             {
                 $defined_polices[] = $execution_policy->Name;
-                $execution_policy->validate();
+                //$execution_policy->validate();
             }
 
             // Check the installer by batch
@@ -290,11 +290,13 @@
             $results = [];
             if($this->Project !== null)
                 $results[($bytecode ? Functions::cbc('project') : 'project')] = $this->Project->toArray($bytecode);
+            if($this->Assembly !== null)
+                $results['assembly'] = $this->Assembly->toArray($bytecode);
             if($this->Build !== null)
                 $results[($bytecode ? Functions::cbc('build') : 'build')] = $this->Build->toArray($bytecode);
             if($this->Installer !== null)
                 $results[($bytecode ? Functions::cbc('installer') : 'installer')] = $this->Installer->toArray($bytecode);
-            if($execution_policies !== null && count($executionPolicy) > 0)
+            if($execution_policies !== null && count($execution_policies) > 0)
                 $results[($bytecode ? Functions::cbc('execution_policies') : 'execution_policies')] = $execution_policies;
             return $results;
         }

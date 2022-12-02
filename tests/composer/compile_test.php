@@ -9,5 +9,5 @@
     ncc::initialize();
     define('NCC_CLI_MODE', 1);
 
-    $require = ComposerInstance::require('symfony', 'console', '^3.4');
+    $require = ComposerInstance::require('laravel', 'laravel', '*');
     ComposerCompatibility::compilePackages($require . DIRECTORY_SEPARATOR . 'composer.lock');

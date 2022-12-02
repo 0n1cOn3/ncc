@@ -5,7 +5,7 @@
     use Exception;
     use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
-    use ncc\Classes\PhpExtension\Runner;
+    use ncc\Classes\PhpExtension\PhpRunner;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\InvalidScopeException;
@@ -19,6 +19,7 @@
     use ncc\Objects\ComposerJson;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
+    use ncc\ThirdParty\jelix\Version\Parser;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
 
     /**
@@ -256,7 +257,7 @@
         public static function compileRunner(string $path, ExecutionPolicy $policy): ExecutionUnit
         {
             return match (strtolower($policy->Runner)) {
-                Runners::php => Runner::processUnit($path, $policy),
+                Runners::php => PhpRunner::processUnit($path, $policy),
                 default => throw new UnsupportedRunnerException('The runner \'' . $policy->Runner . '\' is not supported'),
             };
         }
@@ -434,5 +435,21 @@
         {
             $config_manager = new ConfigurationManager();
             return $config_manager->getProperty($property);
+        }
+
+        /**
+         * Parses the version and returns a valid version format
+         *
+         * @param string $version
+         * @return string
+         * @throws Exception
+         */
+        public static function parseVersion(string $version): string
+        {
+            /** @noinspection PhpStrFunctionsInspection */
+            if(substr($version, 0, 1) === 'v')
+                $version = substr($version, 1);
+
+            return Parser::parse($version)->toString();
         }
     }

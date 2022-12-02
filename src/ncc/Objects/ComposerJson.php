@@ -300,7 +300,7 @@
             }
 
             $_require = null;
-            if($this->Require !== null & count($this->Require) > 0)
+            if($this->Require !== null && count($this->Require) > 0)
             {
                 $_require = [];
                 foreach($this->Require as $require)
@@ -310,7 +310,7 @@
             }
 
             $_require_dev = null;
-            if($this->RequireDev !== null & count($this->RequireDev) > 0)
+            if($this->RequireDev !== null && count($this->RequireDev) > 0)
             {
                 $_require_dev = [];
                 foreach($this->RequireDev as $require)
@@ -320,7 +320,7 @@
             }
 
             $_conflict = null;
-            if($this->Conflict !== null & count($this->Conflict) > 0)
+            if($this->Conflict !== null && count($this->Conflict) > 0)
             {
                 $_conflict = [];
                 foreach($this->Conflict as $require)
@@ -330,7 +330,7 @@
             }
 
             $_replace = null;
-            if($this->Replace !== null & count($this->Replace) > 0)
+            if($this->Replace !== null && count($this->Replace) > 0)
             {
                 $_replace = [];
                 foreach($this->Replace as $require)
@@ -340,7 +340,7 @@
             }
 
             $_provide = null;
-            if($this->Provide !== null & count($this->Provide) > 0)
+            if($this->Provide !== null && count($this->Provide) > 0)
             {
                 $_provide = [];
                 foreach($this->Provide as $require)
@@ -350,7 +350,7 @@
             }
 
             $_suggest = null;
-            if($this->Suggest !== null & count($this->Suggest) > 0)
+            if($this->Suggest !== null && count($this->Suggest) > 0)
             {
                 $_suggest = [];
                 foreach($this->Suggest as $suggestion)

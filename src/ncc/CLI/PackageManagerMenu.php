@@ -107,7 +107,7 @@
                         if($package_version == null)
                             throw new Exception();
 
-                        Console::out(sprintf('%s==%s (%s)',
+                        Console::out(sprintf('%s=%s (%s)',
                             Console::formatColor($package, ConsoleColors::LightGreen),
                             Console::formatColor($version, ConsoleColors::LightMagenta),
                             $package_manager->getPackageVersion($package, $version)->Compiler->Extension
@@ -116,7 +116,7 @@
                     catch(Exception $e)
                     {
                         unset($e);
-                        Console::out(sprintf('%s==%s',
+                        Console::out(sprintf('%s=%s',
                             Console::formatColor($package, ConsoleColors::LightGreen),
                             Console::formatColor($version, ConsoleColors::LightMagenta)
                         ));
@@ -276,9 +276,9 @@
                 return;
             }
 
-            if($version_entry == null & $selected_version !== null)
+            if($version_entry == null && $selected_version !== null)
             {
-                Console::outError(sprintf('Package "%s==%s" is not installed', $selected_package, $selected_version), true, 1);
+                Console::outError(sprintf('Package "%s=%s" is not installed', $selected_package, $selected_version), true, 1);
                 return;
             }
 
@@ -286,7 +286,7 @@
             {
                 if($selected_version !== null)
                 {
-                    if(!Console::getBooleanInput(sprintf('Do you want to uninstall %s==%s', $selected_package, $selected_version)))
+                    if(!Console::getBooleanInput(sprintf('Do you want to uninstall %s=%s', $selected_package, $selected_version)))
                     {
                         Console::outError('User cancelled operation', true, 1);
                         return;

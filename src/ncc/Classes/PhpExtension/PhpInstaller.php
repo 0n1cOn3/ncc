@@ -37,7 +37,7 @@
     use function is_array;
     use function is_string;
 
-    class Installer implements InstallerInterface
+    class PhpInstaller implements InstallerInterface
     {
         /**
          * @var ReflectionClass[] Node type to reflection class map

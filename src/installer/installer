@@ -543,7 +543,7 @@
         return;
     }
     $total_items = count($build_files);
-    $processed_items = 0;
+    $processed_items = 1;
 
     // Create all the directories first
     foreach($build_files as $path)
@@ -711,7 +711,7 @@
 
     if($config_obj['git']['executable_path'] == null)
     {
-        Console::outWarning('Cannot locate the executable path for \'git\', run \'ncc config --git.executable_path="GIT_PATH_HERE"\' as root to update the path');
+        Console::outWarning('Cannot locate the executable path for \'git\', run \'ncc config -p git.executable_path -v "GIT_PATH_HERE"\' as root to update the path');
     }
 
     if(!$update_composer)

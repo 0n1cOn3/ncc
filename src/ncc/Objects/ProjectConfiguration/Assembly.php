@@ -217,7 +217,7 @@
             $AssemblyObject->Copyright = Functions::array_bc($data, 'copyright');
             $AssemblyObject->Trademark = Functions::array_bc($data, 'trademark');
             $AssemblyObject->Version = Functions::array_bc($data, 'version');
-            $AssemblyObject->UUID = Functions::array_bc($data, 'uid');
+            $AssemblyObject->UUID = Functions::array_bc($data, 'uuid');
 
             return $AssemblyObject;
         }
