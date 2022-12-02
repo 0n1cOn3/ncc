@@ -152,12 +152,6 @@
         }
     }
 
-    // Check if running in a TTY
-    if(stream_isatty(STDERR) && !$NCC_BYPASS_CLI_CHECK)
-    {
-        Console::outWarning('Your terminal may have some issues rendering the output of this installer');
-    }
-
     // Check if running as root
     if(!function_exists('posix_getuid'))
     {
@@ -596,8 +590,7 @@
 
     $bin_paths = [
         DIRECTORY_SEPARATOR . 'usr' . DIRECTORY_SEPARATOR . 'bin',
-        DIRECTORY_SEPARATOR . 'usr' . DIRECTORY_SEPARATOR . 'local' . DIRECTORY_SEPARATOR . 'bin',
-        DIRECTORY_SEPARATOR . 'usr' . DIRECTORY_SEPARATOR . 'share'
+        DIRECTORY_SEPARATOR . 'bin'
     ];
 
     foreach($bin_paths as $path)
@@ -613,7 +606,6 @@
             try
             {
                 IO::fwrite($path . DIRECTORY_SEPARATOR . 'ncc', $executable_shortcut);
-                break;
             }
             catch (Exception $e)
             {
