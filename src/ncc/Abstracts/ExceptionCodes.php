@@ -32,6 +32,7 @@
     use ncc\Exceptions\InvalidVersionNumberException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
+    use ncc\Exceptions\MissingDependencyException;
     use ncc\Exceptions\NoAvailableUnitsException;
     use ncc\Exceptions\NoUnitsFoundException;
     use ncc\Exceptions\PackageAlreadyInstalledException;
@@ -313,6 +314,11 @@
         const UserAbortedOperationException = -1750;
 
         /**
+         * @see MissingDependencyException
+         */
+        const MissingDependencyException = -1751;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -365,6 +371,7 @@
             self::InternalComposerNotAvailable,
             self::ComposerNotAvailableException,
             self::ComposerException,
-            self::UserAbortedOperationException
+            self::UserAbortedOperationException,
+            self::MissingDependencyException
         ];
     }
