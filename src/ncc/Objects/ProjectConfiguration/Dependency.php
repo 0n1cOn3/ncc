@@ -4,6 +4,7 @@
 
     namespace ncc\Objects\ProjectConfiguration;
 
+    use ncc\Abstracts\DependencySourceType;
     use ncc\Utilities\Functions;
 
     /**
@@ -29,7 +30,7 @@
         /**
          * Optional. The actual source where NCC can fetch the dependency from
          *
-         * @var string|null
+         * @var DependencySourceType|string|null
          */
         public $Source;
 

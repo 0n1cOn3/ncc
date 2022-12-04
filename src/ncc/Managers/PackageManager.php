@@ -344,24 +344,27 @@
                 $dependency_met = true;
             }
 
-            if (!$dependency_met && $dependency->SourceType !== null)
+            if ($dependency->SourceType !== null)
             {
-                Console::outVerbose(sprintf('Installing dependency %s=%s for %s=%s', $dependency->Name, $dependency->Version, $package->Assembly->Package, $package->Assembly->Version));
-                switch ($dependency->SourceType)
+                if(!$dependency_met)
                 {
-                    case DependencySourceType::Local:
-                        Console::outDebug('installing from local source ' . $dependency->Source);
-                        $basedir = dirname($package_path);
-                        if (!file_exists($basedir . DIRECTORY_SEPARATOR . $dependency->Source))
-                            throw new FileNotFoundException('The dependency source file \'' . $basedir . DIRECTORY_SEPARATOR . $dependency->Source . '\' does not exist');
-                        $this->install($basedir . DIRECTORY_SEPARATOR . $dependency->Source);
-                        break;
+                    Console::outVerbose(sprintf('Installing dependency %s=%s for %s=%s', $dependency->Name, $dependency->Version, $package->Assembly->Package, $package->Assembly->Version));
+                    switch ($dependency->SourceType)
+                    {
+                        case DependencySourceType::Local:
+                            Console::outDebug('installing from local source ' . $dependency->Source);
+                            $basedir = dirname($package_path);
+                            if (!file_exists($basedir . DIRECTORY_SEPARATOR . $dependency->Source))
+                                throw new FileNotFoundException($basedir . DIRECTORY_SEPARATOR . $dependency->Source);
+                            $this->install($basedir . DIRECTORY_SEPARATOR . $dependency->Source);
+                            break;
 
-                    case DependencySourceType::StaticLinking:
-                        throw new PackageNotFoundException('Static linking not possible, package ' . $dependency->Name . ' is not installed');
+                        case DependencySourceType::StaticLinking:
+                            throw new PackageNotFoundException('Static linking not possible, package ' . $dependency->Name . ' is not installed');
 
-                    default:
-                        throw new NotImplementedException('Dependency source type ' . $dependency->SourceType . ' is not implemented');
+                        default:
+                            throw new NotImplementedException('Dependency source type ' . $dependency->SourceType . ' is not implemented');
+                    }
                 }
             }
             else
@@ -420,6 +423,82 @@
         public function getInstalledPackages(): array
         {
             return $this->getPackageLockManager()->getPackageLock()->getPackages();
+        }
+
+        /**
+         * Returns a package tree representation
+         *
+         * @param array $tree
+         * @param string|null $package
+         * @return array
+         */
+        public function getPackageTree(array $tree=[], ?string $package=null): array
+        {
+            // First build the packages to scan first
+            $packages = [];
+            if($package !== null)
+            {
+                // If it's coming from a selected package, query the package and process its dependencies
+                $exploded = explode('=', $package);
+                try
+                {
+                    foreach ($this->getPackage($exploded[0])?->getVersion($exploded[1])?->Dependencies as $dependency)
+                    {
+                        if(!in_array($dependency->PackageName . '=' . $dependency->Version, $tree))
+                            $packages[] = $dependency->PackageName . '=' . $dependency->Version;
+                    }
+                }
+                catch(Exception $e)
+                {
+                    unset($e);
+                }
+
+            }
+            else
+            {
+                // If it's coming from nothing, start with the installed packages on the system
+                try
+                {
+                    foreach ($this->getInstalledPackages() as $installed_package => $versions)
+                    {
+                        foreach ($versions as $version)
+                        {
+                            if (!in_array($installed_package . '=' . $version, $packages))
+                                $packages[] = $installed_package . '=' . $version;
+                        }
+                    }
+                }
+                catch (PackageLockException $e)
+                {
+                    unset($e);
+                }
+            }
+
+            // Go through each package
+            foreach($packages as $package)
+            {
+                $package_e = explode('=', $package);
+                try
+                {
+                    $version_entry = $this->getPackageVersion($package_e[0], $package_e[1]);
+                    $tree[$package] = null;
+                    if($version_entry->Dependencies !== null && count($version_entry->Dependencies) > 0)
+                    {
+                        $tree[$package] = [];
+                        foreach($version_entry->Dependencies as $dependency)
+                        {
+                            $dependency_name = sprintf('%s=%s', $dependency->PackageName, $dependency->Version);
+                            $tree[$package] = $this->getPackageTree($tree[$package], $dependency_name);
+                        }
+                    }
+                }
+                catch(Exception $e)
+                {
+                    unset($e);
+                }
+            }
+
+            return $tree;
         }
 
         /**

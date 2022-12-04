@@ -103,6 +103,7 @@
 
             $this->package->Header->CompilerExtension = $this->project->Project->Compiler;
             $this->package->Header->CompilerVersion = NCC_VERSION_NUMBER;
+            $this->package->Header->Options = $this->project->Project->Options;
 
             Console::outDebug('scanning project files');
             Console::outDebug('theseer\DirectoryScanner - Copyright (c) 2009-2014 Arne Blankerts <arne@blankerts.de> All rights reserved.');
