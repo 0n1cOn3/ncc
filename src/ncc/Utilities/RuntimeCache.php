@@ -32,6 +32,7 @@
          */
         public static function set($key, $value): mixed
         {
+            Console::outDebug(sprintf('setting cache entry \'%s\'', $key));
             self::$cache[$key] = $value;
             return $value;
         }
@@ -44,6 +45,7 @@
          */
         public static function get($key): mixed
         {
+            Console::outDebug(sprintf('getting cache entry \'%s\'', $key));
             if(isset(self::$cache[$key]))
                 return self::$cache[$key];
 
@@ -58,6 +60,7 @@
          */
         public static function setFileAsTemporary(string $path): void
         {
+            Console::outDebug(sprintf('setting file \'%s\' as temporary', $path));
             if(!in_array($path, self::$temporary_files))
                 self::$temporary_files[] = $path;
         }
@@ -71,6 +74,7 @@
          */
         public static function removeFileAsTemporary(string $path): void
         {
+            Console::outDebug(sprintf('removing file \'%s\' from temporary files list', $path));
             if(in_array($path, self::$temporary_files))
                 unset(self::$temporary_files[array_search($path, self::$temporary_files)]);
         }
@@ -84,21 +88,24 @@
         {
             if($clear_memory)
             {
+                Console::outDebug('clearing memory cache');
                 self::$cache = [];
             }
 
             if($clear_files)
             {
+                Console::outDebug('clearing temporary files');
                 $filesystem = new Filesystem();
                 foreach(self::$temporary_files as $file)
                 {
                     try
                     {
                         $filesystem->remove($file);
+                        Console::outDebug(sprintf('deleted temporary file \'%s\'', $file));
                     }
                     catch (Exception $e)
                     {
-                        // Ignore
+                        Console::outDebug(sprintf('failed to delete temporary file \'%s\', %s', $file, $e->getMessage()));
                         unset($e);
                     }
                 }
