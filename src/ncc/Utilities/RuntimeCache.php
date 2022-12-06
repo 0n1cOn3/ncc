@@ -1,7 +1,10 @@
 <?php
 
+    /** @noinspection PhpMissingFieldTypeInspection */
+
     namespace ncc\Utilities;
 
+    use Exception;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
 
     class RuntimeCache
@@ -27,7 +30,7 @@
          * @param $value
          * @return mixed
          */
-        public static function set($key, $value)
+        public static function set($key, $value): mixed
         {
             self::$cache[$key] = $value;
             return $value;
@@ -39,7 +42,7 @@
          * @param $key
          * @return mixed|null
          */
-        public static function get($key)
+        public static function get($key): mixed
         {
             if(isset(self::$cache[$key]))
                 return self::$cache[$key];
@@ -53,7 +56,7 @@
          * @param string $path
          * @return void
          */
-        public static function setFileAsTemporary(string $path)
+        public static function setFileAsTemporary(string $path): void
         {
             if(!in_array($path, self::$temporary_files))
                 self::$temporary_files[] = $path;
@@ -64,14 +67,17 @@
          *
          * @param string $path
          * @return void
+         * @noinspection PhpUnused
          */
-        public static function removeFileAsTemporary(string $path)
+        public static function removeFileAsTemporary(string $path): void
         {
             if(in_array($path, self::$temporary_files))
                 unset(self::$temporary_files[array_search($path, self::$temporary_files)]);
         }
 
         /**
+         * @param bool $clear_memory
+         * @param bool $clear_files
          * @return void
          */
         public static function clearCache(bool $clear_memory=true, bool $clear_files=true): void
@@ -86,8 +92,15 @@
                 $filesystem = new Filesystem();
                 foreach(self::$temporary_files as $file)
                 {
-                    if(file_exists($file))
+                    try
+                    {
                         $filesystem->remove($file);
+                    }
+                    catch (Exception $e)
+                    {
+                        // Ignore
+                        unset($e);
+                    }
                 }
             }
         }
