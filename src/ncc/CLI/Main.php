@@ -12,6 +12,7 @@
     use ncc\ncc;
     use ncc\Utilities\Console;
     use ncc\Utilities\Resolver;
+    use ncc\Utilities\RuntimeCache;
 
     class Main
     {
@@ -24,7 +25,7 @@
          * @var string|null
          */
         private static $log_level;
-        
+
         /**
          * Executes the main CLI process
          *
@@ -51,8 +52,8 @@
                     Console::outException('Cannot initialize NCC due to a runtime error.', $e, 1);
                 }
 
-                // Define CLI stuff
                 define('NCC_CLI_MODE', 1);
+                register_shutdown_function('ncc\CLI\Main::shutdown');
 
                 if(isset(self::$args['l']) || isset(self::$args['log-level']))
                 {
@@ -82,13 +83,14 @@
                 if(Resolver::checkLogLevel(self::$log_level, LogLevel::Debug))
                 {
                     Console::outDebug('Debug logging enabled');
-                    Console::outDebug(sprintf('consts: %s', json_encode(ncc::getConstants(), JSON_UNESCAPED_SLASHES)));
+                    /** @noinspection PhpUnhandledExceptionInspection */
+                    Console::outDebug(sprintf('const: %s', json_encode(ncc::getConstants(), JSON_UNESCAPED_SLASHES)));
                     Console::outDebug(sprintf('args: %s', json_encode(self::$args, JSON_UNESCAPED_SLASHES)));
                 }
 
                 if(in_array(NccBuildFlags::Unstable, NCC_VERSION_FLAGS))
                 {
-                    //Console::outWarning('This is an unstable build of NCC, expect some features to not work as expected');
+                    Console::outWarning('This is an unstable build of NCC, expect some features to not work as expected');
                 }
 
                 try
@@ -150,6 +152,15 @@
             if(self::$log_level == null)
                 self::$log_level = LogLevel::Info;
             return self::$log_level;
+        }
+
+        /**
+         * @return void
+         */
+        public static function shutdown()
+        {
+            Console::outDebug('clearing cache');
+            RuntimeCache::clearCache();
         }
 
     }
