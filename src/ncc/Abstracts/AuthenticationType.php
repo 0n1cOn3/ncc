@@ -2,15 +2,15 @@
 
     namespace ncc\Abstracts;
 
-    abstract class RemoteAuthenticationType
+    abstract class AuthenticationType
     {
         /**
          * A combination of a username and password is used for authentication
          */
-        const UsernamePassword = 'USERNAME_PASSWORD';
+        const UsernamePassword = 1;
 
         /**
          * A single private access token is used for authentication
          */
-        const PrivateAccessToken = 'PRIVATE_ACCESS_TOKEN';
+        const AccessToken = 2;
     }

@@ -8,7 +8,7 @@
     use ncc\Abstracts\Scopes;
     use ncc\Abstracts\Versions;
     use ncc\Exceptions\AccessDeniedException;
-    use ncc\Exceptions\InvalidCredentialsEntryException;
+    use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\RuntimeException;
     use ncc\Objects\Vault;
@@ -20,9 +20,15 @@
     class CredentialManager
     {
         /**
-         * @var null
+         * @var string
          */
         private $CredentialsPath;
+
+
+        /**
+         * @var Vault
+         */
+        private $Vault;
 
         /**
          * Public Constructor
@@ -31,23 +37,16 @@
         {
             /** @noinspection PhpUnhandledExceptionInspection */
             $this->CredentialsPath = PathFinder::getDataPath(Scopes::System) . DIRECTORY_SEPARATOR . 'credentials.store';
-        }
+            $this->Vault = null;
 
-        /**
-         * Determines if CredentialManager has correct access to manage credentials on the system
-         *
-         * @return bool
-         */
-        public function checkAccess(): bool
-        {
-            $ResolvedScope = Resolver::resolveScope();
-
-            if($ResolvedScope !== Scopes::System)
+            try
             {
-                return False;
+                $this->loadVault();
             }
-
-            return True;
+            catch(Exception $e)
+            {
+                unset($e);
+            }
         }
 
         /**
@@ -64,95 +63,67 @@
             if(file_exists($this->CredentialsPath))
                 return;
 
-            if(!$this->checkAccess())
-            {
+            if(Resolver::resolveScope() !== Scopes::System)
                 throw new AccessDeniedException('Cannot construct credentials store without system permissions');
-            }
 
             $VaultObject = new Vault();
             $VaultObject->Version = Versions::CredentialsStoreVersion;
 
-            IO::fwrite($this->CredentialsPath, ZiProto::encode($VaultObject->toArray()), 0600);
+            IO::fwrite($this->CredentialsPath, ZiProto::encode($VaultObject->toArray()), 0744);
         }
 
         /**
-         * Returns the vault object from the credentials store file.
+         * Loads the vault from the disk
          *
-         * @return Vault
-         * @throws AccessDeniedException
-         * @throws IOException
-         * @throws RuntimeException
-         */
-        public function getVault(): Vault
-        {
-            $this->constructStore();
-
-            if(!$this->checkAccess())
-            {
-                throw new AccessDeniedException('Cannot read credentials store without system permissions');
-            }
-
-            try
-            {
-                $Vault = ZiProto::decode(IO::fread($this->CredentialsPath));
-            }
-            catch(Exception $e)
-            {
-                // TODO: Implement error-correction for corrupted credentials store.
-                throw new RuntimeException($e->getMessage(), $e);
-            }
-
-            return Vault::fromArray($Vault);
-        }
-
-        /**
-         * Saves the vault object to the credentials store
-         *
-         * @param Vault $vault
          * @return void
          * @throws AccessDeniedException
          * @throws IOException
+         * @throws RuntimeException
+         * @throws FileNotFoundException
          */
-        public function saveVault(Vault $vault): void
+        public function loadVault(): void
         {
-            if(!$this->checkAccess())
+            if($this->Vault !== null)
+                return;
+
+            if(!file_exists($this->CredentialsPath))
             {
-                throw new AccessDeniedException('Cannot write to credentials store without system permissions');
+                $this->Vault = new Vault();
+                return;
             }
 
-            IO::fwrite($this->CredentialsPath, ZiProto::encode($vault->toArray()), 0600);
+            $VaultArray = ZiProto::decode(IO::fread($this->CredentialsPath));
+            $VaultObject = new Vault();
+            $VaultObject->fromArray($VaultArray);
+
+            if($VaultObject->Version !== Versions::CredentialsStoreVersion)
+                throw new RuntimeException('Credentials store version mismatch');
+
+            $this->Vault = $VaultObject;
         }
 
         /**
-         * Registers an entry to the credentials store file
+         * Saves the vault to the disk
          *
-         * @param Vault\Entry $entry
          * @return void
          * @throws AccessDeniedException
-         * @throws InvalidCredentialsEntryException
-         * @throws RuntimeException
          * @throws IOException
+         * @noinspection PhpUnused
          */
-        public function registerEntry(Vault\Entry $entry): void
+        public function saveVault(): void
         {
-            if(!preg_match('/^[\w-]+$/', $entry->Alias))
-            {
-                throw new InvalidCredentialsEntryException('The property \'Alias\' must be alphanumeric (Regex error)');
-            }
+            if(Resolver::resolveScope() !== Scopes::System)
+                throw new AccessDeniedException('Cannot save credentials store without system permissions');
 
-            // TODO: Implement more validation checks for the rest of the entry properties.
-            // TODO: Implement encryption for entries that require encryption (For securing passwords and data)
-
-            $Vault = $this->getVault();
-            $Vault->Entries[] = $entry;
-
-            $this->saveVault($Vault);
+            IO::fwrite($this->CredentialsPath, ZiProto::encode($this->Vault->toArray()), 0744);
         }
 
+
         /**
-         * @return null
+         * @return string
+         * @noinspection PhpUnused
          */
-        public function getCredentialsPath(): ?string
+        public function getCredentialsPath(): string
         {
             return $this->CredentialsPath;
         }
