@@ -260,7 +260,8 @@
             Console::outHelpSections([
                 new CliHelpSection(['help'], 'Displays this help menu about the value command'),
                 new CliHelpSection(['add'], 'Adds a new entry to the vault (See below)'),
-                new CliHelpSection(['remove', '--name'], 'Removes'),
+                new CliHelpSection(['remove', '--name'], 'Removes an entry from the vault'),
+                new CliHelpSection(['list'], 'Lists all entries in the vault'),
             ]);
             Console::out((string)null);
 
