@@ -96,8 +96,7 @@
             }
 
             $VaultArray = ZiProto::decode(IO::fread($this->CredentialsPath));
-            $VaultObject = new Vault();
-            $VaultObject->fromArray($VaultArray);
+            $VaultObject = Vault::fromArray($VaultArray);
 
             if($VaultObject->Version !== Versions::CredentialsStoreVersion)
                 throw new RuntimeException('Credentials store version mismatch');

@@ -261,8 +261,8 @@
 
             $self->Name = Functions::array_bc($data, 'name');
             $self->Encrypted = Functions::array_bc($data, 'encrypted');
-
             $password = Functions::array_bc($data, 'password');
+
             if($password !== null)
             {
                 if($self->Encrypted)
@@ -272,7 +272,7 @@
                 }
                 elseif(gettype($password) == 'array')
                 {
-                    $self->Password = match (Functions::array_bc($data, 'authentication_type'))
+                    $self->Password = match (Functions::array_bc($password, 'authentication_type'))
                     {
                         AuthenticationType::UsernamePassword => UsernamePassword::fromArray($password),
                         AuthenticationType::AccessToken => AccessToken::fromArray($password)

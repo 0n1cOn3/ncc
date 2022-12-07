@@ -5,6 +5,7 @@
     namespace ncc\Objects;
 
     use ncc\Abstracts\AuthenticationType;
+    use ncc\Abstracts\Versions;
     use ncc\Exceptions\RuntimeException;
     use ncc\Interfaces\PasswordInterface;
     use ncc\Objects\Vault\Entry;
@@ -31,6 +32,7 @@
          */
         public function __construct()
         {
+            $this->Version = Versions::CredentialsStoreVersion;
             $this->Entries = [];
         }
 
@@ -180,12 +182,10 @@
             $vault = new Vault();
             $vault->Version = Functions::array_bc($array, 'version');
             $entries = Functions::array_bc($array, 'entries');
+            $vault->Entries = [];
 
             foreach($entries as $entry)
-            {
-                $entry = Entry::fromArray($entry);
-                $vault->Entries[] = $entry;
-            }
+                $vault->Entries[] = Entry::fromArray($entry);
 
             return $vault;
         }
