@@ -47,6 +47,9 @@
             {
                 unset($e);
             }
+
+            if($this->Vault == null)
+                $this->Vault = new Vault();
         }
 
         /**
@@ -81,7 +84,7 @@
          * @throws RuntimeException
          * @throws FileNotFoundException
          */
-        public function loadVault(): void
+        private function loadVault(): void
         {
             if($this->Vault !== null)
                 return;
@@ -126,5 +129,13 @@
         public function getCredentialsPath(): string
         {
             return $this->CredentialsPath;
+        }
+
+        /**
+         * @return Vault|null
+         */
+        public function getVault(): ?Vault
+        {
+            return $this->Vault;
         }
     }

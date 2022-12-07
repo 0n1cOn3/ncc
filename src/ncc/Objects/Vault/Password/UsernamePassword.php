@@ -15,14 +15,14 @@
          *
          * @var string
          */
-        public $Username;
+        private $Username;
 
         /**
          * The entry's password
          *
          * @var string
          */
-        public $Password;
+        private $Password;
 
         /**
          * Returns an array representation of the object
@@ -89,5 +89,21 @@
         public function __toString(): string
         {
             return $this->Password;
+        }
+
+        /**
+         * @param string $Username
+         */
+        public function setUsername(string $Username): void
+        {
+            $this->Username = $Username;
+        }
+
+        /**
+         * @param string $Password
+         */
+        public function setPassword(string $Password): void
+        {
+            $this->Password = $Password;
         }
     }

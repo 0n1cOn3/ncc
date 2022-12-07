@@ -71,4 +71,12 @@
         {
             return $this->AccessToken;
         }
+
+        /**
+         * @param string $AccessToken
+         */
+        public function setAccessToken(string $AccessToken): void
+        {
+            $this->AccessToken = $AccessToken;
+        }
     }

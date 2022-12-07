@@ -131,7 +131,7 @@
 
             if($entry->getPassword() === null)
             {
-                if($entry->isEncrypted() && !$entry->isIsCurrentlyDecrypted())
+                if($entry->isEncrypted() && !$entry->isCurrentlyDecrypted())
                 {
                     return $entry->unlock($password);
                 }
@@ -162,16 +162,7 @@
             $entries = [];
             foreach($this->Entries as $entry)
             {
-                $entry_array = $entry->toArray($bytecode);
-
-                if($entry->getPassword() !== null && $entry->isEncrypted())
-                {
-                    $entry_array['password'] = Crypto::encryptWithPassword(
-                        ZiProto::encode($entry_array['password']), $entry->getPassword()->__toString(), $bytecode
-                    );
-                }
-
-                $entries[] = $entry_array;
+                $entries[] = $entry->toArray($bytecode);;
             }
 
             return [

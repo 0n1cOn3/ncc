@@ -87,12 +87,12 @@
                         return false;
 
                     if($username == null)
-                        return $password == $this->Password->Password;
+                        return $password == $this->Password->getPassword();
 
                     if($password == null)
-                        return $username == $this->Password->Username;
+                        return $username == $this->Password->getUsername();
 
-                    return $username == $this->Password->Username && $password == $this->Password->Password;
+                    return $username == $this->Password->getUsername() && $password == $this->Password->getPassword();
 
                 case AuthenticationType::AccessToken:
                     if(!($this->Password instanceof AccessToken))
@@ -124,7 +124,7 @@
          * @return bool
          * @noinspection PhpUnused
          */
-        public function isIsCurrentlyDecrypted(): bool
+        public function isCurrentlyDecrypted(): bool
         {
             return $this->IsCurrentlyDecrypted;
         }
@@ -222,11 +222,15 @@
          */
         public function toArray(bool $bytecode=false): array
         {
-            if(!$this->Password)
+            if($this->Password !== null)
             {
                 if($this->Encrypted && $this->IsCurrentlyDecrypted)
                 {
                     $password = $this->encrypt();
+                }
+                elseif($this->Encrypted)
+                {
+                    $password = $this->Password;
                 }
                 else
                 {
@@ -268,7 +272,8 @@
                 }
                 elseif(gettype($password) == 'array')
                 {
-                    $self->Password = match (Functions::array_bc($data, 'authentication_type')) {
+                    $self->Password = match (Functions::array_bc($data, 'authentication_type'))
+                    {
                         AuthenticationType::UsernamePassword => UsernamePassword::fromArray($password),
                         AuthenticationType::AccessToken => AccessToken::fromArray($password)
                     };
