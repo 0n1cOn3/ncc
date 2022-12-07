@@ -5,12 +5,10 @@
     namespace ncc\Objects;
 
     use ncc\Abstracts\AuthenticationType;
-    use ncc\Defuse\Crypto\Crypto;
     use ncc\Exceptions\RuntimeException;
     use ncc\Interfaces\PasswordInterface;
     use ncc\Objects\Vault\Entry;
     use ncc\Utilities\Functions;
-    use ncc\ZiProto\ZiProto;
 
     class Vault
     {
@@ -162,7 +160,7 @@
             $entries = [];
             foreach($this->Entries as $entry)
             {
-                $entries[] = $entry->toArray($bytecode);;
+                $entries[] = $entry->toArray($bytecode);
             }
 
             return [
