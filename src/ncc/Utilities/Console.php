@@ -1,12 +1,14 @@
-<?php
+<?php /** @noinspection PhpMissingFieldTypeInspection */
 
-    namespace ncc\Utilities;
+namespace ncc\Utilities;
 
     use Exception;
     use ncc\Abstracts\ConsoleColors;
     use ncc\Abstracts\LogLevel;
     use ncc\CLI\Main;
     use ncc\ncc;
+    use ncc\Objects\CliHelpSection;
+    use ncc\ThirdParty\Symfony\Process\ExecutableFinder;
 
     class Console
     {
@@ -425,4 +427,48 @@
                 }
             }
         }
+
+        /**
+         * Prompts for a password input while hiding the user's password
+         *
+         * @param string $prompt
+         * @return string|null
+         */
+        public static function passwordInput(string $prompt): ?string
+        {
+            if(!ncc::cliMode())
+                return null;
+
+            $executable_finder = new ExecutableFinder();
+            $bash_path = $executable_finder->find('bash');
+
+            if($bash_path == null)
+            {
+                self::outWarning('Unable to find bash executable, cannot hide password input');
+                return self::getInput($prompt);
+            }
+
+            $prompt = escapeshellarg($prompt);
+            $random = Functions::randomString(10);
+            $command = "$bash_path -c 'read -s -p $prompt $random && echo \$" . $random . "'";
+            $password = rtrim(shell_exec($command));
+            self::out((string)null);
+            return $password;
+        }
+
+        /**
+         * @param array $sections
+         * @return void
+         */
+        public static function outHelpSections(array $sections): void
+        {
+            if(!ncc::cliMode())
+                return;
+
+            $padding = Functions::detectParametersPadding($sections);
+
+            foreach($sections as $section)
+                Console::out('   ' . $section->toString($padding));
+        }
+
     }

@@ -376,6 +376,7 @@
          * @throws AccessDeniedException
          * @throws FileNotFoundException
          * @throws IOException
+         * @noinspection PhpUnused
          */
         public static function loadComposerJson(string $path): ComposerJson
         {
@@ -430,6 +431,7 @@
          *
          * @param string $property
          * @return mixed|null
+         * @noinspection PhpMissingReturnTypeInspection
          */
         public static function getConfigurationProperty(string $property)
         {
@@ -451,5 +453,23 @@
                 $version = substr($version, 1);
 
             return Parser::parse($version)->toString();
+        }
+
+        /**
+         * Returns a random string
+         *
+         * @param int $length
+         * @return string
+         */
+        public static function randomString(int $length = 32): string
+        {
+            $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            $charactersLength = strlen($characters);
+            $randomString = '';
+            for ($i = 0; $i < $length; $i++)
+            {
+                $randomString .= $characters[rand(0, $charactersLength - 1)];
+            }
+            return $randomString;
         }
     }
