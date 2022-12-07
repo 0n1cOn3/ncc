@@ -50,7 +50,45 @@
                 return;
             }
 
+            if(isset($args['list']))
+            {
+                try
+                {
+                    self::listEntries();
+                }
+                catch(Exception $e)
+                {
+                    Console::outException('Cannot list credentials.', $e, 1);
+                }
+
+                return;
+            }
+
             self::displayOptions();
+        }
+
+        /**
+         * Prints the list of entries in the vault
+         *
+         * @return void
+         */
+        public static function listEntries(): void
+        {
+            $credential_manager = new CredentialManager();
+            $entries = $credential_manager->getVault()->getEntries();
+
+            if(count($entries) === 0)
+            {
+                Console::out('No credentials found.');
+                return;
+            }
+
+            foreach($entries as $entry)
+            {
+                Console::out(sprintf('%s%s', $entry->getName(), ($entry->isEncrypted() ? ' (encrypted)' : '')));
+            }
+
+            Console::out('Total: ' . count($entries));
         }
 
         /**
