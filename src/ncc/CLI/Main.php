@@ -109,7 +109,7 @@
                             BuildMenu::start(self::$args);
                             exit(0);
 
-                        case 'credential':
+                        case 'cred':
                             CredentialMenu::start(self::$args);
                             exit(0);
 

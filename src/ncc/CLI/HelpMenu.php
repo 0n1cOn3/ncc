@@ -71,7 +71,7 @@
                 new CliHelpSection(['project'], 'Manages the current project'),
                 new CliHelpSection(['package'], 'Manages the package system'),
                 new CliHelpSection(['cache'], 'Manages the system cache'),
-                new CliHelpSection(['credential'], 'Manages credentials'),
+                new CliHelpSection(['cred'], 'Manages credentials'),
                 new CliHelpSection(['config'], 'Changes NCC configuration values'),
             ];
             $commands_padding = \ncc\Utilities\Functions::detectParametersPadding($commands) + 2;

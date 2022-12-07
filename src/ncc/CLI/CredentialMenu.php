@@ -30,7 +30,6 @@
 
             self::displayOptions();
             exit(0);
-
         }
 
         /**
