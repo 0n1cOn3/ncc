@@ -2,8 +2,12 @@
 
     namespace ncc\CLI;
 
+    use ncc\Exceptions\AccessDeniedException;
+    use ncc\Exceptions\FileNotFoundException;
+    use ncc\Exceptions\IOException;
     use ncc\Objects\CliHelpSection;
     use ncc\Utilities\Console;
+    use ncc\Utilities\Functions;
 
     class HelpMenu
     {
@@ -12,8 +16,11 @@
          *
          * @param $args
          * @return void
+         * @throws AccessDeniedException
+         * @throws FileNotFoundException
+         * @throws IOException
          */
-        public static function start($args)
+        public static function start($args): void
         {
             $basic_ascii = false;
 
@@ -23,7 +30,7 @@
             }
 
             // TODO: Make copyright not hard-coded.
-            print(\ncc\Utilities\Functions::getBanner(NCC_VERSION_BRANCH . ' ' . NCC_VERSION_NUMBER, 'Copyright (c) 2022-2022 Nosial', $basic_ascii) . PHP_EOL);
+            print(Functions::getBanner(NCC_VERSION_BRANCH . ' ' . NCC_VERSION_NUMBER, 'Copyright (c) 2022-2022 Nosial', $basic_ascii) . PHP_EOL);
 
             Console::out('Usage: ncc COMMAND [options]');
             Console::out('Alternative Usage: ncc.php --ncc-cli=COMMAND [options]' . PHP_EOL);
@@ -42,7 +49,8 @@
          */
         private static function displayMainOptions(): void
         {
-            $options = [
+            Console::out('Options:');
+            Console::outHelpSections([
                 new CliHelpSection(['{command} --help'], 'Displays help information about a specific command'),
                 new CliHelpSection(['-v', '--version'], 'Display NCC version information'),
                 new CliHelpSection(['-D', '--debug'], 'Enables debug mode'),
@@ -50,14 +58,7 @@
                 new CliHelpSection(['--basic-ascii'], 'Uses basic ascii characters'),
                 new CliHelpSection(['--no-color'], 'Omits the use of colors'),
                 new CliHelpSection(['--no-banner'], 'Omits displaying the NCC ascii banner')
-            ];
-            $options_padding = \ncc\Utilities\Functions::detectParametersPadding($options) + 4;
-
-            Console::out('Options:');
-            foreach($options as $option)
-            {
-                Console::out('   ' . $option->toString($options_padding));
-            }
+            ]);
         }
 
         /**
@@ -67,20 +68,14 @@
          */
         private static function displayManagementCommands(): void
         {
-            $commands = [
+            Console::out('Management Commands:');
+            Console::outHelpSections([
                 new CliHelpSection(['project'], 'Manages the current project'),
                 new CliHelpSection(['package'], 'Manages the package system'),
                 new CliHelpSection(['cache'], 'Manages the system cache'),
                 new CliHelpSection(['cred'], 'Manages credentials'),
                 new CliHelpSection(['config'], 'Changes NCC configuration values'),
-            ];
-            $commands_padding = \ncc\Utilities\Functions::detectParametersPadding($commands) + 2;
-
-            Console::out('Management Commands:');
-            foreach($commands as $command)
-            {
-                Console::out('   ' . $command->toString($commands_padding));
-            }
+            ]);
         }
 
         /**
@@ -90,17 +85,11 @@
          */
         private static function displayMainCommands(): void
         {
-            $commands = [
+            Console::out('Commands:');
+            Console::outHelpSections([
                 new CliHelpSection(['build'], 'Builds the current project'),
                 new CliHelpSection(['main'], 'Executes the main entrypoint of a package')
-            ];
-            $commands_padding = \ncc\Utilities\Functions::detectParametersPadding($commands) + 2;
-
-            Console::out('Commands:');
-            foreach($commands as $command)
-            {
-                Console::out('   ' . $command->toString($commands_padding));
-            }
+            ]);
         }
 
         /**
@@ -110,15 +99,9 @@
          */
         private static function displayExtensions(): void
         {
-            $extensions = [
-                new CliHelpSection(['exphp'], 'The PHP compiler extension')
-            ];
-            $extensions_padding = \ncc\Utilities\Functions::detectParametersPadding($extensions) + 2;
-
             Console::out('Extensions:');
-            foreach($extensions as $command)
-            {
-                Console::out('   ' . $command->toString($extensions_padding));
-            }
+            Console::outHelpSections([
+                new CliHelpSection(['exphp'], 'The PHP compiler extension')
+            ]);
         }
     }
