@@ -31,6 +31,7 @@
          *
          * @param $argv
          * @return void
+         * @throws RuntimeException
          */
         public static function start($argv): void
         {
@@ -137,10 +138,22 @@
         }
 
         /**
-         * @return mixed
+         * @return array
          */
-        public static function getArgs()
+        public static function getArgs(): array
         {
+            if (self::$args == null)
+            {
+                if(isset($argv))
+                {
+                    self::$args = Resolver::parseArguments(implode(' ', $argv));
+                }
+                else
+                {
+                    self::$args = [];
+                }
+            }
+
             return self::$args;
         }
 
@@ -157,7 +170,7 @@
         /**
          * @return void
          */
-        public static function shutdown()
+        public static function shutdown(): void
         {
             Console::outDebug('clearing cache');
             RuntimeCache::clearCache();
