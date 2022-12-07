@@ -19,29 +19,50 @@
          *
          * @param $args
          * @return void
-         * @noinspection PhpNoReturnAttributeCanBeAddedInspection
          */
         public static function start($args): void
         {
             if(isset($args['add']))
             {
-                self::addCredential($args);
+                try
+                {
+                    self::addEntry($args);
+                }
+                catch(Exception $e)
+                {
+                    Console::outException('Error while adding entry.', $e, 1);
+                }
+
+                return;
+            }
+
+            if(isset($args['remove']))
+            {
+                try
+                {
+                    self::removeEntry($args);
+                }
+                catch(Exception $e)
+                {
+                    Console::outException('Cannot remove credential.', $e, 1);
+                }
+
+                return;
             }
 
             self::displayOptions();
-            exit(0);
         }
 
         /**
          * @param $args
          * @return void
          */
-        public static function addCredential($args): void
+        public static function addEntry($args): void
         {
             $ResolvedScope = Resolver::resolveScope();
 
             if($ResolvedScope !== Scopes::System)
-                Console::outError('Insufficient permissions to add credentials');
+                Console::outError('Insufficient permissions to add entries');
 
             // Really dumb-proofing this
             $name = $args['alias'] ?? $args['name'] ?? null;
@@ -149,7 +170,44 @@
             }
 
             Console::out('Successfully added entry', true, 0);
-            exit(0);
+        }
+
+        /**
+         * Removes an existing entry from the vault.
+         *
+         * @param $args
+         * @return void
+         */
+        private static function removeEntry($args): void
+        {
+            $ResolvedScope = Resolver::resolveScope();
+
+            if($ResolvedScope !== Scopes::System)
+                Console::outError('Insufficient permissions to remove entries');
+
+            $name = $args['alias'] ?? $args['name'] ?? null;
+
+            if($name === null)
+                $name = Console::getInput('Enter the name of the entry to remove: ');
+
+            $credential_manager = new CredentialManager();
+            if(!$credential_manager->getVault()->deleteEntry($name))
+            {
+                Console::outError('Failed to remove entry, entry does not exist.', true, 1);
+                return;
+            }
+
+            try
+            {
+                $credential_manager->saveVault();
+            }
+            catch(Exception $e)
+            {
+                Console::outException('Failed to save vault', $e, 1);
+                return;
+            }
+
+            Console::out('Successfully removed entry', true, 0);
         }
 
         /**
