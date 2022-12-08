@@ -149,6 +149,7 @@
                 return false;
 
             $this->Password = $this->encrypt();
+            var_dump($this->Password);
             return true;
         }
 
@@ -210,8 +211,8 @@
             if(!($this->Password instanceof PasswordInterface))
                 return null;
 
-            $password = ZiProto::encode($this->Password->toArray(true));
-            return Crypto::encryptWithPassword($password, $password, true);
+            $data = ZiProto::encode($this->Password->toArray(true));
+            return Crypto::encryptWithPassword($data, (string)$this->Password, true);
         }
 
         /**
