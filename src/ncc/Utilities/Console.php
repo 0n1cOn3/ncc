@@ -1,6 +1,8 @@
-<?php /** @noinspection PhpMissingFieldTypeInspection */
+<?php
 
-namespace ncc\Utilities;
+    /** @noinspection PhpMissingFieldTypeInspection */
+
+    namespace ncc\Utilities;
 
     use Exception;
     use ncc\Abstracts\ConsoleColors;
@@ -439,6 +441,10 @@ namespace ncc\Utilities;
             if(!ncc::cliMode())
                 return null;
 
+            Console::outWarning('passwordInput() is not properly implemented yet, defaulting to prompt');
+            return self::getInput($prompt);
+
+            /**
             $executable_finder = new ExecutableFinder();
             $bash_path = $executable_finder->find('bash');
 
@@ -454,6 +460,7 @@ namespace ncc\Utilities;
             $password = rtrim(shell_exec($command));
             self::out((string)null);
             return $password;
+             **/
         }
 
         /**
