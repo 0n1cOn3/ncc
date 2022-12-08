@@ -335,7 +335,7 @@
          */
         private static function displayOptions(): void
         {
-            Console::out('Usage: ncc vault {command} [options]');
+            Console::out('Usage: ncc cred {command} [options]');
             Console::out('Options:');
             Console::outHelpSections([
                 new CliHelpSection(['help'], 'Displays this help menu about the value command'),
@@ -371,8 +371,8 @@
             Console::out('   pat' . PHP_EOL);
 
             Console::out('Examples:');
-            Console::out('   ncc vault add --alias "My Alias" --auth-type login --username "myusername" --password "mypassword" --encrypt');
-            Console::out('   ncc vault add --alias "My Alias" --auth-type pat --token "mytoken"');
-            Console::out('   ncc vault remove --alias "My Alias"');
+            Console::out('   ncc cred add --alias "My Alias" --auth-type login --username "myusername" --password "mypassword" --encrypt');
+            Console::out('   ncc cred add --alias "My Alias" --auth-type pat --token "mytoken"');
+            Console::out('   ncc cred remove --alias "My Alias"');
         }
     }
