@@ -74,15 +74,18 @@
          */
         public function deleteEntry(string $name): bool
         {
-            foreach($this->Entries as $entry)
+            // Find the entry
+            foreach($this->Entries as $index => $entry)
             {
                 if($entry->getName() === $name)
                 {
-                    $this->Entries = array_diff($this->Entries, [$entry]);
+                    // Remove the entry
+                    unset($this->Entries[$index]);
                     return true;
                 }
             }
 
+            // Entry not found
             return false;
         }
 
