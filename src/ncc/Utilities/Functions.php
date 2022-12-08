@@ -5,6 +5,7 @@
     use Exception;
     use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
+    use ncc\Classes\BashExtension\BashRunner;
     use ncc\Classes\PhpExtension\PhpRunner;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
@@ -257,6 +258,7 @@
         public static function compileRunner(string $path, ExecutionPolicy $policy): ExecutionUnit
         {
             return match (strtolower($policy->Runner)) {
+                Runners::bash => BashRunner::processUnit($path, $policy),
                 Runners::php => PhpRunner::processUnit($path, $policy),
                 default => throw new UnsupportedRunnerException('The runner \'' . $policy->Runner . '\' is not supported'),
             };

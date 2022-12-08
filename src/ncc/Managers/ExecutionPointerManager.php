@@ -7,6 +7,7 @@
     use Exception;
     use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
+    use ncc\Classes\BashExtension\BashRunner;
     use ncc\Classes\PhpExtension\PhpRunner;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\ExecutionUnitNotFoundException;
@@ -140,6 +141,7 @@
 
             $bin_file = $package_bin_path . DIRECTORY_SEPARATOR . hash('haval128,4', $unit->ExecutionPolicy->Name);
             $bin_file .= match ($unit->ExecutionPolicy->Runner) {
+                Runners::bash => BashRunner::getFileExtension(),
                 Runners::php => PhpRunner::getFileExtension(),
                 default => throw new UnsupportedRunnerException('The runner \'' . $unit->ExecutionPolicy->Runner . '\' is not supported'),
             };
@@ -272,6 +274,7 @@
 
             $process = match (strtolower($unit->ExecutionPolicy->Runner))
             {
+                Runners::bash => BashRunner::prepareProcess($unit),
                 Runners::php => PhpRunner::prepareProcess($unit),
                 default => throw new UnsupportedRunnerException('The runner \'' . $unit->ExecutionPolicy->Runner . '\' is not supported'),
             };
