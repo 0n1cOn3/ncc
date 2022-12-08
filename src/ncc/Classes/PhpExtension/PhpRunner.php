@@ -2,6 +2,7 @@
 
     namespace ncc\Classes\PhpExtension;
 
+    use ncc\Abstracts\Runners;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;
@@ -10,10 +11,10 @@
     use ncc\Objects\ExecutionPointers\ExecutionPointer;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
-    use ncc\ThirdParty\Symfony\Process\ExecutableFinder;
     use ncc\ThirdParty\Symfony\Process\Process;
     use ncc\Utilities\Base64;
     use ncc\Utilities\IO;
+    use ncc\Utilities\PathFinder;
 
     class PhpRunner implements RunnerInterface
     {
@@ -28,12 +29,11 @@
         public static function processUnit(string $path, ExecutionPolicy $policy): ExecutionUnit
         {
             $execution_unit = new ExecutionUnit();
-            $target_file = $path;
-            if(!file_exists($target_file) && !is_file($target_file))
-                throw new FileNotFoundException($target_file);
+            if(!file_exists($path) && !is_file($path))
+                throw new FileNotFoundException($path);
             $policy->Execute->Target = null;
             $execution_unit->ExecutionPolicy = $policy;
-            $execution_unit->Data = Base64::encode(IO::fread($target_file));
+            $execution_unit->Data = Base64::encode(IO::fread($path));
 
             return $execution_unit;
         }
@@ -55,10 +55,7 @@
          */
         public static function prepareProcess(ExecutionPointer $pointer): Process
         {
-            $php_bin = new ExecutableFinder();
-            $php_bin = $php_bin->find('php');
-            if($php_bin == null)
-                throw new RunnerExecutionException('Cannot locate PHP executable');
+            $php_bin = PathFinder::findRunner(Runners::php);
 
             if($pointer->ExecutionPolicy->Execute->Options !== null && count($pointer->ExecutionPolicy->Execute->Options) > 0)
                 return new Process(array_merge([$php_bin, $pointer->FilePointer], $pointer->ExecutionPolicy->Execute->Options));
