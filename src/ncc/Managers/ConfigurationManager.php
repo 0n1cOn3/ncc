@@ -12,6 +12,7 @@
     use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\IOException;
     use ncc\ThirdParty\Symfony\Yaml\Yaml;
+    use ncc\Utilities\Console;
     use ncc\Utilities\Functions;
     use ncc\Utilities\IO;
     use ncc\Utilities\PathFinder;
@@ -88,6 +89,7 @@
          */
         public function getProperty(string $property)
         {
+            Console::outDebug($property);
             $current_selection = $this->getConfiguration();
             foreach(explode('.', strtolower($property)) as $property)
             {
