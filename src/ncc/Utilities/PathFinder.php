@@ -2,8 +2,11 @@
 
     namespace ncc\Utilities;
 
+    use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
     use ncc\Exceptions\InvalidScopeException;
+    use ncc\Exceptions\RunnerExecutionException;
+    use ncc\ThirdParty\Symfony\Process\ExecutableFinder;
 
     class PathFinder
     {
@@ -212,5 +215,33 @@
         public static function getConfigurationFile(): string
         {
             return self::getDataPath(Scopes::System) . DIRECTORY_SEPARATOR . 'ncc.yaml';
+        }
+
+        /**
+         * Attempts to locate the executable path of the given program name
+         *
+         * @param string $runner
+         * @return string
+         * @throws RunnerExecutionException
+         */
+        public static function findRunner(string $runner): string
+        {
+            $executable_finder = new ExecutableFinder();
+
+            $config_value = Functions::getConfigurationProperty(sprintf('runners.%s', $runner));
+            if($config_value !== null)
+            {
+                if(file_exists($config_value) && is_executable($config_value))
+                    return $config_value;
+
+                Console::outWarning(sprintf('The configured \'%s\' executable path is invalid, trying to find it automatically...', $runner));
+            }
+
+            $exec_path = $executable_finder->find($runner);
+
+            if($exec_path !== null)
+                return $exec_path;
+
+            throw new RunnerExecutionException(sprintf('Unable to find \'%s\' executable', $runner));
         }
     }
