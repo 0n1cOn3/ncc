@@ -1,6 +1,6 @@
 # Execution Policies
 
-**Updated on Sunday, November 20, 2022**
+**Updated on Wednesday, December 07, 2022**
 
 An execution policy is a policy defined in the Project
 configuration file (`project.json`) that can be used
@@ -24,13 +24,20 @@ handled by NCC's compiler extensions.
   * [JSON Example](#json-example)
   * [ExecutionPolicy Object](#executionpolicy-object)
     * [Object Properties](#object-properties)
-    * [JSON Example](#json-example)
+    * [JSON Example](#json-example-1)
   * [ExecutionConfiguration Object](#executionconfiguration-object)
-    * [Object Properties](#object-properties)
-    * [JSON Example](#json-example)
+    * [Object Properties](#object-properties-1)
+    * [JSON Example](#json-example-2)
   * [ExitHandler Object](#exithandler-object)
-    * [Object Properties](#object-properties)
-    * [JSON Example](#json-example)
+    * [Object Properties](#object-properties-2)
+    * [JSON Example](#json-example-3)
+  * [More Examples](#more-examples)
+    * [bash](#bash)
+    * [lua](#lua)
+    * [php](#php)
+    * [perl](#perl)
+    * [python (or python2/python3)](#python--or-python2python3-)
+    * [shell](#shell)
 <!-- TOC -->
 
 
@@ -147,5 +154,126 @@ an exit handler is specified it will be executed.
   "end_process": false,
   "run": null,
   "exit_code": 1
+}
+```
+
+
+## More Examples
+
+Just like the `project.json` file, you can have multiple
+execution policies in your project, here are some examples
+of how you can use them:
+
+### bash
+
+```json
+{
+  "execution_policies": [
+    {
+      "name": "main",
+      "runner": "bash",
+      "message": "Running main %ASSEMBLY.PACKAGE%",
+      "exec": {
+        "target": "scripts/main.bash",
+        "working_directory": "%INSTALL_PATH.SRC%",
+        "silent": false
+      }
+    }
+  ]
+}
+```
+
+### lua
+
+```json
+{
+  "execution_policies": [
+    {
+      "name": "main",
+      "runner": "lua",
+      "message": "Running main %ASSEMBLY.PACKAGE%",
+      "exec": {
+        "target": "scripts/main.lua",
+        "working_directory": "%INSTALL_PATH.SRC%",
+        "silent": false
+      }
+    }
+  ]
+}
+```
+
+### php
+
+```json
+{
+  "execution_policies": [
+    {
+      "name": "main",
+      "runner": "php",
+      "message": "Running main %ASSEMBLY.PACKAGE%",
+      "exec": {
+        "target": "scripts/main.php",
+        "working_directory": "%INSTALL_PATH.SRC%",
+        "silent": false
+      }
+    }
+  ]
+}
+```
+
+### perl
+
+```json
+{
+  "execution_policies": [
+    {
+      "name": "main",
+      "runner": "perl",
+      "message": "Running main %ASSEMBLY.PACKAGE%",
+      "exec": {
+        "target": "scripts/main.pl",
+        "working_directory": "%INSTALL_PATH.SRC%",
+        "silent": false
+      }
+    }
+  ]
+}
+```
+
+### python (or python2/python3)
+
+```json
+{
+  "execution_policies": [
+    {
+      "name": "main",
+      "runner": "python",
+      "message": "Running main %ASSEMBLY.PACKAGE%",
+      "exec": {
+        "target": "scripts/main.py",
+        "working_directory": "%INSTALL_PATH.SRC%",
+        "silent": false
+      }
+    }
+  ]
+}
+```
+
+### shell
+
+```json
+{
+  "execution_policies": [
+    {
+      "name": "main",
+      "runner": "shell",
+      "message": "Running main %ASSEMBLY.PACKAGE%",
+      "exec": {
+        "target": "scripts/main.sh",
+        "working_directory": "%INSTALL_PATH.SRC%",
+        "silent": false
+      }
+    }
+  ]
 }
 ```
