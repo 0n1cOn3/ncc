@@ -441,7 +441,7 @@
             if(!ncc::cliMode())
                 return null;
 
-            Console::outWarning('passwordInput() is not properly implemented yet, defaulting to prompt');
+            // passwordInput() is not properly implemented yet, defaulting to prompt
             return self::getInput($prompt);
 
             /**
