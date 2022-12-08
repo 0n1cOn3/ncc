@@ -148,8 +148,6 @@
                     $source_directories = [];
                     $static_files = [];
 
-                    // TODO: Implement static files handling
-
                     // Extract all the source directories
                     if ($package->Autoload->Psr4 !== null && count($package->Autoload->Psr4) > 0)
                     {
@@ -221,18 +219,68 @@
                     if (count($static_files) > 0)
                     {
                         $project_configuration->Project->Options['static_files'] = $static_files;
-                        $parsed_path = str_ireplace($package_path . DIRECTORY_SEPARATOR, '', $item->getPathName());
-                        if (!$filesystem->exists($source_directory . DIRECTORY_SEPARATOR . $parsed_path))
+
+                        foreach ($static_files as $file)
                         {
+                            $parsed_path = str_ireplace($package_path . DIRECTORY_SEPARATOR, '', $file);
                             Console::outDebug(sprintf('copying file %s for package %s', $parsed_path, $package->Name));
-                            $filesystem->copy($item->getPathName(), $source_directory . DIRECTORY_SEPARATOR . $parsed_path);
+                            $filesystem->copy($file, $source_directory . DIRECTORY_SEPARATOR . $parsed_path);
                         }
+                        unset($file);
                     }
 
                     $project_configuration->toFile($package_path . DIRECTORY_SEPARATOR . 'project.json');
                 }
 
                 // Load the project
+                $license_files = [
+                    'LICENSE',
+                    'license',
+                    'LICENSE.txt',
+                    'license.txt'
+                ];
+
+                foreach($license_files as $license_file)
+                {
+                    if($filesystem->exists($package_path . DIRECTORY_SEPARATOR . $license_file))
+                    {
+                        // Check configuration if composer.extension.display_licenses is set
+                        if(Functions::cbool(Functions::getConfigurationProperty('composer.extension.display_licenses')))
+                        {
+                            Console::out(sprintf('License for package %s:', $package->Name));
+                            Console::out(IO::fread($package_path . DIRECTORY_SEPARATOR . $license_file));
+                        }
+                    }
+                }
+
+                if(Functions::cbool(Functions::getConfigurationProperty('composer.extension.display_authors')))
+                {
+                    if($package->Authors !== null && count($package->Authors) > 0)
+                    {
+                        Console::out(sprintf('Authors for package %s:', $package->Name));
+                        foreach($package->Authors as $author)
+                        {
+                            Console::out(sprintf(' - %s', $author->Name));
+
+                            if($author->Email !== null)
+                            {
+                                Console::out(sprintf('   %s', $author->Email));
+                            }
+
+                            if($author->Homepage !== null)
+                            {
+                                Console::out(sprintf('   %s', $author->Homepage));
+                            }
+
+                            if($author->Role !== null)
+                            {
+                                Console::out(sprintf('   %s', $author->Role));
+                            }
+
+                        }
+                    }
+                }
+
                 $project_manager = new ProjectManager($package_path);
                 $project_manager->load();
                 $built_package = $project_manager->build();
