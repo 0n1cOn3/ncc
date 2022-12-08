@@ -4,6 +4,7 @@
 
     use Exception;
     use ncc\Abstracts\Scopes;
+    use ncc\Exceptions\RuntimeException;
     use ncc\Managers\CredentialManager;
     use ncc\Objects\CliHelpSection;
     use ncc\Objects\Vault\Password\AccessToken;
@@ -44,7 +45,7 @@
                 }
                 catch(Exception $e)
                 {
-                    Console::outException('Cannot remove credential.', $e, 1);
+                    Console::outException('Cannot remove entry.', $e, 1);
                 }
 
                 return;
@@ -58,13 +59,92 @@
                 }
                 catch(Exception $e)
                 {
-                    Console::outException('Cannot list credentials.', $e, 1);
+                    Console::outException('Cannot list entries.', $e, 1);
+                }
+
+                return;
+            }
+
+            if(isset($args['test']))
+            {
+                try
+                {
+                    self::testEntry($args);
+                }
+                catch(Exception $e)
+                {
+                    Console::outException('Cannot test entry.', $e, 1);
                 }
 
                 return;
             }
 
             self::displayOptions();
+        }
+
+        /**
+         * Tests an entry authentication
+         *
+         * @param $args
+         * @return void
+         */
+        public static function testEntry($args): void
+        {
+            $name = $args['name'] ?? $args['alias'] ?? null;
+
+            if($name === null)
+            {
+                Console::outError('Please specify a name or alias for the entry.', true, 1);
+                return;
+            }
+
+            $credential_manager = new CredentialManager();
+            $entry = $credential_manager->getVault()->getEntry($name);
+
+            if($entry === null)
+            {
+                Console::out('Entry not found.', true, 1);
+                return;
+            }
+
+            if($entry->isEncrypted())
+            {
+                $tries = 0;
+
+                while(true)
+                {
+                    try
+                    {
+                        $password = Console::passwordInput('Password/Secret: ');
+                        if (!$entry->unlock($password))
+                        {
+                            $tries++;
+                            if ($tries >= 3)
+                            {
+                                Console::outError('Too many failed attempts.', true, 1);
+                                return;
+                            }
+
+                            Console::outError('Invalid password.', true, 1);
+                        }
+                        else
+                        {
+                            Console::out('Authentication successful.');
+                            return;
+                        }
+                    }
+                    catch (RuntimeException $e)
+                    {
+                        Console::outException('Cannot unlock entry.', $e, 1);
+                        return;
+                    }
+                }
+            }
+
+            else
+            {
+                Console::out('Authentication always successful, entry is not encrypted.');
+            }
         }
 
         /**
@@ -79,7 +159,7 @@
 
             if(count($entries) === 0)
             {
-                Console::out('No credentials found.');
+                Console::out('No entries found.');
                 return;
             }
 
