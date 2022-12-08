@@ -6,6 +6,7 @@
     use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
     use ncc\Classes\BashExtension\BashRunner;
+    use ncc\Classes\PerlExtension\PerlRunner;
     use ncc\Classes\PhpExtension\PhpRunner;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
@@ -260,6 +261,7 @@
             return match (strtolower($policy->Runner)) {
                 Runners::bash => BashRunner::processUnit($path, $policy),
                 Runners::php => PhpRunner::processUnit($path, $policy),
+                Runners::perl => PerlRunner::processUnit($path, $policy),
                 default => throw new UnsupportedRunnerException('The runner \'' . $policy->Runner . '\' is not supported'),
             };
         }
