@@ -6,8 +6,12 @@
     use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
     use ncc\Classes\BashExtension\BashRunner;
+    use ncc\Classes\LuaExtension\LuaRunner;
     use ncc\Classes\PerlExtension\PerlRunner;
     use ncc\Classes\PhpExtension\PhpRunner;
+    use ncc\Classes\PythonExtension\Python2Runner;
+    use ncc\Classes\PythonExtension\Python3Runner;
+    use ncc\Classes\PythonExtension\PythonRunner;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\InvalidScopeException;
@@ -262,6 +266,10 @@
                 Runners::bash => BashRunner::processUnit($path, $policy),
                 Runners::php => PhpRunner::processUnit($path, $policy),
                 Runners::perl => PerlRunner::processUnit($path, $policy),
+                Runners::python => PythonRunner::processUnit($path, $policy),
+                Runners::python2 => Python2Runner::processUnit($path, $policy),
+                Runners::python3 => Python3Runner::processUnit($path, $policy),
+                Runners::lua => LuaRunner::processUnit($path, $policy),
                 default => throw new UnsupportedRunnerException('The runner \'' . $policy->Runner . '\' is not supported'),
             };
         }

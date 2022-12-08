@@ -8,8 +8,6 @@
 
         const bash = 'bash';
 
-        const sh = 'sh';
-
         const python = 'python';
 
         const python3 = 'python3';
@@ -24,7 +22,6 @@
         const All = [
             self::php,
             self::bash,
-            self::sh,
             self::python,
             self::python3,
             self::python2,

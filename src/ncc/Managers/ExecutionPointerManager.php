@@ -8,8 +8,12 @@
     use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
     use ncc\Classes\BashExtension\BashRunner;
+    use ncc\Classes\LuaExtension\LuaRunner;
     use ncc\Classes\PerlExtension\PerlRunner;
     use ncc\Classes\PhpExtension\PhpRunner;
+    use ncc\Classes\PythonExtension\Python2Runner;
+    use ncc\Classes\PythonExtension\Python3Runner;
+    use ncc\Classes\PythonExtension\PythonRunner;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\ExecutionUnitNotFoundException;
     use ncc\Exceptions\FileNotFoundException;
@@ -145,6 +149,10 @@
                 Runners::bash => BashRunner::getFileExtension(),
                 Runners::php => PhpRunner::getFileExtension(),
                 Runners::perl => PerlRunner::getFileExtension(),
+                Runners::python => PythonRunner::getFileExtension(),
+                Runners::python2 => Python2Runner::getFileExtension(),
+                Runners::python3 => Python3Runner::getFileExtension(),
+                Runners::lua => LuaRunner::getFileExtension(),
                 default => throw new UnsupportedRunnerException('The runner \'' . $unit->ExecutionPolicy->Runner . '\' is not supported'),
             };
 
@@ -279,6 +287,10 @@
                 Runners::bash => BashRunner::prepareProcess($unit),
                 Runners::php => PhpRunner::prepareProcess($unit),
                 Runners::perl => PerlRunner::prepareProcess($unit),
+                Runners::python => PythonRunner::prepareProcess($unit),
+                Runners::python2 => Python2Runner::prepareProcess($unit),
+                Runners::python3 => Python3Runner::prepareProcess($unt),
+                Runners::lua => LuaRunner::prepareProcess($unit),
                 default => throw new UnsupportedRunnerException('The runner \'' . $unit->ExecutionPolicy->Runner . '\' is not supported'),
             };
 
