@@ -269,6 +269,11 @@
         const MissingDependencyException = -1751;
 
         /**
+         * @see HttpException
+         */
+        const HttpException = -1752;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -322,6 +327,7 @@
             self::ComposerNotAvailableException,
             self::ComposerException,
             self::UserAbortedOperationException,
-            self::MissingDependencyException
+            self::MissingDependencyException,
+            self::HttpException
         ];
     }
