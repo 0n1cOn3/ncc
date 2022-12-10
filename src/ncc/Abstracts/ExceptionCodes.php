@@ -274,6 +274,11 @@
         const HttpException = -1752;
 
         /**
+         * @see UnsupportedRemoteSourceTypeException
+         */
+        const UnsupportedRemoteSourceTypeException = -1753;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -329,5 +334,6 @@
             self::UserAbortedOperationException,
             self::MissingDependencyException,
             self::HttpException,
+            self::UnsupportedRemoteSourceTypeException
         ];
     }
