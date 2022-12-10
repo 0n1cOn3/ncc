@@ -64,6 +64,12 @@
             if (count($httpRequest->Headers) > 0)
                 curl_setopt($curl, CURLOPT_HTTPHEADER, $httpRequest->Headers);
 
+            Console::outDebug(sprintf(' => %s request %s', $httpRequest->Type, $httpRequest->Url));
+            if($httpRequest->Headers !== null && count($httpRequest->Headers) > 0)
+                Console::outDebug(sprintf(' => headers: %s', implode(', ', $httpRequest->Headers)));
+            if($httpRequest->Body !== null)
+                Console::outDebug(sprintf(' => body: %s', $httpRequest->Body));
+
             $response = curl_exec($curl);
 
             if ($response === false)
@@ -81,6 +87,13 @@
             $httpResponse->StatusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
             $httpResponse->Headers = self::parseHeaders($headers);
             $httpResponse->Body = $body;
+
+            Console::outDebug(sprintf(' <= %s response', $httpResponse->StatusCode));/** @noinspection PhpConditionAlreadyCheckedInspection */
+            if($httpResponse->Headers !== null && count($httpResponse->Headers) > 0)
+                Console::outDebug(sprintf(' <= headers: %s', implode(', ', $httpResponse->Headers)));
+            /** @noinspection PhpConditionAlreadyCheckedInspection */
+            if($httpResponse->Body !== null)
+                Console::outDebug(sprintf(' <= body: %s', $httpResponse->Body));
 
             curl_close($curl);
 
