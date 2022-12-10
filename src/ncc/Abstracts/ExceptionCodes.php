@@ -328,6 +328,6 @@
             self::ComposerException,
             self::UserAbortedOperationException,
             self::MissingDependencyException,
-            self::HttpException
+            self::HttpException,
         ];
     }
