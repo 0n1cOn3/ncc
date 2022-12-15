@@ -4,8 +4,12 @@
 
         namespace ncc\Utilities;
 
+    use ncc\Abstracts\BuiltinRemoteSourceType;
+    use ncc\Abstracts\DefinedRemoteSourceType;
     use ncc\Abstracts\LogLevel;
+    use ncc\Abstracts\RemoteSourceType;
     use ncc\Abstracts\Scopes;
+    use ncc\Managers\RemoteSourcesManager;
 
     class Resolver
     {
@@ -86,7 +90,7 @@
             }
 
             $configs = array();
-            $regex = "/(?(?=-)-(?(?=-)-(?'bigflag'[^\\s=]+)|(?'smallflag'\\S))(?:\\s*=\\s*|\\s+)(?(?!-)(?(?=[\\\"\\'])((?<![\\\\])['\"])(?'string'(?:.(?!(?<![\\\\])\\3))*.?)\\3|(?'value'\\S+)))(?:\\s+)?|(?'unmatched'\\S+))/";
+                $regex = "/(?(?=-)-(?(?=-)-(?'bigflag'[^\\s=]+)|(?'smallflag'\\S))(?:\\s*=\\s*|\\s+)(?(?!-)(?(?=[\\\"\\'])((?<![\\\\])['\"])(?'string'(?:.(?!(?<![\\\\])\\3))*.?)\\3|(?'value'\\S+)))(?:\\s+)?|(?'unmatched'\\S+))/";
             preg_match_all($regex, $flags, $matches, PREG_SET_ORDER);
 
             foreach ($matches as $index => $match)
@@ -240,5 +244,26 @@
                 case LogLevel::Silent:
                     return false;
             }
+        }
+
+        /**
+         * Detects the remote source type, can also accept defined remote
+         * sources as the input, the function will look for the source
+         * type and return it
+         *
+         * @param string $input
+         * @return string
+         */
+        public static function detectRemoteSourceType(string $input): string
+        {
+            if(in_array($input, BuiltinRemoteSourceType::All))
+                return RemoteSourceType::Builtin;
+
+            $source_manager = new RemoteSourcesManager();
+            $defined_source = $source_manager->getRemoteSource($input);
+            if($defined_source == null)
+                return RemoteSourceType::Unknown;
+
+            return $defined_source->Type;
         }
     }
