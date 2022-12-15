@@ -78,6 +78,17 @@
         }
 
         /**
+         * Returns the hash of the object.
+         * (This is used for caching)
+         *
+         * @return string
+         */
+        public function requestHash(): string
+        {
+            return hash('sha1', json_encode($this->toArray()));
+        }
+
+        /**
          * Constructs a new HttpRequest object from an array representation.
          *
          * @param array $data
