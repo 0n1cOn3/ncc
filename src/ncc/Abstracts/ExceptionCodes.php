@@ -295,6 +295,11 @@
          */
         const GitlabServiceException = -1756;
 
+        /**
+         * @see ImportException
+         */
+        const ImportException = -1757;
+
 
         /**
          * All the exception codes from NCC
