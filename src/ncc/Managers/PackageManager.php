@@ -5,11 +5,15 @@
     namespace ncc\Managers;
 
     use Exception;
+    use ncc\Abstracts\BuiltinRemoteSourceType;
     use ncc\Abstracts\CompilerExtensions;
     use ncc\Abstracts\ConstantReferences;
     use ncc\Abstracts\DependencySourceType;
     use ncc\Abstracts\LogLevel;
+    use ncc\Abstracts\RemoteSourceType;
     use ncc\Abstracts\Scopes;
+    use ncc\Abstracts\Versions;
+    use ncc\Classes\ComposerExtension\ComposerSourceBuiltin;
     use ncc\Classes\NccExtension\PackageCompiler;
     use ncc\Classes\PhpExtension\PhpInstaller;
     use ncc\CLI\Main;
@@ -32,6 +36,7 @@
     use ncc\Objects\PackageLock\PackageEntry;
     use ncc\Objects\PackageLock\VersionEntry;
     use ncc\Objects\ProjectConfiguration\Dependency;
+    use ncc\Objects\RemotePackageInput;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\ThirdParty\theseer\DirectoryScanner\DirectoryScanner;
     use ncc\Utilities\Console;
@@ -309,6 +314,83 @@
         }
 
         /**
+         * @param string $source
+         * @return string
+         * @throws InstallationException
+         */
+        public function fetchFromSource(string $source): string
+        {
+            $parsed_source = new RemotePackageInput($source);
+
+            if($parsed_source->Source == null)
+                throw new InstallationException('No source specified');
+
+            if($parsed_source->Package == null)
+                throw new InstallationException('No package specified');
+
+            if($parsed_source->Version == null)
+                $parsed_source->Version = Versions::Latest;
+
+            $remote_source_type = Resolver::detectRemoteSourceType($parsed_source->Source);
+
+            if($remote_source_type == RemoteSourceType::Builtin)
+            {
+                switch($parsed_source->Source)
+                {
+                    case BuiltinRemoteSourceType::Composer:
+                        try
+                        {
+                            return ComposerSourceBuiltin::fetch($parsed_source);
+                        }
+                        catch(Exception $e)
+                        {
+                            throw new InstallationException('Cannot fetch package from composer source, ' . $e->getMessage(), $e);
+                        }
+
+                    default:
+                        throw new InstallationException('Builtin source type ' . $parsed_source->Source . ' is not implemented');
+                }
+            }
+
+            if($remote_source_type == RemoteSourceType::Defined)
+            {
+                $remote_source_manager = new RemoteSourcesManager();
+                $remote_source = $remote_source_manager->getRemoteSource($parsed_source->Source);
+                if($remote_source == null)
+                    throw new InstallationException('Remote source ' . $parsed_source->Source . ' is not defined');
+
+                // TODO: Implement defined remote sources
+            }
+
+            throw new InstallationException(sprintf('Unknown remote source type %s', $remote_source_type));
+        }
+
+        /**
+         * Installs a package from a source syntax (vendor/package=version@source)
+         *
+         * @param string $source
+         * @return string
+         * @throws AccessDeniedException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws InstallationException
+         * @throws MissingDependencyException
+         * @throws NotImplementedException
+         * @throws PackageAlreadyInstalledException
+         * @throws PackageLockException
+         * @throws PackageNotFoundException
+         * @throws PackageParsingException
+         * @throws UnsupportedCompilerExtensionException
+         * @throws UnsupportedRunnerException
+         * @throws VersionNotFoundException
+         */
+        public function installFromSource(string $source): string
+        {
+            $package_path = $this->fetchFromSource($source);
+            return $this->install($package_path);
+        }
+
+        /**
          * @param Dependency $dependency
          * @param Package $package
          * @param string $package_path
@@ -378,7 +460,6 @@
          *
          * @param string $package
          * @return PackageEntry|null
-         * @throws PackageLockException
          * @throws PackageLockException
          */
         public function getPackage(string $package): ?PackageEntry
