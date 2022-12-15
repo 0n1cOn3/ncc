@@ -28,6 +28,9 @@
             curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
 
+            foreach($httpRequest->Options as $option => $value)
+                curl_setopt($curl, $option, $value);
+
             switch($httpRequest->Type)
             {
                 case HttpRequestType::GET:

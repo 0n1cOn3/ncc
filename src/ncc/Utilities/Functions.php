@@ -484,4 +484,26 @@
             }
             return $randomString;
         }
+
+        /**
+         * Returns a path to a temporary directory
+         *
+         * @param bool $create
+         * @param bool $set_as_tmp
+         * @return string
+         * @throws InvalidScopeException
+         */
+        public static function getTmpDir(bool $create=true, bool $set_as_tmp=true): string
+        {
+            $path = PathFinder::getCachePath() . DIRECTORY_SEPARATOR . self::randomString(16);
+            if($create)
+            {
+                $filesystem = new Filesystem();
+                /** @noinspection PhpRedundantOptionalArgumentInspection */
+                $filesystem->mkdir($path, 0777);
+            }
+            if($set_as_tmp)
+                RuntimeCache::setFileAsTemporary($path);
+            return $path;
+        }
     }

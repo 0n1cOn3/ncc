@@ -122,6 +122,10 @@
                             ConfigMenu::start(self::$args);
                             exit(0);
 
+                        case 'source':
+                            SourcesMenu::start(self::$args);
+                            exit(0);
+
                         case '1':
                         case 'help':
                             HelpMenu::start(self::$args);

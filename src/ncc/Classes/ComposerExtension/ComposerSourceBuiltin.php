@@ -30,7 +30,7 @@
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Exceptions\UserAbortedOperationException;
-    use ncc\Interfaces\RemoteSourceInterface;
+    use ncc\Interfaces\ServiceSourceInterface;
     use ncc\Managers\ProjectManager;
     use ncc\Objects\ComposerLock;
     use ncc\Objects\ProjectConfiguration;
@@ -47,7 +47,7 @@
     use ncc\Utilities\RuntimeCache;
     use SplFileInfo;
 
-    class ComposerSource implements RemoteSourceInterface
+    class ComposerSourceBuiltin implements ServiceSourceInterface
     {
         /**
          * Attempts to acquire the package from the composer repository and
@@ -134,7 +134,7 @@
             {
                 $package_path = $base_dir . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . $package->Name;
                 // Generate the package configuration
-                $project_configuration = ComposerSource::generateProjectConfiguration($package->Name, $composer_lock);
+                $project_configuration = ComposerSourceBuiltin::generateProjectConfiguration($package->Name, $composer_lock);
 
                 // Process the source files
                 if ($package->Autoload !== null)

@@ -18,4 +18,9 @@
          * The current version of the package lock structure file format
          */
         const PackageLockVersion = '1.0.0';
+
+        /**
+         * Generic version of the package structure file format (latest)
+         */
+        const Latest = 'latest';
     }

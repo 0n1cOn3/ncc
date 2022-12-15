@@ -2,6 +2,8 @@
 
     namespace ncc\Abstracts;
 
+    use ncc\Exceptions\GitlabServiceException;
+
     /**
      * @author Zi Xing Narrakas
      * @copyright Copyright (C) 2022-2022. Nosial - All Rights Reserved.
@@ -279,6 +281,22 @@
         const UnsupportedRemoteSourceTypeException = -1753;
 
         /**
+         * @see GitCloneException
+         */
+        const GitCloneException = -1754;
+
+        /**
+         * @see GitCheckoutException
+         */
+        const GitCheckoutException = -1755;
+
+        /**
+         * @see GitlabServiceException
+         */
+        const GitlabServiceException = -1756;
+
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -334,6 +352,9 @@
             self::UserAbortedOperationException,
             self::MissingDependencyException,
             self::HttpException,
-            self::UnsupportedRemoteSourceTypeException
+            self::UnsupportedRemoteSourceTypeException,
+            self::GitCloneException,
+            self::GitCheckoutException,
+            self::GitlabServiceException
         ];
     }

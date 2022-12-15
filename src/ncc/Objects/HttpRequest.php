@@ -43,6 +43,13 @@
          */
         public $Authentication;
 
+        /**
+         * An array of curl options to set
+         *
+         * @var array
+         */
+        public $Options;
+
         public function __construct()
         {
             $this->Type = HttpRequestType::GET;
@@ -50,6 +57,7 @@
             $this->Headers = [
                 'User-Agent: ncc/1.0'
             ];
+            $this->Options = [];
         }
 
         /**
@@ -64,7 +72,8 @@
                 'url' => $this->Url,
                 'headers' => $this->Headers,
                 'body' => $this->Body,
-                'authentication' => $this->Authentication
+                'authentication' => $this->Authentication,
+                'options' => $this->Options
             ];
         }
 
@@ -82,6 +91,7 @@
             $request->Headers = $data['headers'];
             $request->Body = $data['body'];
             $request->Authentication = $data['authentication'];
+            $request->Options = $data['options'];
             return $request;
         }
     }

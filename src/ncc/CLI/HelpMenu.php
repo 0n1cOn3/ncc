@@ -75,6 +75,7 @@
                 new CliHelpSection(['cache'], 'Manages the system cache'),
                 new CliHelpSection(['cred'], 'Manages credentials'),
                 new CliHelpSection(['config'], 'Changes NCC configuration values'),
+                new CliHelpSection(['source'], 'Manages remote sources'),
             ]);
         }
 
