@@ -6,6 +6,7 @@
     use ncc\Exceptions\HttpException;
     use ncc\Objects\HttpRequest;
     use ncc\Objects\HttpResponse;
+    use ncc\Objects\HttpResponseCache;
 
     class HttpClient
     {
@@ -13,11 +14,22 @@
          * Creates a new HTTP request and returns the response.
          *
          * @param HttpRequest $httpRequest
+         * @param bool $cache
          * @return HttpResponse
          * @throws HttpException
          */
-        public static function request(HttpRequest $httpRequest): HttpResponse
+        public static function request(HttpRequest $httpRequest, bool $cache=false): HttpResponse
         {
+            if($cache)
+            {
+                /** @var HttpResponseCache $cache */
+                $cache = RuntimeCache::get(sprintf('http_cache_%s', $httpRequest->requestHash()));
+                if($cache !== null && $cache->getTtl() > time())
+                {
+                    return $cache->getHttpResponse();
+                }
+            }
+
             $curl = curl_init();
 
             curl_setopt($curl, CURLOPT_URL, $httpRequest->Url);
@@ -99,6 +111,12 @@
                 Console::outDebug(sprintf(' <= body: %s', $httpResponse->Body));
 
             curl_close($curl);
+
+            if($cache)
+            {
+                $httpCacheObject = new HttpResponseCache($httpResponse, 60);
+                RuntimeCache::set(sprintf('http_cache_%s', $httpRequest->requestHash()), $httpCacheObject);
+            }
 
             return $httpResponse;
         }
