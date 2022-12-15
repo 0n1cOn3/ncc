@@ -4,7 +4,7 @@
 
     use ncc\Objects\RemotePackageInput;
 
-    interface RemoteSourceInterface
+    interface ServiceSourceInterface
     {
         /**
          * Fetches a package and all it's dependencies from the given remote source
