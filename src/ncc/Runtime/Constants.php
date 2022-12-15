@@ -68,4 +68,24 @@
 
             unset(self::$Constants[$constant_hash]);
         }
+
+        /**
+         * Gets the constant
+         *
+         * @param string $scope
+         * @param string $name
+         * @return string|null
+         */
+        public static function get(string $scope, string $name): ?string
+        {
+            if(!Validate::constantName($name))
+                return null;
+
+            $constant_hash = Resolver::resolveConstantHash($scope, $name);
+
+            if(isset(self::$Constants[$constant_hash]))
+                return self::$Constants[$constant_hash]->getValue();
+
+            return null;
+        }
     }
