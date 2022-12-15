@@ -4,18 +4,37 @@
 
     use ncc\Objects\DefinedRemoteSource;
     use ncc\Objects\RemotePackageInput;
+    use ncc\Objects\Vault\Entry;
 
     interface RepositorySourceInterface
     {
         /**
-         * Fetches a package and all it's dependencies from the given remote source
-         * and optionally converts and compiles it to a local package, returns the
-         * fetched package as a path to the ncc package file. This function uses
-         * a defined remote source to fetch the package or build the package from.
+         * Returns the git repository url of the repository, versions cannot be specified.
          *
          * @param RemotePackageInput $packageInput
          * @param DefinedRemoteSource $definedRemoteSource
+         * @param Entry|null $entry
          * @return string
          */
-        public static function fetch(RemotePackageInput $packageInput, DefinedRemoteSource $definedRemoteSource): string;
+        public static function fetchGitUri(RemotePackageInput $packageInput, DefinedRemoteSource $definedRemoteSource, ?Entry $entry=null): string;
+
+        /**
+         * Returns the release url of the repository, versions can be specified.
+         *
+         * @param RemotePackageInput $packageInput
+         * @param DefinedRemoteSource $definedRemoteSource
+         * @param Entry|null $entry
+         * @return string
+         */
+        public static function getRelease(RemotePackageInput $packageInput, DefinedRemoteSource $definedRemoteSource, ?Entry $entry = null): string;
+
+        /**
+         * Returns the download URL of the pre-compiled .ncc package if available
+         *
+         * @param RemotePackageInput $packageInput
+         * @param DefinedRemoteSource $definedRemoteSource
+         * @param Entry|null $entry
+         * @return string
+         */
+        public static function getNccPackage(RemotePackageInput $packageInput, DefinedRemoteSource $definedRemoteSource, ?Entry $entry = null): string;
     }
