@@ -3,6 +3,7 @@
     namespace ncc\Utilities;
 
     use Exception;
+    use ncc\Abstracts\AuthenticationType;
     use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
     use ncc\Classes\BashExtension\BashRunner;
@@ -13,7 +14,9 @@
     use ncc\Classes\PythonExtension\Python3Runner;
     use ncc\Classes\PythonExtension\PythonRunner;
     use ncc\Exceptions\AccessDeniedException;
+    use ncc\Exceptions\AuthenticationException;
     use ncc\Exceptions\FileNotFoundException;
+    use ncc\Exceptions\GitlabServiceException;
     use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
@@ -23,8 +26,10 @@
     use ncc\Managers\PackageLockManager;
     use ncc\Objects\CliHelpSection;
     use ncc\Objects\ComposerJson;
+    use ncc\Objects\HttpRequest;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
+    use ncc\Objects\Vault\Entry;
     use ncc\ThirdParty\jelix\Version\Parser;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
 
@@ -505,5 +510,37 @@
             if($set_as_tmp)
                 RuntimeCache::setFileAsTemporary($path);
             return $path;
+        }
+
+        /**
+         * Applies the authentication to the given HTTP request.
+         *
+         * @param HttpRequest $httpRequest
+         * @param Entry|null $entry
+         * @return HttpRequest
+         * @throws AuthenticationException
+         * @throws GitlabServiceException
+         */
+        public static function prepareGitServiceRequest(HttpRequest $httpRequest, ?Entry $entry=null): HttpRequest
+        {
+            if($entry !== null)
+            {
+                if (!$entry->isCurrentlyDecrypted())
+                    throw new GitlabServiceException('The given Vault entry is not decrypted.');
+
+                switch ($entry->getPassword()->getAuthenticationType()) {
+                    case AuthenticationType::AccessToken:
+                        $httpRequest->Headers[] = "Authorization: Bearer " . $entry->getPassword();
+                        break;
+
+                    case AuthenticationType::UsernamePassword:
+                        throw new AuthenticationException('Username/Password authentication is not supported');
+                }
+            }
+
+            $httpRequest->Headers[] = "Accept: application/json";
+            $httpRequest->Headers[] = "Content-Type: application/json";
+
+            return $httpRequest;
         }
     }
