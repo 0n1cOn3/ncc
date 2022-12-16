@@ -14,9 +14,11 @@
 
     use ncc\Abstracts\ConsoleColors;
     use ncc\Exceptions\FileNotFoundException;
-    use ncc\ncc;
+use ncc\Managers\RemoteSourcesManager;
+use ncc\ncc;
     use ncc\Objects\CliHelpSection;
-    use ncc\ThirdParty\Symfony\Filesystem\Exception\IOException;
+use ncc\Objects\DefinedRemoteSource;
+use ncc\ThirdParty\Symfony\Filesystem\Exception\IOException;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\ThirdParty\Symfony\Process\Exception\ProcessFailedException;
     use ncc\ThirdParty\Symfony\Process\ExecutableFinder;
@@ -816,6 +818,57 @@
     {
         Console::outException($e->getMessage(), $e, 1);
         return;
+    }
+
+    if($NCC_FILESYSTEM->exists(__DIR__ . DIRECTORY_SEPARATOR . 'repositories'))
+    {
+        if(!$NCC_FILESYSTEM->exists(__DIR__ . DIRECTORY_SEPARATOR . 'repositories' . DIRECTORY_SEPARATOR . 'custom_repositories.json'))
+            return;
+
+        try
+        {
+            $custom_repositories = Functions::loadJsonFile(__DIR__ . DIRECTORY_SEPARATOR . 'repositories' . DIRECTORY_SEPARATOR . 'custom_repositories.json', Functions::FORCE_ARRAY);
+        }
+        catch(Exception $e)
+        {
+            $custom_repositories = null;
+            Console::outWarning(sprintf('Failed to load custom repositories: %s', $e->getMessage()));
+        }
+
+        if($custom_repositories !== null)
+        {
+            $source_manager = new RemoteSourcesManager();
+            foreach($custom_repositories as $repository)
+            {
+                $repo_path = __DIR__ . DIRECTORY_SEPARATOR . 'repositories' . DIRECTORY_SEPARATOR . $repository;
+                if($NCC_FILESYSTEM->exists($repo_path))
+                {
+                    try
+                    {
+                        $definedEntry = DefinedRemoteSource::fromArray(Functions::loadJsonFile($repo_path, Functions::FORCE_ARRAY));
+                        if(!$source_manager->getRemoteSource($definedEntry->Name))
+                            $source_manager->addRemoteSource($definedEntry);
+                    }
+                    catch(Exception $e)
+                    {
+                        Console::outWarning(sprintf('Failed to load custom repository %s: %s', $repository, $e->getMessage()));
+                    }
+                }
+                else
+                {
+                    Console::outWarning(sprintf('Failed to load custom repository %s, file does not exist', $repository));
+                }
+            }
+
+            try
+            {
+                $source_manager->save();
+            } 
+            catch (\ncc\Exceptions\IOException $e) 
+            {
+                Console::outWarning(sprintf('Failed to save sources: %s', $e->getMessage()));
+            }
+        }
     }
 
     Console::out('NCC version: ' . NCC_VERSION_NUMBER . ' has been successfully installed');
