@@ -41,7 +41,7 @@
         /**
          * The optional update source to where the package can be updated from
          *
-         * @var $UpdateSource|null
+         * @var UpdateSource|null
          */
         public $UpdateSource;
 
@@ -67,7 +67,7 @@
                 ($bytecode ? Functions::cbc('compiler_extension') : 'compiler_extension') => $this->CompilerExtension->toArray($bytecode),
                 ($bytecode ? Functions::cbc('runtime_constants') : 'runtime_constants') => $this->RuntimeConstants,
                 ($bytecode ? Functions::cbc('compiler_version') : 'compiler_version') => $this->CompilerVersion,
-                ($bytecode ? Functions::cbc('update_source') : 'update_source') => $this->UpdateSource->toArray($bytecode),
+                ($bytecode ? Functions::cbc('update_source') : 'update_source') => ($this->UpdateSource?->toArray($bytecode) ?? null),
                 ($bytecode ? Functions::cbc('options') : 'options') => $this->Options,
             ];
         }
