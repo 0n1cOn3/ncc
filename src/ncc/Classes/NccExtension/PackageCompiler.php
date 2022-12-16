@@ -7,6 +7,8 @@
     use ncc\Abstracts\ConstantReferences;
     use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\Options\BuildConfigurationValues;
+    use ncc\Abstracts\ProjectType;
+    use ncc\Classes\ComposerExtension\ComposerSourceBuiltin;
     use ncc\Classes\PhpExtension\PhpCompiler;
     use ncc\CLI\Main;
     use ncc\Exceptions\AccessDeniedException;
@@ -18,6 +20,7 @@
     use ncc\Exceptions\PackagePreparationFailedException;
     use ncc\Exceptions\ProjectConfigurationNotFoundException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
+    use ncc\Exceptions\UnsupportedProjectTypeException;
     use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Interfaces\CompilerInterface;
     use ncc\Managers\ProjectManager;
@@ -82,6 +85,39 @@
             return PackageCompiler::writePackage(
                 $manager->getProjectPath(), $Compiler->getPackage(), $configuration, $build_configuration
             );
+        }
+
+        /**
+         * Attempts to detect the project type and convert it accordingly before compiling
+         * Returns the compiled package path
+         *
+         * @param string $path
+         * @return string
+         * @throws BuildException
+         * @throws UnsupportedProjectTypeException
+         */
+        public static function tryCompile(string $path): string
+        {
+            $project_type = Resolver::detectProjectType($path);
+
+            try
+            {
+                if($project_type->ProjectType == ProjectType::Composer)
+                    return ComposerSourceBuiltin::fromLocal($project_type->ProjectPath);
+
+                if($project_type->ProjectType == ProjectType::Ncc)
+                {
+                    $project_manager = new ProjectManager($project_type->ProjectPath);
+                    return $project_manager->build();
+                }
+            }
+            catch(Exception $e)
+            {
+                throw new BuildException('Failed to build project', $e);
+            }
+
+
+            throw new UnsupportedProjectTypeException('The project type \'' . $project_type->ProjectType . '\' is not supported');
         }
 
         /**
