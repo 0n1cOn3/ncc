@@ -246,7 +246,7 @@
             {
                 try
                 {
-                    $path = $package_manager->fetchFromSource($parsed_source->toString());
+                    $path = $package_manager->fetchFromSource($parsed_source->toString(), $credential);
                 }
                 catch (Exception $e)
                 {
@@ -364,7 +364,7 @@
             {
                 try
                 {
-                    $package_manager->install($path);
+                    $package_manager->install($path, $credential);
                     Console::out(sprintf('Package %s installed successfully', $package->Assembly->Package));
                 }
                 catch(Exception $e)

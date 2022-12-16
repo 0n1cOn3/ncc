@@ -95,7 +95,7 @@
          * @throws UnsupportedRunnerException
          * @throws VersionNotFoundException
          */
-        public function install(string $package_path): string
+        public function install(string $package_path, ?Entry $entry=null): string
         {
             if(Resolver::resolveScope() !== Scopes::System)
                 throw new AccessDeniedException('Insufficient permission to install packages');
@@ -127,7 +127,7 @@
             {
                 foreach($package->Dependencies as $dependency)
                 {
-                    $this->processDependency($dependency, $package, $package_path);
+                    $this->processDependency($dependency, $package, $package_path, $entry);
                 }
             }
 
@@ -412,12 +412,12 @@
          * @return string
          * @throws InstallationException
          */
-        public function installFromSource(string $source): string
+        public function installFromSource(string $source, ?Entry $entry): string
         {
             try
             {
-                $package = $this->fetchFromSource($source);
-                return $this->install($package);
+                $package = $this->fetchFromSource($source, $entry);
+                return $this->install($package, $entry);
             }
             catch(Exception $e)
             {
@@ -444,7 +444,7 @@
          * @throws UnsupportedRunnerException
          * @throws VersionNotFoundException
          */
-        private function processDependency(Dependency $dependency, Package $package, string $package_path): void
+        private function processDependency(Dependency $dependency, Package $package, string $package_path, ?Entry $entry=null): void
         {
             Console::outVerbose('processing dependency ' . $dependency->Name . ' (' . $dependency->Version . ')');
             $dependent_package = $this->getPackage($dependency->Name);
@@ -481,7 +481,7 @@
 
                         case DependencySourceType::RemoteSource:
                             Console::outDebug('installing from remote source ' . $dependency->Source);
-                            $this->installFromSource($dependency->Source);
+                            $this->installFromSource($dependency->Source, $entry);
                             break;
 
                         default:
