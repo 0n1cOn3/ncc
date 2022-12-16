@@ -4,9 +4,11 @@
 
     use Exception;
     use ncc\Abstracts\AuthenticationType;
+    use ncc\Abstracts\HttpRequestType;
     use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
     use ncc\Classes\BashExtension\BashRunner;
+    use ncc\Classes\HttpClient;
     use ncc\Classes\LuaExtension\LuaRunner;
     use ncc\Classes\PerlExtension\PerlRunner;
     use ncc\Classes\PhpExtension\PhpRunner;
@@ -17,6 +19,7 @@
     use ncc\Exceptions\AuthenticationException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\GitlabServiceException;
+    use ncc\Exceptions\HttpException;
     use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
@@ -32,6 +35,8 @@
     use ncc\Objects\Vault\Entry;
     use ncc\ThirdParty\jelix\Version\Parser;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
+    use PharData;
+    use ZipArchive;
 
     /**
      * @author Zi Xing Narrakas
@@ -517,11 +522,12 @@
          *
          * @param HttpRequest $httpRequest
          * @param Entry|null $entry
+         * @param bool $expect_json
          * @return HttpRequest
          * @throws AuthenticationException
          * @throws GitlabServiceException
          */
-        public static function prepareGitServiceRequest(HttpRequest $httpRequest, ?Entry $entry=null): HttpRequest
+        public static function prepareGitServiceRequest(HttpRequest $httpRequest, ?Entry $entry=null, bool $expect_json=true): HttpRequest
         {
             if($entry !== null)
             {
@@ -538,9 +544,76 @@
                 }
             }
 
-            $httpRequest->Headers[] = "Accept: application/json";
-            $httpRequest->Headers[] = "Content-Type: application/json";
+            if($expect_json)
+            {
+                $httpRequest->Headers[] = "Accept: application/json";
+                $httpRequest->Headers[] = "Content-Type: application/json";
+            }
 
             return $httpRequest;
         }
+
+        /**
+         * Downloads a file from the given URL and saves it to the given path
+         *
+         * @param string $url
+         * @param Entry|null $entry
+         * @return string
+         * @throws AuthenticationException
+         * @throws GitlabServiceException
+         * @throws InvalidScopeException
+         * @throws HttpException
+         */
+        public static function downloadGitServiceFile(string $url, ?Entry $entry=null): string
+        {
+            $out_path = Functions::getTmpDir() . "/" . basename($url);
+
+            $httpRequest = new HttpRequest();
+            $httpRequest->Url = $url;
+            $httpRequest->Type = HttpRequestType::GET;
+            $httpRequest = Functions::prepareGitServiceRequest($httpRequest, $entry, false);
+
+            Console::out('Downloading file ' . $url);
+            HttpClient::download($httpRequest, $out_path);
+
+            return $out_path;
+        }
+
+        /**
+         * @param string $path
+         * @return string
+         * @throws Exception
+         */
+        public static function extractArchive(string $path): string
+        {
+            $filesystem = new Filesystem();
+            if(!$filesystem->exists(dirname($path)))
+                $filesystem->mkdir(dirname($path));
+
+            switch(pathinfo($path, PATHINFO_EXTENSION))
+            {
+                case 'zip':
+                    $zip = new ZipArchive();
+                    $zip->open($path);
+                    $zip->extractTo(dirname($path));
+                    $zip->close();
+                    break;
+
+                case 'tar':
+                    $phar = new PharData($path);
+                    $phar->extractTo(dirname($path));
+                    break;
+
+                case 'gz':
+                    $phar = new PharData($path);
+                    $phar->decompress();
+                    break;
+
+                default:
+                    throw new Exception('Unsupported archive type');
+            }
+
+            return dirname($path);
+        }
+
     }
