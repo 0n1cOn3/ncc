@@ -1,6 +1,6 @@
 <?php
 
-    namespace ncc\Utilities;
+    namespace ncc\Classes;
 
     use CurlHandle;
     use ncc\Abstracts\HttpRequestType;
@@ -10,6 +10,8 @@
     use ncc\Objects\HttpRequest;
     use ncc\Objects\HttpResponse;
     use ncc\Objects\HttpResponseCache;
+    use ncc\Utilities\Console;
+    use ncc\Utilities\RuntimeCache;
 
     class HttpClient
     {
