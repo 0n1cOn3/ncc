@@ -7,9 +7,12 @@
     use ncc\Abstracts\BuiltinRemoteSourceType;
     use ncc\Abstracts\DefinedRemoteSourceType;
     use ncc\Abstracts\LogLevel;
+    use ncc\Abstracts\ProjectType;
     use ncc\Abstracts\RemoteSourceType;
     use ncc\Abstracts\Scopes;
     use ncc\Managers\RemoteSourcesManager;
+    use ncc\Objects\ProjectDetectionResults;
+    use ncc\ThirdParty\theseer\DirectoryScanner\DirectoryScanner;
 
     class Resolver
     {
@@ -265,5 +268,47 @@
                 return RemoteSourceType::Unknown;
 
             return $defined_source->Type;
+        }
+
+        /**
+         * Detects the project type from the specified path
+         *
+         * @param string $path
+         * @param array $exlucde
+         * @return ProjectDetectionResults
+         */
+        public static function detectProjectType(string $path, array $exlucde=[]): ProjectDetectionResults
+        {
+            $Scanner = new DirectoryScanner();
+            $Scanner->setExcludes($exlucde);
+            $project_files = [
+                'composer.json',
+                'package.json',
+            ];
+
+            $project_detection_results = new ProjectDetectionResults();
+            $project_detection_results->ProjectType = ProjectType::Unknown;
+
+            /** @var \SplFileInfo $item */
+            foreach($Scanner($path, true) as $item)
+            {
+                if(in_array($item->getFilename(), $project_files))
+                {
+                    switch($item->getFilename())
+                    {
+                        case 'composer.json':
+                            $project_detection_results->ProjectType = ProjectType::Composer;
+                            $project_detection_results->ProjectPath = dirname($item->getPathname());
+                            break;
+
+                        case 'project.json':
+                            $project_detection_results->ProjectType = ProjectType::Ncc;
+                            $project_detection_results->ProjectPath = dirname($item->getPathname());
+                            break;
+                    }
+                }
+            }
+
+            return $project_detection_results;
         }
     }
