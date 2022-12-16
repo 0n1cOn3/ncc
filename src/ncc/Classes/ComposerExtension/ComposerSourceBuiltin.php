@@ -32,6 +32,8 @@
     use ncc\Exceptions\UserAbortedOperationException;
     use ncc\Interfaces\ServiceSourceInterface;
     use ncc\Managers\ProjectManager;
+    use ncc\ncc;
+    use ncc\Objects\ComposerJson;
     use ncc\Objects\ComposerLock;
     use ncc\Objects\ProjectConfiguration;
     use ncc\Objects\RemotePackageInput;
@@ -96,6 +98,68 @@
         }
 
         /**
+         * Works with a local composer.json file and attempts to compile the required packages
+         * and their dependencies, returns the path to the compiled package.
+         *
+         * @param string $path
+         * @return string
+         * @throws AccessDeniedException
+         * @throws BuildConfigurationNotFoundException
+         * @throws BuildException
+         * @throws ComposerDisabledException
+         * @throws ComposerException
+         * @throws ComposerNotAvailableException
+         * @throws DirectoryNotFoundException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws InternalComposerNotAvailableException
+         * @throws MalformedJsonException
+         * @throws PackageNotFoundException
+         * @throws PackagePreparationFailedException
+         * @throws ProjectConfigurationNotFoundException
+         * @throws UnsupportedCompilerExtensionException
+         * @throws UnsupportedRunnerException
+         * @throws UserAbortedOperationException
+         */
+        public static function fromLocal(string $path): string
+        {
+            // Check if the file composer.json exists
+            if (!file_exists($path . DIRECTORY_SEPARATOR . 'composer.json'))
+                throw new FileNotFoundException(sprintf('File "%s" not found', $path . DIRECTORY_SEPARATOR . 'composer.json'));
+
+            // Execute composer with options
+            $options = self::getOptions();
+            $composer_exec = self::getComposerPath();
+            $process = new Process([$composer_exec, 'install']);
+            self::prepareProcess($process, $path, $options);
+
+            Console::outDebug(sprintf('executing %s', $process->getCommandLine()));
+            $process->run(function ($type, $buffer) {
+                Console::out($buffer, false);
+            });
+
+            if (!$process->isSuccessful())
+                throw new ComposerException($process->getErrorOutput());
+
+            $filesystem = new Filesystem();
+            if($filesystem->exists($path . DIRECTORY_SEPARATOR . 'build'))
+                $filesystem->remove($path . DIRECTORY_SEPARATOR . 'build');
+            $filesystem->mkdir($path . DIRECTORY_SEPARATOR . 'build');
+
+            // Compile dependencies
+            self::compilePackages($path . DIRECTORY_SEPARATOR . 'composer.lock');
+
+            // Finally convert the main package's composer.json to package.json and compile it
+            ComposerSourceBuiltin::convertProject($path);
+            $project_manager = new ProjectManager($path);
+            $project_manager->load();
+            $built_package = $project_manager->build();
+
+            RuntimeCache::setFileAsTemporary($built_package);
+            return $built_package;
+        }
+
+        /**
          * @param string $composer_lock_path
          * @return array
          * @throws AccessDeniedException
@@ -133,154 +197,16 @@
             foreach ($composer_lock->Packages as $package)
             {
                 $package_path = $base_dir . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . $package->Name;
-                // Generate the package configuration
-                $project_configuration = ComposerSourceBuiltin::generateProjectConfiguration($package->Name, $composer_lock);
 
-                // Process the source files
-                if ($package->Autoload !== null)
-                {
-                    $source_directory = $package_path . DIRECTORY_SEPARATOR . '.src';
-                    if ($filesystem->exists($source_directory))
-                    {
-                        $filesystem->remove($source_directory);
-                    }
-                    $filesystem->mkdir($source_directory);
-                    $source_directories = [];
-                    $static_files = [];
+                // Load the composer lock file
+                $composer_package = $composer_lock->getPackage($package->Name);
+                if ($composer_package == null)
+                    throw new PackageNotFoundException(sprintf('Package "%s" not found in composer lock file', $package->Name));
 
-                    // Extract all the source directories
-                    if ($package->Autoload->Psr4 !== null && count($package->Autoload->Psr4) > 0)
-                    {
-                        Console::outVerbose('Extracting PSR-4 source directories');
-                        foreach ($package->Autoload->Psr4 as $namespace_pointer)
-                        {
-                            if ($namespace_pointer->Path !== null && !in_array($namespace_pointer->Path, $source_directories))
-                            {
-                                $source_directories[] = $package_path . DIRECTORY_SEPARATOR . $namespace_pointer->Path;
-                            }
-                        }
-                    }
-
-                    if ($package->Autoload->Psr0 !== null && count($package->Autoload->Psr0) > 0)
-                    {
-                        Console::outVerbose('Extracting PSR-0 source directories');
-                        foreach ($package->Autoload->Psr0 as $namespace_pointer)
-                        {
-                            if ($namespace_pointer->Path !== null && !in_array($namespace_pointer->Path, $source_directories))
-                            {
-                                $source_directories[] = $package_path . DIRECTORY_SEPARATOR . $namespace_pointer->Path;
-                            }
-                        }
-                    }
-
-                    if ($package->Autoload->Files !== null && count($package->Autoload->Files) > 0)
-                    {
-                        Console::outVerbose('Extracting static files');
-                        foreach ($package->Autoload->Files as $file)
-                        {
-                            $static_files[] = $package_path . DIRECTORY_SEPARATOR . $file;
-                        }
-                    }
-
-                    Console::outDebug(sprintf('source directories: %s', implode(', ', $source_directories)));
-
-                    // First scan the project files and create a file struct.
-                    $DirectoryScanner = new DirectoryScanner();
-
-                    // TODO: Implement exclude-class handling
-                    try
-                    {
-                        $DirectoryScanner->unsetFlag(FilesystemIterator::FOLLOW_SYMLINKS);
-                    }
-                    catch (Exception $e)
-                    {
-                        throw new PackagePreparationFailedException('Cannot unset flag \'FOLLOW_SYMLINKS\' in DirectoryScanner, ' . $e->getMessage(), $e);
-                    }
-
-                    // Include file components that can be compiled
-                    $DirectoryScanner->setIncludes(ComponentFileExtensions::Php);
-
-                    foreach ($source_directories as $directory)
-                    {
-                        /** @var SplFileInfo $item */
-                        /** @noinspection PhpRedundantOptionalArgumentInspection */
-                        foreach ($DirectoryScanner($directory, True) as $item)
-                        {
-                            if (is_dir($item->getPathName()))
-                                continue;
-
-                            $parsed_path = str_ireplace($package_path . DIRECTORY_SEPARATOR, '', $item->getPathName());
-
-                            Console::outDebug(sprintf('copying file %s for package %s', $parsed_path, $package->Name));
-                            $filesystem->copy($item->getPathName(), $source_directory . DIRECTORY_SEPARATOR . $parsed_path);
-                        }
-                    }
-
-                    if (count($static_files) > 0)
-                    {
-                        $project_configuration->Project->Options['static_files'] = $static_files;
-
-                        foreach ($static_files as $file)
-                        {
-                            $parsed_path = str_ireplace($package_path . DIRECTORY_SEPARATOR, '', $file);
-                            Console::outDebug(sprintf('copying file %s for package %s', $parsed_path, $package->Name));
-                            $filesystem->copy($file, $source_directory . DIRECTORY_SEPARATOR . $parsed_path);
-                        }
-                        unset($file);
-                    }
-
-                    $project_configuration->toFile($package_path . DIRECTORY_SEPARATOR . 'project.json');
-                }
+                // Convert it to a NCC project configuration
+                $project_configuration = self::convertProject($package_path, $composer_package);
 
                 // Load the project
-                $license_files = [
-                    'LICENSE',
-                    'license',
-                    'LICENSE.txt',
-                    'license.txt'
-                ];
-
-                foreach($license_files as $license_file)
-                {
-                    if($filesystem->exists($package_path . DIRECTORY_SEPARATOR . $license_file))
-                    {
-                        // Check configuration if composer.extension.display_licenses is set
-                        if(Functions::cbool(Functions::getConfigurationProperty('composer.extension.display_licenses')))
-                        {
-                            Console::out(sprintf('License for package %s:', $package->Name));
-                            Console::out(IO::fread($package_path . DIRECTORY_SEPARATOR . $license_file));
-                        }
-                    }
-                }
-
-                if(Functions::cbool(Functions::getConfigurationProperty('composer.extension.display_authors')))
-                {
-                    if($package->Authors !== null && count($package->Authors) > 0)
-                    {
-                        Console::out(sprintf('Authors for package %s:', $package->Name));
-                        foreach($package->Authors as $author)
-                        {
-                            Console::out(sprintf(' - %s', $author->Name));
-
-                            if($author->Email !== null)
-                            {
-                                Console::out(sprintf('   %s', $author->Email));
-                            }
-
-                            if($author->Homepage !== null)
-                            {
-                                Console::out(sprintf('   %s', $author->Homepage));
-                            }
-
-                            if($author->Role !== null)
-                            {
-                                Console::out(sprintf('   %s', $author->Role));
-                            }
-
-                        }
-                    }
-                }
-
                 $project_manager = new ProjectManager($package_path);
                 $project_manager->load();
                 $built_package = $project_manager->build();
@@ -288,6 +214,7 @@
                 // Copy the project to the build directory
                 $out_path = $base_dir . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . sprintf('%s=%s.ncc', $project_configuration->Assembly->Package, $project_configuration->Assembly->Version);
                 $filesystem->copy($built_package, $out_path);
+                $filesystem->remove($built_package);
                 $built_packages[$project_configuration->Assembly->Package] = $out_path;
 
             }
@@ -323,18 +250,12 @@
          * Generates a project configuration from a package selection
          * from the composer.lock file
          *
-         * @param string $package_name
-         * @param ComposerLock $composer_lock
+         * @param ComposerJson $composer_package
          * @return ProjectConfiguration
-         * @throws PackageNotFoundException
+         * @throws Exception
          */
-        private static function generateProjectConfiguration(string $package_name, ComposerLock $composer_lock): ProjectConfiguration
+        private static function generateProjectConfiguration(ComposerJson $composer_package): ProjectConfiguration
         {
-            // Load the composer lock file
-            $composer_package = $composer_lock->getPackage($package_name);
-            if ($composer_package == null)
-                throw new PackageNotFoundException(sprintf('Package "%s" not found in composer lock file', $package_name));
-
             // Generate a new project configuration object
             $project_configuration = new ProjectConfiguration();
 
@@ -345,14 +266,22 @@
             if (isset($composer_package->Version))
                 $project_configuration->Assembly->Version = Functions::parseVersion($composer_package->Version);
 
+            if($project_configuration->Assembly->Version == null || $project_configuration->Assembly->Version == '')
+                $project_configuration->Assembly->Version = '1.0.0';
+
             $project_configuration->Assembly->UUID = Uuid::v1()->toRfc4122();
-            $project_configuration->Assembly->Package = self::toPackageName($package_name);
+            $project_configuration->Assembly->Package = self::toPackageName($composer_package->Name);
+
+            // Add the update source
+            $project_configuration->Project->UpdateSource = new ProjectConfiguration\UpdateSource();
+            $project_configuration->Project->UpdateSource->Source = sprintf('%s=%s@composer', str_ireplace('\\', '/', $composer_package->Name), $composer_package->Version);
+            $project_configuration->Project->UpdateSource->Repository = null;
 
             // Process the dependencies
             foreach ($composer_package->Require as $item)
             {
                 $package_name = self::toPackageName($item->PackageName);
-                $package_version = $composer_lock->getPackage($item->PackageName)?->Version;
+                $package_version = $composer_package->Version;
                 if ($package_version == null)
                 {
                     $package_version = '1.0.0';
@@ -485,7 +414,6 @@
          * @param string $vendor
          * @param string $package
          * @param string|null $version
-         * @param array $options
          * @return string
          * @throws AccessDeniedException
          * @throws ComposerDisabledException
@@ -497,7 +425,7 @@
          * @throws InvalidScopeException
          * @throws UserAbortedOperationException
          */
-        private static function require(string $vendor, string $package, ?string $version = null, array $options = []): string
+        private static function require(string $vendor, string $package, ?string $version = null): string
         {
             if (Resolver::resolveScope() !== Scopes::System)
                 throw new AccessDeniedException('Insufficient permissions to require');
@@ -530,26 +458,7 @@
             // Execute composer with options
             $options = self::getOptions();
             $process = new Process(array_merge([$composer_exec, 'require'], $options));
-            $process->setWorkingDirectory($tmp_dir);
-
-            // Check if scripts are enabled while running as root
-            if (!in_array('--no-scripts', $options) && Resolver::resolveScope() == Scopes::System)
-            {
-                Console::outWarning('composer scripts are enabled while running as root, this can allow malicious scripts to run as root');
-                if (!isset($options['--no-interaction']))
-                {
-                    if (!Console::getBooleanInput('Do you want to continue?'))
-                        throw new UserAbortedOperationException('The operation was aborted by the user');
-
-                    // The user understands the risks and wants to continue
-                    $process->setEnv(['COMPOSER_ALLOW_SUPERUSER' => 1]);
-                }
-            }
-            else
-            {
-                // Composer is running "safely". We can disable the superuser check
-                $process->setEnv(['COMPOSER_ALLOW_SUPERUSER' => 1]);
-            }
+            self::prepareProcess($process, $tmp_dir, $options);
 
             Console::outDebug(sprintf('executing %s', $process->getCommandLine()));
             $process->run(function ($type, $buffer) {
@@ -605,5 +514,207 @@
             }
 
             throw new ComposerNotAvailableException('No composer executable path is configured');
+        }
+
+        /**
+         * @param Process $process
+         * @param string $path
+         * @param array $options
+         * @return void
+         * @throws UserAbortedOperationException
+         */
+        private static function prepareProcess(Process $process, string $path, array $options): void
+        {
+            $process->setWorkingDirectory($path);
+
+            // Check if scripts are enabled while running as root
+            if (!in_array('--no-scripts', $options) && Resolver::resolveScope() == Scopes::System)
+            {
+                Console::outWarning('composer scripts are enabled while running as root, this can allow malicious scripts to run as root');
+                if (!isset($options['--no-interaction']))
+                {
+                    if (!Console::getBooleanInput('Do you want to continue?'))
+                        throw new UserAbortedOperationException('The operation was aborted by the user');
+
+                    // The user understands the risks and wants to continue
+                    $process->setEnv(['COMPOSER_ALLOW_SUPERUSER' => 1]);
+                }
+            }
+            else
+            {
+                // Composer is running "safely". We can disable the superuser check
+                $process->setEnv(['COMPOSER_ALLOW_SUPERUSER' => 1]);
+            }
+        }
+
+        /**
+         * Converts a composer project to a NCC project
+         *
+         * @param mixed $composer_package
+         * @param string $package_path
+         * @return ProjectConfiguration
+         * @throws AccessDeniedException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws MalformedJsonException
+         * @throws PackagePreparationFailedException
+         * @throws Exception
+         */
+        private static function convertProject(string $package_path, ?ComposerJson $composer_package=null): ProjectConfiguration
+        {
+            if($composer_package == null)
+                ComposerJson::fromArray(Functions::loadJsonFile($package_path . DIRECTORY_SEPARATOR . 'composer.json'));
+
+            $project_configuration = ComposerSourceBuiltin::generateProjectConfiguration($composer_package);
+            $filesystem = new Filesystem();
+
+            // Process the source files
+            if ($composer_package->Autoload !== null)
+            {
+                $source_directory = $package_path . DIRECTORY_SEPARATOR . '.src';
+                if ($filesystem->exists($source_directory))
+                    $filesystem->remove($source_directory);
+                $filesystem->mkdir($source_directory);
+                $source_directories = [];
+                $static_files = [];
+
+                // Extract all the source directories
+                if ($composer_package->Autoload->Psr4 !== null && count($composer_package->Autoload->Psr4) > 0)
+                {
+                    Console::outVerbose('Extracting PSR-4 source directories');
+                    foreach ($composer_package->Autoload->Psr4 as $namespace_pointer)
+                    {
+                        if ($namespace_pointer->Path !== null && !in_array($namespace_pointer->Path, $source_directories))
+                        {
+                            $source_directories[] = $package_path . DIRECTORY_SEPARATOR . $namespace_pointer->Path;
+                        }
+                    }
+                }
+
+                if ($composer_package->Autoload->Psr0 !== null && count($composer_package->Autoload->Psr0) > 0)
+                {
+                    Console::outVerbose('Extracting PSR-0 source directories');
+                    foreach ($composer_package->Autoload->Psr0 as $namespace_pointer)
+                    {
+                        if ($namespace_pointer->Path !== null && !in_array($namespace_pointer->Path, $source_directories))
+                        {
+                            $source_directories[] = $package_path . DIRECTORY_SEPARATOR . $namespace_pointer->Path;
+                        }
+                    }
+                }
+
+                if ($composer_package->Autoload->Files !== null && count($composer_package->Autoload->Files) > 0)
+                {
+                    Console::outVerbose('Extracting static files');
+                    foreach ($composer_package->Autoload->Files as $file)
+                    {
+                        $static_files[] = $package_path . DIRECTORY_SEPARATOR . $file;
+                    }
+                }
+
+                Console::outDebug(sprintf('source directories: %s', implode(', ', $source_directories)));
+
+                // First scan the project files and create a file struct.
+                $DirectoryScanner = new DirectoryScanner();
+
+                // TODO: Implement exclude-class handling
+                try
+                {
+                    $DirectoryScanner->unsetFlag(FilesystemIterator::FOLLOW_SYMLINKS);
+                }
+                catch (Exception $e)
+                {
+                    throw new PackagePreparationFailedException('Cannot unset flag \'FOLLOW_SYMLINKS\' in DirectoryScanner, ' . $e->getMessage(), $e);
+                }
+
+                // Include file components that can be compiled
+                $DirectoryScanner->setIncludes(ComponentFileExtensions::Php);
+
+                foreach ($source_directories as $directory)
+                {
+                    /** @var SplFileInfo $item */
+                    /** @noinspection PhpRedundantOptionalArgumentInspection */
+                    foreach ($DirectoryScanner($directory, True) as $item)
+                    {
+                        if (is_dir($item->getPathName()))
+                            continue;
+
+                        $parsed_path = str_ireplace($package_path . DIRECTORY_SEPARATOR, '', $item->getPathName());
+
+                        Console::outDebug(sprintf('copying file %s for package %s', $parsed_path, $composer_package->Name));
+                        $filesystem->copy($item->getPathName(), $source_directory . DIRECTORY_SEPARATOR . $parsed_path);
+                    }
+                }
+
+                if (count($static_files) > 0)
+                {
+                    $project_configuration->Project->Options['static_files'] = $static_files;
+
+                    foreach ($static_files as $file)
+                    {
+                        $parsed_path = str_ireplace($package_path . DIRECTORY_SEPARATOR, '', $file);
+                        Console::outDebug(sprintf('copying file %s for package %s', $parsed_path, $composer_package->Name));
+                        $filesystem->copy($file, $source_directory . DIRECTORY_SEPARATOR . $parsed_path);
+                    }
+                    unset($file);
+                }
+
+                $project_configuration->toFile($package_path . DIRECTORY_SEPARATOR . 'project.json');
+            }
+
+            // This part simply displays the package information to the command-line interface
+            if(ncc::cliMode())
+            {
+                $license_files = [
+                    'LICENSE',
+                    'license',
+                    'LICENSE.txt',
+                    'license.txt'
+                ];
+
+                foreach($license_files as $license_file)
+                {
+                    if($filesystem->exists($package_path . DIRECTORY_SEPARATOR . $license_file))
+                    {
+                        // Check configuration if composer.extension.display_licenses is set
+                        if(Functions::cbool(Functions::getConfigurationProperty('composer.extension.display_licenses')))
+                        {
+                            Console::out(sprintf('License for package %s:', $composer_package->Name));
+                            Console::out(IO::fread($package_path . DIRECTORY_SEPARATOR . $license_file));
+                            break;
+                        }
+                    }
+                }
+
+                if(Functions::cbool(Functions::getConfigurationProperty('composer.extension.display_authors')))
+                {
+                    if($composer_package->Authors !== null && count($composer_package->Authors) > 0)
+                    {
+                        Console::out(sprintf('Authors for package %s:', $composer_package->Name));
+                        foreach($composer_package->Authors as $author)
+                        {
+                            Console::out(sprintf(' - %s', $author->Name));
+
+                            if($author->Email !== null)
+                            {
+                                Console::out(sprintf('   %s', $author->Email));
+                            }
+
+                            if($author->Homepage !== null)
+                            {
+                                Console::out(sprintf('   %s', $author->Homepage));
+                            }
+
+                            if($author->Role !== null)
+                            {
+                                Console::out(sprintf('   %s', $author->Role));
+                            }
+
+                        }
+                    }
+                }
+            }
+
+            return $project_configuration;
         }
     }
