@@ -128,67 +128,75 @@
 
             // TODO: Re-implement the scanning process outside the compiler, as this is will be redundant
             // Scan for components first.
-            Console::outVerbose('Scanning for components... ');
-            /** @var SplFileInfo $item */
-            /** @noinspection PhpRedundantOptionalArgumentInspection */
-            foreach($DirectoryScanner($source_path, True) as $item)
+
+            if(file_exists($source_path))
             {
-                // Ignore directories, they're not important. :-)
-                if(is_dir($item->getPathName()))
-                    continue;
+                Console::outVerbose('Scanning for components... ');
+                /** @var SplFileInfo $item */
+                /** @noinspection PhpRedundantOptionalArgumentInspection */
+                foreach($DirectoryScanner($source_path, True) as $item)
+                {
+                    // Ignore directories, they're not important. :-)
+                    if(is_dir($item->getPathName()))
+                        continue;
 
-                $Component = new Package\Component();
-                $Component->Name = Functions::removeBasename($item->getPathname(), $this->path);
-                $this->package->Components[] = $Component;
+                    $Component = new Package\Component();
+                    $Component->Name = Functions::removeBasename($item->getPathname(), $this->path);
+                    $this->package->Components[] = $Component;
 
-                Console::outVerbose(sprintf('Found component %s', $Component->Name));
-            }
+                    Console::outVerbose(sprintf('Found component %s', $Component->Name));
+                }
 
-            if(count($this->package->Components) > 0)
-            {
-                Console::outVerbose(count($this->package->Components) . ' component(s) found');
+                if(count($this->package->Components) > 0)
+                {
+                    Console::outVerbose(count($this->package->Components) . ' component(s) found');
+                }
+                else
+                {
+                    Console::outVerbose('No components found');
+                }
+
+                // Clear previous excludes and includes
+                $DirectoryScanner->setExcludes([]);
+                $DirectoryScanner->setIncludes([]);
+
+                // Ignore component files
+                if($selected_build_configuration->ExcludeFiles !== null && count($selected_build_configuration->ExcludeFiles) > 0)
+                {
+                    $DirectoryScanner->setExcludes(array_merge($selected_build_configuration->ExcludeFiles, ComponentFileExtensions::Php));
+                }
+                else
+                {
+                    $DirectoryScanner->setExcludes(ComponentFileExtensions::Php);
+                }
+
+                Console::outVerbose('Scanning for resources... ');
+                /** @var SplFileInfo $item */
+                foreach($DirectoryScanner($source_path) as $item)
+                {
+                    // Ignore directories, they're not important. :-)
+                    if(is_dir($item->getPathName()))
+                        continue;
+
+                    $Resource = new Package\Resource();
+                    $Resource->Name = Functions::removeBasename($item->getPathname(), $this->path);
+                    $this->package->Resources[] = $Resource;
+
+                    Console::outVerbose(sprintf('found resource %s', $Resource->Name));
+                }
+
+                if(count($this->package->Resources) > 0)
+                {
+                    Console::outVerbose(count($this->package->Resources) . ' resources(s) found');
+                }
+                else
+                {
+                    Console::outVerbose('No resources found');
+                }
             }
             else
             {
-                Console::outVerbose('No components found');
-            }
-
-            // Clear previous excludes and includes
-            $DirectoryScanner->setExcludes([]);
-            $DirectoryScanner->setIncludes([]);
-
-            // Ignore component files
-            if($selected_build_configuration->ExcludeFiles !== null && count($selected_build_configuration->ExcludeFiles) > 0)
-            {
-                $DirectoryScanner->setExcludes(array_merge($selected_build_configuration->ExcludeFiles, ComponentFileExtensions::Php));
-            }
-            else
-            {
-                $DirectoryScanner->setExcludes(ComponentFileExtensions::Php);
-            }
-
-            Console::outVerbose('Scanning for resources... ');
-            /** @var SplFileInfo $item */
-            foreach($DirectoryScanner($source_path) as $item)
-            {
-                // Ignore directories, they're not important. :-)
-                if(is_dir($item->getPathName()))
-                    continue;
-
-                $Resource = new Package\Resource();
-                $Resource->Name = Functions::removeBasename($item->getPathname(), $this->path);
-                $this->package->Resources[] = $Resource;
-
-                Console::outVerbose(sprintf('found resource %s', $Resource->Name));
-            }
-
-            if(count($this->package->Resources) > 0)
-            {
-                Console::outVerbose(count($this->package->Resources) . ' resources(s) found');
-            }
-            else
-            {
-                Console::outVerbose('No resources found');
+                Console::outWarning('Source path does not exist, skipping resource and component scanning');
             }
 
             $selected_dependencies = [];

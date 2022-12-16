@@ -149,7 +149,6 @@
                 return false;
 
             $this->Password = $this->encrypt();
-            var_dump($this->Password);
             return true;
         }
 

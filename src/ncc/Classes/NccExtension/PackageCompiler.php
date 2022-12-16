@@ -116,7 +116,6 @@
                 throw new BuildException('Failed to build project', $e);
             }
 
-
             throw new UnsupportedProjectTypeException('The project type \'' . $project_type->ProjectType . '\' is not supported');
         }
 
@@ -168,7 +167,6 @@
          * @param string $build_configuration
          * @return string
          * @throws BuildConfigurationNotFoundException
-         * @throws BuildException
          * @throws IOException
          */
         public static function writePackage(string $path, Package $package, ProjectConfiguration $configuration, string $build_configuration=BuildConfigurationValues::DefaultConfiguration): string
@@ -176,21 +174,14 @@
             // Write the package to disk
             $FileSystem = new Filesystem();
             $BuildConfiguration = $configuration->Build->getBuildConfiguration($build_configuration);
-            if($FileSystem->exists($path . $BuildConfiguration->OutputPath))
-            {
-                try
-                {
-                    $FileSystem->remove($path . $BuildConfiguration->OutputPath);
-                }
-                catch(\ncc\ThirdParty\Symfony\Filesystem\Exception\IOException $e)
-                {
-                    throw new BuildException('Cannot delete directory \'' . $path . $BuildConfiguration->OutputPath . '\', ' . $e->getMessage(), $e);
-                }
-            }
+            if(!$FileSystem->exists($path . $BuildConfiguration->OutputPath))
+                $FileSystem->mkdir($path . $BuildConfiguration->OutputPath);
 
             // Finally write the package to the disk
             $FileSystem->mkdir($path . $BuildConfiguration->OutputPath);
             $output_file = $path . $BuildConfiguration->OutputPath . DIRECTORY_SEPARATOR . $package->Assembly->Package . '.ncc';
+            if($FileSystem->exists($output_file))
+                $FileSystem->remove($output_file);
             $FileSystem->touch($output_file);
 
             try

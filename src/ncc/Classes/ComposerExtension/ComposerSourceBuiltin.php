@@ -35,6 +35,7 @@
     use ncc\ncc;
     use ncc\Objects\ComposerJson;
     use ncc\Objects\ComposerLock;
+    use ncc\Objects\Package;
     use ncc\Objects\ProjectConfiguration;
     use ncc\Objects\RemotePackageInput;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
@@ -47,6 +48,7 @@
     use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
     use ncc\Utilities\RuntimeCache;
+    use ncc\Utilities\Validate;
     use SplFileInfo;
 
     class ComposerSourceBuiltin implements ServiceSourceInterface
@@ -212,11 +214,10 @@
                 $built_package = $project_manager->build();
 
                 // Copy the project to the build directory
-                $out_path = $base_dir . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . sprintf('%s=%s.ncc', $project_configuration->Assembly->Package, $project_configuration->Assembly->Version);
+                $out_path = $base_dir . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . sprintf('%s.ncc', $project_configuration->Assembly->Package);
                 $filesystem->copy($built_package, $out_path);
                 $filesystem->remove($built_package);
                 $built_packages[$project_configuration->Assembly->Package] = $out_path;
-
             }
 
             return $built_packages;
@@ -269,35 +270,50 @@
             if($project_configuration->Assembly->Version == null || $project_configuration->Assembly->Version == '')
                 $project_configuration->Assembly->Version = '1.0.0';
 
+            if(!Validate::version($project_configuration->Assembly->Version))
+                $project_configuration->Assembly->Version = Functions::convertToSemVer($project_configuration->Assembly->Version);
+
+            if(!Validate::version($project_configuration->Assembly->Version))
+            {
+                Console::outWarning(sprintf('Invalid version "%s" for package "%s", using "1.0.0" instead', $project_configuration->Assembly->Version, $project_configuration->Assembly->Name));
+                $project_configuration->Assembly->Version = '1.0.0';
+            }
+
+            RuntimeCache::set(sprintf('composer_version_%s', $project_configuration->Assembly->Package), $project_configuration->Assembly->Version);
+
+
             $project_configuration->Assembly->UUID = Uuid::v1()->toRfc4122();
             $project_configuration->Assembly->Package = self::toPackageName($composer_package->Name);
 
             // Add the update source
             $project_configuration->Project->UpdateSource = new ProjectConfiguration\UpdateSource();
-            $project_configuration->Project->UpdateSource->Source = sprintf('%s=%s@composer', str_ireplace('\\', '/', $composer_package->Name), $composer_package->Version);
+            $project_configuration->Project->UpdateSource->Source = sprintf('%s@composer', str_ireplace('\\', '/', $composer_package->Name));
             $project_configuration->Project->UpdateSource->Repository = null;
 
             // Process the dependencies
-            foreach ($composer_package->Require as $item)
+            if($composer_package->Require !== null && count($composer_package->Require) > 0)
             {
-                $package_name = self::toPackageName($item->PackageName);
-                $package_version = $composer_package->Version;
-                if ($package_version == null)
+                foreach ($composer_package->Require as $item)
                 {
-                    $package_version = '1.0.0';
+                    $package_name = self::toPackageName($item->PackageName);
+                    $package_version = $composer_package->Version;
+                    if ($package_version == null)
+                    {
+                        $package_version = '1.0.0';
+                    }
+                    else
+                    {
+                        $package_version = Functions::parseVersion($package_version);
+                    }
+                    if ($package_name == null)
+                        continue;
+                    $dependency = new ProjectConfiguration\Dependency();
+                    $dependency->Name = $package_name;
+                    $dependency->SourceType = DependencySourceType::Local;
+                    $dependency->Version = $package_version;
+                    $dependency->Source = $package_name . '.ncc';
+                    $project_configuration->Build->Dependencies[] = $dependency;
                 }
-                else
-                {
-                    $package_version = Functions::parseVersion($package_version);
-                }
-                if ($package_name == null)
-                    continue;
-                $dependency = new ProjectConfiguration\Dependency();
-                $dependency->Name = $package_name;
-                $dependency->SourceType = DependencySourceType::Local;
-                $dependency->Version = $package_version;
-                $dependency->Source = $package_name . '=' . $dependency->Version . '.ncc';
-                $project_configuration->Build->Dependencies[] = $dependency;
             }
 
             // Create a build configuration
@@ -563,7 +579,7 @@
         private static function convertProject(string $package_path, ?ComposerJson $composer_package=null): ProjectConfiguration
         {
             if($composer_package == null)
-                ComposerJson::fromArray(Functions::loadJsonFile($package_path . DIRECTORY_SEPARATOR . 'composer.json'));
+                $composer_package = ComposerJson::fromArray(Functions::loadJsonFile($package_path . DIRECTORY_SEPARATOR . 'composer.json', Functions::FORCE_ARRAY));
 
             $project_configuration = ComposerSourceBuiltin::generateProjectConfiguration($composer_package);
             $filesystem = new Filesystem();
@@ -658,9 +674,9 @@
                     }
                     unset($file);
                 }
-
-                $project_configuration->toFile($package_path . DIRECTORY_SEPARATOR . 'project.json');
             }
+
+            $project_configuration->toFile($package_path . DIRECTORY_SEPARATOR . 'project.json');
 
             // This part simply displays the package information to the command-line interface
             if(ncc::cliMode())

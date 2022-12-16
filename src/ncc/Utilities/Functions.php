@@ -36,6 +36,8 @@
     use ncc\ThirdParty\jelix\Version\Parser;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use PharData;
+    use RecursiveDirectoryIterator;
+    use RecursiveIteratorIterator;
     use Throwable;
     use ZipArchive;
 
@@ -585,36 +587,82 @@
          * @return string
          * @throws Exception
          */
-        public static function extractArchive(string $path): string
+        public static function extractArchive(string $path): ?string
         {
-            $filesystem = new Filesystem();
-            if(!$filesystem->exists(dirname($path)))
-                $filesystem->mkdir(dirname($path));
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $path);
+            finfo_close($finfo);
 
-            switch(pathinfo($path, PATHINFO_EXTENSION))
+            if ($mimeType == 'application/zip')
             {
-                case 'zip':
-                    $zip = new ZipArchive();
-                    $zip->open($path);
+                $zip = new ZipArchive;
+                $res = $zip->open($path);
+                if ($res === TRUE)
+                {
                     $zip->extractTo(dirname($path));
                     $zip->close();
-                    break;
-
-                case 'tar':
-                    $phar = new PharData($path);
-                    $phar->extractTo(dirname($path));
-                    break;
-
-                case 'gz':
-                    $phar = new PharData($path);
-                    $phar->decompress();
-                    break;
-
-                default:
-                    throw new Exception('Unsupported archive type');
+                    return dirname($path);
+                }
+            }
+            if ($mimeType == 'application/x-tar' || $mimeType == 'application/tar')
+            {
+                $phar = new PharData($path);
+                $phar->extractTo(dirname($path), null, true);
+                return dirname($path);
+            }
+            elseif ($mimeType == 'application/x-gzip' || $mimeType == 'application/gzip')
+            {
+                $phar = new PharData($path);
+                $phar->decompress();
+                return dirname($path);
             }
 
-            return dirname($path);
+            return null;
         }
+
+        /**
+         * Scans the given directory for files and returns the found file
+         *
+         * @param string $path
+         * @param array $files
+         * @return string|null
+         */
+        public static function searchDirectory(string $path, array $files): ?string
+        {
+            if (!is_dir($path))
+                return null;
+
+            // Search files in the given directory recursively
+            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
+            foreach ($iterator as $file)
+            {
+                if (in_array($file->getFilename(), $files))
+                    return $file->getPathname();
+            }
+
+            return null;
+        }
+
+        /**
+         * Attempts to convert a weird version number to a standard version number
+         *
+         * @param $version
+         * @return string
+         */
+        public static function convertToSemVer($version)
+        {
+            $parts = explode('.', $version);
+            $major = $parts[0];
+            $minor = $parts[1];
+            $patch = $parts[2];
+            $buildmetadata = $parts[3];
+
+            // Assemble the SemVer compatible string
+            $semver = "$major.$minor.$patch+$buildmetadata";
+
+            return $semver;
+        }
+
+
 
     }

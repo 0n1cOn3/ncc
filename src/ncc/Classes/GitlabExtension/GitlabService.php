@@ -118,11 +118,12 @@
             $protocol = ($definedRemoteSource->SSL ? "https" : "http");
             $owner_f = str_ireplace("/", "%2F", $packageInput->Vendor);
             $owner_f = str_ireplace(".", "%2F", $owner_f);
-            $repository = urlencode($packageInput->Package);
-            $httpRequest->Url = $protocol . '://' . $definedRemoteSource->Host . "/api/v4/projects/$owner_f%2F$repository";
+            $project_f = str_ireplace("/", "%2F", $packageInput->Package);
+            $project_f = str_ireplace(".", "%2F", $project_f);
+            $httpRequest->Url = $protocol . '://' . $definedRemoteSource->Host . "/api/v4/projects/$owner_f%2F$project_f";
             $httpRequest = Functions::prepareGitServiceRequest($httpRequest, $entry);
 
-            $response = HttpClient::request($httpRequest);
+            $response = HttpClient::request($httpRequest, true);
 
             if($response->StatusCode != 200)
                 throw new GitlabServiceException(sprintf('Failed to fetch releases for the given repository. Status code: %s', $response->StatusCode));
@@ -210,10 +211,13 @@
             $protocol = ($definedRemoteSource->SSL ? "https" : "http");
             $owner_f = str_ireplace("/", "%2F", $owner);
             $owner_f = str_ireplace(".", "%2F", $owner_f);
-            $httpRequest->Url = $protocol . '://' . $definedRemoteSource->Host . "/api/v4/projects/$owner_f%2F$repository/releases";
+            $repository_f = str_ireplace("/", "%2F", $repository);
+            $repository_f = str_ireplace(".", "%2F", $repository_f);
+
+            $httpRequest->Url = $protocol . '://' . $definedRemoteSource->Host . "/api/v4/projects/$owner_f%2F$repository_f/releases";
             $httpRequest = Functions::prepareGitServiceRequest($httpRequest, $entry);
 
-            $response = HttpClient::request($httpRequest);
+            $response = HttpClient::request($httpRequest, true);
 
             if($response->StatusCode != 200)
                throw new GitlabServiceException(sprintf('Failed to fetch releases for the given repository. Status code: %s', $response->StatusCode));
@@ -237,7 +241,7 @@
                         $return[$release_version] = $release['assets']['sources'][0]['url'];
                         foreach($release['assets']['sources'] as $source)
                         {
-                            if($source['format'] == 'tar.gz')
+                            if($source['format'] == 'zip')
                             {
                                 $return[$release_version] = $source['url'];
                                 break;

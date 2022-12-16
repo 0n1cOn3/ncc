@@ -153,10 +153,12 @@
             $owner_f = str_ireplace(".", "%2F", $owner_f);
             $repository = urlencode($packageInput->Package);
             $httpRequest->Url = $protocol . '://' . $definedRemoteSource->Host . "/repos/$owner_f/$repository";
-            $httpRequest->Type = HttpRequestType::POST;
-            $httpRequest = Functions::prepareGitServiceRequest($httpRequest, $entry);
+            $httpRequest->Type = HttpRequestType::GET;
+            $httpRequest = Functions::prepareGitServiceRequest($httpRequest, $entry, false);
+            $httpRequest->Headers[] = 'X-GitHub-Api-Version: 2022-11-28';
+            $httpRequest->Headers[] = 'Accept: application/vnd.github+json';
 
-            $response = HttpClient::request($httpRequest);
+            $response = HttpClient::request($httpRequest, true);
 
             if($response->StatusCode != 200)
                 throw new GithubServiceException(sprintf('Failed to fetch releases for the given repository. Status code: %s', $response->StatusCode));
@@ -249,13 +251,21 @@
                         $latest_version = $version;
                 }
 
-                return $releases[$latest_version]['package'];
+                $return = $releases[$latest_version]['package'] ?? null;
+                if($return === null)
+                    throw new VersionNotFoundException('No releases found for the given repository.');
+
+                return $return;
             }
 
             if(!isset($releases[$packageInput->Version]))
                 throw new VersionNotFoundException(sprintf('The given version "%s" does not exist.', $packageInput->Version));
 
-            return $releases[$packageInput->Version]['package'];
+            $return = $releases[$packageInput->Version]['package'] ?? null;
+            if($return === null)
+                throw new VersionNotFoundException('No releases found for the given repository.');
+
+            return $return;
         }
 
         /**
@@ -279,10 +289,12 @@
             $owner_f = str_ireplace(".", "%2F", $owner_f);
             $repository = urlencode($packageInput->Package);
             $httpRequest->Url = $protocol . '://' . $definedRemoteSource->Host . "/repos/$owner_f/$repository/releases";
-            $httpRequest->Type = HttpRequestType::POST;
-            $httpRequest = Functions::prepareGitServiceRequest($httpRequest, $entry);
+            $httpRequest->Type = HttpRequestType::GET;
+            $httpRequest = Functions::prepareGitServiceRequest($httpRequest, $entry, false);
+            $httpRequest->Headers[] = 'X-GitHub-Api-Version: 2022-11-28';
+            $httpRequest->Headers[] = 'Accept: application/vnd.github+json';
 
-            $response = HttpClient::request($httpRequest);
+            $response = HttpClient::request($httpRequest, true);
 
             if($response->StatusCode != 200)
                 throw new GithubServiceException(sprintf('Failed to fetch releases for the given repository. Status code: %s', $response->StatusCode));
@@ -298,7 +310,7 @@
                 // Make the tag_name version friendly
                 $release_version = str_replace('v', '', $release['tag_name']);
                 $return[$release_version] = [
-                    'url' => ($release['tarball_url'] ?? $release['zipball_url'] ?? null)
+                    'url' => ($release['zipball_url'] ?? $release['tarball_url'] ?? null)
                 ];
 
                 if(isset($release['assets']))

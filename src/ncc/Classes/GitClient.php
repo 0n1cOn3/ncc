@@ -27,14 +27,7 @@
             $process->setTimeout(3600); // 1 hour
             $process->run(function ($type, $buffer)
             {
-                if (Process::ERR === $type)
-                {
-                    Console::outWarning($buffer);
-                }
-                else
-                {
-                    Console::outVerbose($buffer);
-                }
+                Console::outVerbose($buffer);
             });
 
             if (!$process->isSuccessful())
@@ -86,14 +79,7 @@
             $process->setTimeout(3600); // 1 hour
             $process->run(function ($type, $buffer)
             {
-                if (Process::ERR === $type)
-                {
-                    Console::outWarning($buffer);
-                }
-                else
-                {
-                    Console::outVerbose($buffer);
-                }
+                Console::outVerbose($buffer);
             });
 
             if (!$process->isSuccessful())
@@ -103,9 +89,7 @@
 
             $process->run(function ($type, $buffer)
             {
-                if (Process::ERR === $type)
-                    Console::outWarning($buffer);
-
+                Console::outVerbose($buffer);
             });
 
             if (!$process->isSuccessful())

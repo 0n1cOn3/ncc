@@ -206,19 +206,19 @@
          * @param string $headers
          * @return array
          */
-        private static function parseHeaders(string $headers): array
+        private static function parseHeaders(string $input): array
         {
-            $headers = explode("\r", $headers);
-            $headers = array_filter($headers, function ($header)
-            {
-                return !empty($header);
-            });
-            $headers = array_map(function ($header) {
-                return explode(':', $header, 2);
-            }, $headers);
+            $headers = array();
+            $lines = explode("\n", $input);
+            $headers['HTTP'] = array_shift($lines);
 
-            return array_combine(array_map(function ($header) { return strtolower($header[0]); }, $headers),
-                array_map(function ($header) { return trim($header[1]); }, $headers)
-            );
+            foreach ($lines as $line) {
+                $header = explode(':', $line, 2);
+                if (count($header) == 2) {
+                    $headers[trim($header[0])] = trim($header[1]);
+                }
+            }
+
+            return $headers;
         }
     }

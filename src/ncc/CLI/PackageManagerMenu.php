@@ -32,7 +32,6 @@
             {
                 try
                 {
-                    Console::outException('Example Error', new Exception('test'), 1);
                     self::installPackage($args);
                     return;
                 }
@@ -195,15 +194,23 @@
             // check if authentication is provided
             $entry_arg = ($args['auth'] ?? null);
             $credential_manager = new CredentialManager();
-            $credential = $credential_manager->getVault()->getEntry($entry_arg);
 
-            if($credential == null)
+            if($entry_arg !== null)
             {
-                Console::outError(sprintf('Unknown credential entry \'%s\'', $entry_arg), true, 1);
-                return;
+                $credential = $credential_manager->getVault()->getEntry($entry_arg);
+
+                if($credential == null)
+                {
+                    Console::outError(sprintf('Unknown credential entry \'%s\'', $entry_arg), true, 1);
+                    return;
+                }
+            }
+            else
+            {
+                $credential = null;
             }
 
-            if(!$credential->isCurrentlyDecrypted())
+            if($credential !== null && !$credential->isCurrentlyDecrypted())
             {
                 // Try 3 times
                 for($i = 0; $i < 3; $i++)

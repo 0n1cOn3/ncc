@@ -1,18 +1,16 @@
 <?php
 
-        /** @noinspection PhpMissingFieldTypeInspection */
+    /** @noinspection PhpMissingFieldTypeInspection */
 
-        namespace ncc\Utilities;
+    namespace ncc\Utilities;
 
     use ncc\Abstracts\BuiltinRemoteSourceType;
-    use ncc\Abstracts\DefinedRemoteSourceType;
     use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\ProjectType;
     use ncc\Abstracts\RemoteSourceType;
     use ncc\Abstracts\Scopes;
     use ncc\Managers\RemoteSourcesManager;
     use ncc\Objects\ProjectDetectionResults;
-    use ncc\ThirdParty\theseer\DirectoryScanner\DirectoryScanner;
 
     class Resolver
     {
@@ -267,7 +265,7 @@
             if($defined_source == null)
                 return RemoteSourceType::Unknown;
 
-            return $defined_source->Type;
+            return RemoteSourceType::Defined;
         }
 
         /**
@@ -277,38 +275,36 @@
          * @param array $exlucde
          * @return ProjectDetectionResults
          */
-        public static function detectProjectType(string $path, array $exlucde=[]): ProjectDetectionResults
+        public static function detectProjectType(string $path): ProjectDetectionResults
         {
-            $Scanner = new DirectoryScanner();
-            $Scanner->setExcludes($exlucde);
             $project_files = [
-                'composer.json',
-                'package.json',
+                'project.json',
+                'composer.json'
             ];
+
+            $project_file = Functions::searchDirectory($path, $project_files);
 
             $project_detection_results = new ProjectDetectionResults();
             $project_detection_results->ProjectType = ProjectType::Unknown;
 
-            /** @var \SplFileInfo $item */
-            foreach($Scanner($path, true) as $item)
+            if($project_file == null)
             {
-                if(in_array($item->getFilename(), $project_files))
-                {
-                    switch($item->getFilename())
-                    {
-                        case 'composer.json':
-                            $project_detection_results->ProjectType = ProjectType::Composer;
-                            $project_detection_results->ProjectPath = dirname($item->getPathname());
-                            break;
-
-                        case 'project.json':
-                            $project_detection_results->ProjectType = ProjectType::Ncc;
-                            $project_detection_results->ProjectPath = dirname($item->getPathname());
-                            break;
-                    }
-                }
+                return $project_detection_results;
             }
 
+            // Get filename of the project file
+            switch(basename($project_file))
+            {
+                case 'project.json':
+                    $project_detection_results->ProjectType = ProjectType::Ncc;
+                    break;
+
+                case 'composer.json':
+                    $project_detection_results->ProjectType = ProjectType::Composer;
+                    break;
+            }
+
+            $project_detection_results->ProjectPath = dirname($project_file);
             return $project_detection_results;
         }
     }

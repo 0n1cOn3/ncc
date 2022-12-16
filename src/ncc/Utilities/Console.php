@@ -126,7 +126,7 @@
                 /** @noinspection PhpRedundantOptionalArgumentInspection */
                 $tick_time = str_pad($tick_time, (strlen($tick_time) + (self::$largestTickLength - strlen($tick_time))), ' ', STR_PAD_RIGHT);
 
-            return '[' . $tick_time . ' - ' . date('TH:i:sP') . '] ' . $input;
+            return '[' . $tick_time . '] ' . $input;
         }
 
         /**
