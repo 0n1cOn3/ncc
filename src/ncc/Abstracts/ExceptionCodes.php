@@ -2,8 +2,6 @@
 
     namespace ncc\Abstracts;
 
-    use ncc\Exceptions\GitlabServiceException;
-
     /**
      * @author Zi Xing Narrakas
      * @copyright Copyright (C) 2022-2022. Nosial - All Rights Reserved.
@@ -321,6 +319,11 @@
         const NotSupportedException = -1761;
 
         /**
+         * @see UnsupportedProjectTypeException
+         */
+        const UnsupportedProjectTypeException = -1762;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -382,6 +385,7 @@
             self::GitlabServiceException,
             self::GitTagsException,
             self::AuthenticationException,
-            self::NotSupportedException
+            self::NotSupportedException,
+            self::UnsupportedProjectTypeException
         ];
     }
