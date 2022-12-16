@@ -63,12 +63,14 @@
                 $package_entry = new PackageEntry();
                 $package_entry->addVersion($package, $install_path, true);
                 $package_entry->Name = $package->Assembly->Package;
+                $package_entry->UpdateSource = $package->Header->UpdateSource;
                 $this->Packages[$package->Assembly->Package] = $package_entry;
                 $this->update();
 
                 return;
             }
 
+            $this->Packages[$package->Assembly->Package]->UpdateSource = $package->Header->UpdateSource;
             $this->Packages[$package->Assembly->Package]->addVersion($package, true);
             $this->update();
         }
