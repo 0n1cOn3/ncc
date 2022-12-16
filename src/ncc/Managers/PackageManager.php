@@ -8,12 +8,15 @@
     use ncc\Abstracts\BuiltinRemoteSourceType;
     use ncc\Abstracts\CompilerExtensions;
     use ncc\Abstracts\ConstantReferences;
+    use ncc\Abstracts\DefinedRemoteSourceType;
     use ncc\Abstracts\DependencySourceType;
     use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\RemoteSourceType;
     use ncc\Abstracts\Scopes;
     use ncc\Abstracts\Versions;
     use ncc\Classes\ComposerExtension\ComposerSourceBuiltin;
+    use ncc\Classes\GithubExtension\GithubService;
+    use ncc\Classes\GitlabExtension\GitlabService;
     use ncc\Classes\NccExtension\PackageCompiler;
     use ncc\Classes\PhpExtension\PhpInstaller;
     use ncc\CLI\Main;
@@ -31,12 +34,15 @@
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Exceptions\VersionNotFoundException;
+    use ncc\Interfaces\RepositorySourceInterface;
+    use ncc\Objects\DefinedRemoteSource;
     use ncc\Objects\InstallationPaths;
     use ncc\Objects\Package;
     use ncc\Objects\PackageLock\PackageEntry;
     use ncc\Objects\PackageLock\VersionEntry;
     use ncc\Objects\ProjectConfiguration\Dependency;
     use ncc\Objects\RemotePackageInput;
+    use ncc\Objects\Vault\Entry;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\ThirdParty\theseer\DirectoryScanner\DirectoryScanner;
     use ncc\Utilities\Console;
@@ -307,6 +313,22 @@
                 }
             }
 
+            if($package->Header->UpdateSource !== null && $package->Header->UpdateSource->Repository !== null)
+            {
+                $sources_manager = new RemoteSourcesManager();
+                if($sources_manager->getRemoteSource($package->Header->UpdateSource->Repository->Name) === null)
+                {
+                    Console::outVerbose('Adding remote source ' . $package->Header->UpdateSource->Repository->Name);
+                    $defined_remote_source = new DefinedRemoteSource();
+                    $defined_remote_source->Name = $package->Header->UpdateSource->Repository->Name;
+                    $defined_remote_source->Host = $package->Header->UpdateSource->Repository->Host;
+                    $defined_remote_source->Type = $package->Header->UpdateSource->Repository->Type;
+                    $defined_remote_source->SSL = $package->Header->UpdateSource->Repository->SSL;
+
+                    $sources_manager->addRemoteSource($defined_remote_source);
+                }
+            }
+
             $this->getPackageLockManager()->getPackageLock()->addPackage($package, $installation_paths->getInstallationPath());
             $this->getPackageLockManager()->save();
 
@@ -315,10 +337,11 @@
 
         /**
          * @param string $source
+         * @param Entry|null $auth_entry
          * @return string
          * @throws InstallationException
          */
-        public function fetchFromSource(string $source): string
+        public function fetchFromSource(string $source, ?Entry $auth_entry=null): string
         {
             $parsed_source = new RemotePackageInput($source);
 
@@ -359,7 +382,21 @@
                 if($remote_source == null)
                     throw new InstallationException('Remote source ' . $parsed_source->Source . ' is not defined');
 
-                // TODO: Implement defined remote sources
+                /** @var RepositorySourceInterface $remote_service_client */
+                $remote_service_client = match ($remote_source->Type) {
+                    DefinedRemoteSourceType::Gitlab => GitlabService::class,
+                    DefinedRemoteSourceType::Github => GithubService::class,
+                    default => throw new InstallationException('Remote source type ' . $remote_source->Type . ' is not implemented'),
+                };
+
+                try
+                {
+                    return $remote_service_client::fetch($parsed_source, $remote_source, $auth_entry);
+                }
+                catch(Exception $e)
+                {
+                    throw new InstallationException('Cannot fetch package from remote source, ' . $e->getMessage(), $e);
+                }
             }
 
             throw new InstallationException(sprintf('Unknown remote source type %s', $remote_source_type));
