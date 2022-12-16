@@ -6,6 +6,7 @@
 
     use ncc\Exceptions\VersionNotFoundException;
     use ncc\Objects\Package;
+    use ncc\Objects\ProjectConfiguration\UpdateSource;
     use ncc\ThirdParty\jelix\Version\VersionComparator;
     use ncc\Utilities\Functions;
 
@@ -31,6 +32,13 @@
          * @var VersionEntry[]
          */
         public $Versions;
+
+        /**
+         * The update source of the package entry
+         *
+         * @var UpdateSource|null
+         */
+        public $UpdateSource;
 
         /**
          * Public Constructor
@@ -204,6 +212,7 @@
                 ($bytecode ? Functions::cbc('name')  : 'name')  => $this->Name,
                 ($bytecode ? Functions::cbc('latest_version')  : 'latest_version')  => $this->LatestVersion,
                 ($bytecode ? Functions::cbc('versions')  : 'versions')  => $versions,
+                ($bytecode ? Functions::cbc('update_source')  : 'update_source')  => ($this->UpdateSource?->toArray($bytecode) ?? null),
             ];
         }
 
@@ -220,6 +229,10 @@
             $object->Name = Functions::array_bc($data, 'name');
             $object->LatestVersion = Functions::array_bc($data, 'latest_version');
             $versions = Functions::array_bc($data, 'versions');
+            $object->UpdateSource = Functions::array_bc($data, 'update_source');
+
+            if($object->UpdateSource !== null)
+                $object->UpdateSource = UpdateSource::fromArray($object->UpdateSource);
 
             if($versions !== null)
             {
