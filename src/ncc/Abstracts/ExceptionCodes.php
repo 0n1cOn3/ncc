@@ -300,6 +300,25 @@
          */
         const ImportException = -1757;
 
+        /**
+         * @see GitTagsException
+         */
+        const GitTagsException = -1758;
+
+        /**
+         * @see GithubServiceException
+         */
+        const GithubServiceException = -1759;
+
+        /**
+         * @see AuthenticationException
+         */
+        const AuthenticationException = -1760;
+
+        /**
+         * @see NotSupportedException
+         */
+        const NotSupportedException = -1761;
 
         /**
          * All the exception codes from NCC
@@ -360,6 +379,9 @@
             self::UnsupportedRemoteSourceTypeException,
             self::GitCloneException,
             self::GitCheckoutException,
-            self::GitlabServiceException
+            self::GitlabServiceException,
+            self::GitTagsException,
+            self::AuthenticationException,
+            self::NotSupportedException
         ];
     }
