@@ -19,7 +19,7 @@
         public $Name;
 
         /**
-         * The type of service NCC should use with this source (git, gitlab, github, etc...).
+         * The type of service NCC should use with this source (gitlab, github, etc...).
          *
          * @var string|DefinedRemoteSourceType
          */
