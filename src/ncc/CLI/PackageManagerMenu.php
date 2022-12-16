@@ -4,13 +4,21 @@
 
     use Exception;
     use ncc\Abstracts\ConsoleColors;
-    use ncc\Abstracts\RemoteSource;
+    use ncc\Abstracts\BuiltinRemoteSourceType;
+    use ncc\Abstracts\DefinedRemoteSourceType;
+    use ncc\Abstracts\RemoteSourceType;
     use ncc\Abstracts\Scopes;
-    use ncc\Classes\ComposerExtension\ComposerSource;
+    use ncc\Classes\ComposerExtension\ComposerSourceBuiltin;
+    use ncc\Classes\GithubExtension\GithubService;
+    use ncc\Classes\GitlabExtension\GitlabService;
     use ncc\Exceptions\FileNotFoundException;
+    use ncc\Exceptions\InstallationException;
     use ncc\Exceptions\PackageLockException;
+    use ncc\Exceptions\RuntimeException;
     use ncc\Exceptions\VersionNotFoundException;
+    use ncc\Managers\CredentialManager;
     use ncc\Managers\PackageManager;
+    use ncc\Managers\RemoteSourcesManager;
     use ncc\Objects\CliHelpSection;
     use ncc\Objects\Package;
     use ncc\Objects\RemotePackageInput;
@@ -32,6 +40,7 @@
             {
                 try
                 {
+                    Console::outException('Example Error', new Exception('test'), 1);
                     self::installPackage($args);
                     return;
                 }
@@ -191,33 +200,58 @@
                 return;
             }
 
-            $path = $package;
-            $parsed_source = new RemotePackageInput($path);
-            if($parsed_source->Vendor !== null && $parsed_source->Package !== null)
+            // check if authentication is provided
+            $entry_arg = ($args['auth'] ?? null);
+            $credential_manager = new CredentialManager();
+            $credential = $credential_manager->getVault()->getEntry($entry_arg);
+
+            if($credential == null)
             {
-                if($parsed_source->Source == null)
+                Console::outError(sprintf('Unknown credential entry \'%s\'', $entry_arg), true, 1);
+                return;
+            }
+
+            if(!$credential->isCurrentlyDecrypted())
+            {
+                // Try 3 times
+                for($i = 0; $i < 3; $i++)
                 {
-                    Console::outError('No source specified', true, 1);
-                    return;
+                    try
+                    {
+                        $credential->unlock(Console::passwordInput(sprintf('Enter Password for %s: ', $credential->getName())));
+                    }
+                    catch (RuntimeException $e)
+                    {
+                        Console::outException(sprintf('Failed to unlock credential %s', $credential->getName()), $e, 1);
+                        return;
+                    }
+
+                    if($credential->isCurrentlyDecrypted())
+                        break;
+
+                    Console::outWarning(sprintf('Invalid password, %d attempts remaining', 2 - $i));
                 }
 
-                switch($parsed_source->Source)
+                if(!$credential->isCurrentlyDecrypted())
                 {
-                    case RemoteSource::Composer:
-                        try
-                        {
-                            $path = ComposerSource::fetch($parsed_source);
-                            break;
-                        }
-                        catch(Exception $e)
-                        {
-                            Console::outException(sprintf('Failed to fetch package %s', $package), $e, 1);
-                            return;
-                        }
+                    Console::outError('Failed to unlock credential', true, 1);
+                    return;
+                }
+            }
 
-                    default:
-                        Console::outError('Cannot install package from source: ' . $parsed_source->Source, true, 1);
-                        return;
+            $path = $package;
+            $parsed_source = new RemotePackageInput($path);
+
+            if($parsed_source->Vendor !== null && $parsed_source->Package !== null)
+            {
+                try
+                {
+                    $path = $package_manager->fetchFromSource($parsed_source->toString());
+                }
+                catch (Exception $e)
+                {
+                    Console::outException('Failed to fetch package from source', $e, 1);
+                    return;
                 }
             }
 

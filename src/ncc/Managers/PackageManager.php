@@ -110,10 +110,13 @@
 
             $extension = $package->Header->CompilerExtension->Extension;
             $installation_paths = new InstallationPaths($this->PackagesPath . DIRECTORY_SEPARATOR . $package->Assembly->Package . '=' . $package->Assembly->Version);
-            $installer = match ($extension) {
+
+            $installer = match ($extension)
+            {
                 CompilerExtensions::PHP => new PhpInstaller($package),
                 default => throw new UnsupportedCompilerExtensionException('The compiler extension \'' . $extension . '\' is not supported'),
             };
+
             $execution_pointer_manager = new ExecutionPointerManager();
             PackageCompiler::compilePackageConstants($package, [
                 ConstantReferences::Install => $installation_paths
@@ -407,24 +410,19 @@
          *
          * @param string $source
          * @return string
-         * @throws AccessDeniedException
-         * @throws FileNotFoundException
-         * @throws IOException
          * @throws InstallationException
-         * @throws MissingDependencyException
-         * @throws NotImplementedException
-         * @throws PackageAlreadyInstalledException
-         * @throws PackageLockException
-         * @throws PackageNotFoundException
-         * @throws PackageParsingException
-         * @throws UnsupportedCompilerExtensionException
-         * @throws UnsupportedRunnerException
-         * @throws VersionNotFoundException
          */
         public function installFromSource(string $source): string
         {
-            $package_path = $this->fetchFromSource($source);
-            return $this->install($package_path);
+            try
+            {
+                $package = $this->fetchFromSource($source);
+                return $this->install($package);
+            }
+            catch(Exception $e)
+            {
+                throw new InstallationException('Cannot install package from source, ' . $e->getMessage(), $e);
+            }
         }
 
         /**
@@ -480,6 +478,11 @@
 
                         case DependencySourceType::StaticLinking:
                             throw new PackageNotFoundException('Static linking not possible, package ' . $dependency->Name . ' is not installed');
+
+                        case DependencySourceType::RemoteSource:
+                            Console::outDebug('installing from remote source ' . $dependency->Source);
+                            $this->installFromSource($dependency->Source);
+                            break;
 
                         default:
                             throw new NotImplementedException('Dependency source type ' . $dependency->SourceType . ' is not implemented');

@@ -30,7 +30,7 @@
         /**
          * Optional. The actual source where NCC can fetch the dependency from
          *
-         * @var DependencySourceType|string|null
+         * @var string|null
          */
         public $Source;
 
