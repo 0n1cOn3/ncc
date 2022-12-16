@@ -234,7 +234,7 @@
             $path = $package;
             $parsed_source = new RemotePackageInput($path);
 
-            if($parsed_source->Vendor !== null && $parsed_source->Package !== null)
+            if($parsed_source->Vendor !== null && $parsed_source->Package !== null && $parsed_source->Source !== null)
             {
                 try
                 {
