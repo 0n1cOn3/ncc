@@ -11,6 +11,7 @@
     use ncc\ncc;
     use ncc\Objects\CliHelpSection;
     use ncc\ThirdParty\Symfony\Process\ExecutableFinder;
+    use Throwable;
 
     class Console
     {
@@ -317,16 +318,20 @@
          * Prints out a detailed exception display (unfinished)
          *
          * @param Exception $e
+         * @param bool $sub
          * @return void
          */
-        private static function outExceptionDetails(Exception $e): void
+        private static function outExceptionDetails(Throwable $e, bool $sub=false): void
         {
             if(!ncc::cliMode())
                 return;
 
+            // Exception name without namespace
+
             $trace_header = self::formatColor($e->getFile() . ':' . $e->getLine(), ConsoleColors::Magenta);
-            $trace_error = self::formatColor('error: ', ConsoleColors::Red);
+            $trace_error = self::formatColor( 'Error: ', ConsoleColors::Red);
             self::out($trace_header . ' ' . $trace_error . $e->getMessage());
+            self::out(sprintf('Exception: %s', get_class($e)));
             self::out(sprintf('Error code: %s', $e->getCode()));
             $trace = $e->getTrace();
             if(count($trace) > 1)
@@ -338,7 +343,16 @@
                 }
             }
 
-            if(Main::getArgs() !== null)
+            if($e->getPrevious() !== null)
+            {
+                // Check if previous is the same as the current
+                if($e->getPrevious()->getMessage() !== $e->getMessage())
+                {
+                    self::outExceptionDetails($e->getPrevious(), true);
+                }
+            }
+
+            if(Main::getArgs() !== null && !$sub)
             {
                 if(isset(Main::getArgs()['dbg-ex']))
                 {

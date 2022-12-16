@@ -36,6 +36,7 @@
     use ncc\ThirdParty\jelix\Version\Parser;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use PharData;
+    use Throwable;
     use ZipArchive;
 
     /**
@@ -290,7 +291,7 @@
          * @param Exception $e
          * @return array
          */
-        public static function exceptionToArray(Exception $e): array
+        public static function exceptionToArray(Throwable $e): array
         {
             $exception = [
                 'message' => $e->getMessage(),
@@ -303,7 +304,7 @@
 
             if($e->getPrevious() !== null)
             {
-                $exception['trace'] = self::exceptionToArray($e);
+                $exception['previous'] = self::exceptionToArray($e->getPrevious());
             }
 
             return $exception;
