@@ -13,6 +13,7 @@
     use ncc\Exceptions\VersionNotFoundException;
     use ncc\Managers\PackageManager;
     use ncc\Objects\PackageLock\VersionEntry;
+    use ncc\Objects\ProjectConfiguration\Dependency;
 
     class Runtime
     {
@@ -110,8 +111,9 @@
             if($version_entry->Dependencies !== null && count($version_entry->Dependencies) > 0)
             {
                 // Import all dependencies first
+                /** @var Dependency $dependency */
                 foreach($version_entry->Dependencies as $dependency)
-                    self::import($dependency->Package, $dependency->Version, $options);
+                    self::import($dependency->PackageName, $dependency->Version, $options);
             }
 
             try
