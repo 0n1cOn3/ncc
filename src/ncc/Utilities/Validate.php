@@ -258,4 +258,21 @@
 
             return false;
         }
+
+        /**
+         * Determines if the input is considered "name friendly" and does not
+         * contain any special characters, spaces or weird prefixes
+         *
+         * @param string $input
+         * @return bool
+         */
+        public static function nameFriendly(string $input): bool
+        {
+            if (!preg_match('/^[a-zA-Z0-9_]+$/', $input))
+                return false;
+            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $input))
+                return false;
+
+            return true;
+        }
     }
