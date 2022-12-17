@@ -118,7 +118,7 @@
             {
                 if($dep->Name == $dependency->Name)
                 {
-                    $this->removeDependency($dep);
+                    $this->removeDependency($dep->Name);
                     break;
                 }
             }

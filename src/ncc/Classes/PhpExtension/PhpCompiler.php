@@ -250,7 +250,7 @@
                             break;
                     }
 
-                    $this->package->Dependencies[] = $dependency;
+                    $this->package->addDependency($dependency);
                 }
 
                 if(count($this->package->Dependencies) > 0)

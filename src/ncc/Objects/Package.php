@@ -104,6 +104,44 @@
         }
 
         /**
+         * Adds a dependency to the package
+         *
+         * @param Dependency $dependency
+         * @return void
+         */
+        public function addDependency(Dependency $dependency)
+        {
+            foreach($this->Dependencies as $dep)
+            {
+                if($dep->Name == $dependency->Name)
+                {
+                    $this->removeDependency($dep->Name);
+                    break;
+                }
+            }
+
+            $this->Dependencies[] = $dependency;
+        }
+
+        /**
+         * Removes a dependency from the build
+         *
+         * @param string $name
+         * @return void
+         */
+        private function removeDependency(string $name)
+        {
+            foreach($this->Dependencies as $key => $dep)
+            {
+                if($dep->Name == $name)
+                {
+                    unset($this->Dependencies[$key]);
+                    return;
+                }
+            }
+        }
+
+        /**
          * Validates the package object and returns True if the package contains the correct information
          *
          * Returns false if the package contains incorrect information which can cause
