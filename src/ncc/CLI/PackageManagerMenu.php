@@ -338,7 +338,7 @@
                     }
                 }
 
-                Console::out('The following dependencies will be installed:');
+                Console::out('The package requires the following dependencies:');
                 Console::out(sprintf('%s', implode(PHP_EOL, $dependencies)));
             }
 
