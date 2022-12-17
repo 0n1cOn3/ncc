@@ -5,7 +5,9 @@
     namespace ncc\Objects\ProjectConfiguration;
 
     use ncc\Abstracts\DependencySourceType;
+    use ncc\Exceptions\InvalidDependencyConfiguration;
     use ncc\Utilities\Functions;
+    use ncc\Utilities\Validate;
 
     /**
      * @author Zi Xing Narrakas
@@ -83,5 +85,33 @@
             $DependencyObject->Version = Functions::array_bc($data, 'version');
 
             return $DependencyObject;
+        }
+
+        /**
+         * Validates the dependency configuration
+         *
+         * @param bool $throw_exception
+         * @return bool
+         * @throws InvalidDependencyConfiguration
+         */
+        public function validate(bool $throw_exception): bool
+        {
+            if(!Validate::packageName($this->Name))
+            {
+                if($throw_exception)
+                    throw new InvalidDependencyConfiguration(sprintf('Invalid dependency name "%s"', $this->Name));
+
+                return false;
+            }
+
+            if($this->Version !== null && !Validate::version($this->Version))
+            {
+                if($throw_exception)
+                    throw new InvalidDependencyConfiguration(sprintf('Invalid dependency version "%s"', $this->Version));
+
+                return false;
+            }
+
+            return true;
         }
     }
