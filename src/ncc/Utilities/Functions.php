@@ -4,10 +4,13 @@
 
     use Exception;
     use ncc\Abstracts\AuthenticationType;
+    use ncc\Abstracts\DefinedRemoteSourceType;
     use ncc\Abstracts\HttpRequestType;
     use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
     use ncc\Classes\BashExtension\BashRunner;
+    use ncc\Classes\GithubExtension\GithubService;
+    use ncc\Classes\GitlabExtension\GitlabService;
     use ncc\Classes\HttpClient;
     use ncc\Classes\LuaExtension\LuaRunner;
     use ncc\Classes\PerlExtension\PerlRunner;
@@ -16,6 +19,7 @@
     use ncc\Classes\PythonExtension\Python3Runner;
     use ncc\Classes\PythonExtension\PythonRunner;
     use ncc\Exceptions\AccessDeniedException;
+    use ncc\Exceptions\ArchiveException;
     use ncc\Exceptions\AuthenticationException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\GitlabServiceException;
@@ -23,23 +27,29 @@
     use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
+    use ncc\Exceptions\UnsupportedArchiveException;
     use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Managers\ConfigurationManager;
     use ncc\Managers\CredentialManager;
     use ncc\Managers\PackageLockManager;
     use ncc\Objects\CliHelpSection;
     use ncc\Objects\ComposerJson;
+    use ncc\Objects\DefinedRemoteSource;
     use ncc\Objects\HttpRequest;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
+    use ncc\Objects\RemotePackageInput;
+    use ncc\Objects\RepositoryQueryResults;
+    use ncc\Objects\RepositoryQueryResults\Files;
     use ncc\Objects\Vault\Entry;
     use ncc\ThirdParty\jelix\Version\Parser;
+    use ncc\ThirdParty\jelix\Version\VersionComparator;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
-    use PharData;
+    use ncc\ThirdParty\Symfony\Process\ExecutableFinder;
+    use ncc\ThirdParty\Symfony\Process\Process;
     use RecursiveDirectoryIterator;
     use RecursiveIteratorIterator;
     use Throwable;
-    use ZipArchive;
 
     /**
      * @author Zi Xing Narrakas
@@ -584,40 +594,96 @@
 
         /**
          * @param string $path
-         * @return string
-         * @throws Exception
+         * @return string|null
+         * @throws ArchiveException
+         * @throws UnsupportedArchiveException
          */
         public static function extractArchive(string $path): ?string
         {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mimeType = finfo_file($finfo, $path);
-            finfo_close($finfo);
+            $executable_finder = new ExecutableFinder();
+            $unzip_executable = $executable_finder->find('unzip');
+            $tar_executable = $executable_finder->find('tar');
+            $out_path = dirname($path);
+            $filesystem = new Filesystem();
 
-            if ($mimeType == 'application/zip')
+            if(!$filesystem->exists($out_path))
+                $filesystem->mkdir($out_path);
+
+            RuntimeCache::setFileAsTemporary($out_path);
+
+            $mimeType = mime_content_type($path);
+            $supportedTypes = [];
+
+            if($unzip_executable !== null)
             {
-                $zip = new ZipArchive;
-                $res = $zip->open($path);
-                if ($res === TRUE)
+                $supportedTypes = array_merge($supportedTypes, [
+                    'application/zip',
+                    'application/x-zip',
+                    'application/x-zip-compressed',
+                    'application/octet-stream',
+                    'application/x-compress',
+                    'application/x-compressed',
+                    'multipart/x-zip'
+                ]);
+            }
+            else
+            {
+                if(RuntimeCache::get('warning_zip_shown') !== true)
                 {
-                    $zip->extractTo(dirname($path));
-                    $zip->close();
-                    return dirname($path);
+                    Console::out('unzip executable not found. ZIP archives will not be supported.');
+                    RuntimeCache::set('warning_zip_shown', true);
                 }
             }
-            if ($mimeType == 'application/x-tar' || $mimeType == 'application/tar')
+
+            if($tar_executable !== null)
             {
-                $phar = new PharData($path);
-                $phar->extractTo(dirname($path), null, true);
-                return dirname($path);
+                $supportedTypes = array_merge($supportedTypes, [
+                    'application/x-tar',
+                    'application/x-gzip',
+                    'application/x-bzip2',
+                    'application/x-xz'
+                ]);
             }
-            elseif ($mimeType == 'application/x-gzip' || $mimeType == 'application/gzip')
+            else
             {
-                $phar = new PharData($path);
-                $phar->decompress();
-                return dirname($path);
+                if(RuntimeCache::get('warning_tar_shown') !== true)
+                {
+                    Console::outWarning('tar executable not found. TAR archives will not be supported.');
+                    RuntimeCache::set('warning_tar_shown', true);
+                }
             }
 
-            return null;
+            if (!in_array($mimeType, $supportedTypes))
+                throw new UnsupportedArchiveException("Unsupported archive type: $mimeType");
+
+            switch($mimeType)
+            {
+                case 'application/zip':
+                    $command = [$unzip_executable, $path, '-d', $out_path];
+                    break;
+                case 'application/x-tar':
+                    $command = [$tar_executable, '--verbose', '-xf', $path, '-C', $out_path];
+                    break;
+                case 'application/x-gzip':
+                    $command = [$tar_executable, '--verbose', '-xzf', $path, '-C', $out_path];
+                    break;
+                case 'application/x-bzip2':
+                    $command = [$tar_executable, '--verbose', '-xjf', $path, '-C', $out_path];
+                    break;
+            }
+
+            Console::out("Extracting archive $path");
+            $process = new Process($command);
+
+            // display the output of the command
+            $process->run(function ($type, $buffer) {
+                Console::outVerbose($buffer);
+            });
+
+            if (!$process->isSuccessful())
+                throw new ArchiveException($process->getErrorOutput());
+
+            return $out_path;
         }
 
         /**
@@ -649,20 +715,207 @@
          * @param $version
          * @return string
          */
-        public static function convertToSemVer($version)
+        public static function convertToSemVer($version): string
         {
-            $parts = explode('.', $version);
-            $major = $parts[0];
-            $minor = $parts[1];
-            $patch = $parts[2];
-            $buildmetadata = $parts[3];
+            if(stripos($version, 'v') === 0)
+                $version = substr($version, 1);
+            if(!Validate::version($version))
+            {
+                $parts = explode('.', $version);
+                $major = (string)null;
+                $minor = (string)null;
+                $patch = (string)null;
 
-            // Assemble the SemVer compatible string
-            $semver = "$major.$minor.$patch+$buildmetadata";
+                $buildmetadata = (string)null;
+                if(count($parts) >= 1)
+                    $major = $parts[0];
+                if(count($parts) >= 2)
+                    $minor = $parts[1];
+                if(count($parts) >= 3)
+                    $patch = $parts[2];
 
-            return $semver;
+                // Assemble the SemVer compatible string
+                $version = "$major.$minor.$patch";
+            }
+            if(!Validate::version($version))
+                return '1.0.0';
+
+            return $version;
         }
 
+        /**
+         * Returns a complete RepositoryQueryResults object
+         *
+         * @param RemotePackageInput $packageInput
+         * @param DefinedRemoteSource $definedRemoteSource
+         * @param Entry|null $entry
+         * @return RepositoryQueryResults
+         */
+        public static function getRepositoryQueryResults(RemotePackageInput $packageInput, DefinedRemoteSource $definedRemoteSource, ?Entry $entry): RepositoryQueryResults
+        {
+            $results = new RepositoryQueryResults();
 
+            switch($definedRemoteSource->Type)
+            {
+                case DefinedRemoteSourceType::Github:
+                    $source = GithubService::class;
+                    break;
 
+                case DefinedRemoteSourceType::Gitlab:
+                    $source = GitlabService::class;
+                    break;
+
+                default:
+                    return $results;
+            }
+
+            // Check if the specified version is a release
+            try
+            {
+                Console::outVerbose(sprintf('Attempting to fetch source code from %s', $definedRemoteSource->Host));
+                $release_results = $source::getRelease($packageInput, $definedRemoteSource, $entry);
+            }
+            catch(Exception $e)
+            {
+                $release_results = null;
+                unset($e);
+            }
+
+            // If the specified version is a release, download the source code
+            if($release_results !== null)
+            {
+                $results->ReleaseName = ($release_results->ReleaseName ?? null);
+                $results->ReleaseDescription = ($release_results->ReleaseDescription ?? null);
+                $results->Files = self::mergeFilesResults($release_results->Files, ($results->Files ?? null));
+                if($release_results->Version !== null)
+                    $results->Version = $release_results->Version;
+            }
+
+            try
+            {
+                $git_results = $source::getGitRepository($packageInput, $definedRemoteSource, $entry);
+            }
+            catch(Exception $e)
+            {
+                $git_results = null;
+                unset($e);
+            }
+
+            if($git_results !== null)
+            {
+                if($results->ReleaseName == null)
+                {
+                    $results->ReleaseName = ($git_results->ReleaseName ?? null);
+                }
+                elseif($git_results->ReleaseName !== null)
+                {
+                    if(strlen($git_results->ReleaseName) > strlen($results->ReleaseName))
+                        $results->ReleaseName = $git_results->ReleaseName;
+                }
+
+                if($results->ReleaseDescription == null)
+                {
+                    $results->ReleaseDescription = ($git_results->ReleaseDescription ?? null);
+                }
+                elseif($git_results->ReleaseDescription !== null)
+                {
+                    if(strlen($git_results->ReleaseDescription) > strlen($results->ReleaseDescription))
+                        $results->ReleaseDescription = $git_results->ReleaseDescription;
+                }
+
+                if($results->Version == null)
+                {
+                    $results->Version = ($git_results->Version ?? null);
+                }
+                elseif($git_results->Version !== null)
+                {
+                    // Version compare
+                    if(VersionComparator::compareVersion($git_results->Version, $results->Version) > 0)
+                        $results->Version = $git_results->Version;
+                }
+
+                $results->Files = self::mergeFilesResults($git_results->Files, ($results->Files ?? null));
+            }
+
+            try
+            {
+                $ncc_package_results = $source::getNccPackage($packageInput, $definedRemoteSource, $entry);
+            }
+            catch(Exception $e)
+            {
+                unset($e);
+                $ncc_package_results = null;
+            }
+
+            if($ncc_package_results !== null)
+            {
+                if($results->ReleaseName == null)
+                {
+                    $results->ReleaseName = ($ncc_package_results->ReleaseName ?? null);
+                }
+                elseif($ncc_package_results->ReleaseName !== null)
+                {
+                    if(strlen($ncc_package_results->ReleaseName) > strlen($results->ReleaseName))
+                        $results->ReleaseName = $ncc_package_results->ReleaseName;
+                }
+
+                if($results->ReleaseDescription == null)
+                {
+                    $results->ReleaseDescription = ($ncc_package_results->ReleaseDescription ?? null);
+                }
+                elseif($ncc_package_results->ReleaseDescription !== null)
+                {
+                    if(strlen($ncc_package_results->ReleaseDescription) > strlen($results->ReleaseDescription))
+                        $results->ReleaseDescription = $ncc_package_results->ReleaseDescription;
+                }
+
+                if($results->Version == null)
+                {
+                    $results->Version = ($ncc_package_results->Version ?? null);
+                }
+                elseif($ncc_package_results->Version !== null)
+                {
+                    // Version compare
+                    if(VersionComparator::compareVersion($ncc_package_results->Version, $results->Version) > 0)
+                        $results->Version = $ncc_package_results->Version;
+                }
+
+                $results->Files = self::mergeFilesResults($ncc_package_results->Files, ($results->Files ?? null));
+            }
+
+            return $results;
+        }
+
+        /**
+         * Merges the given Files object with another Files object
+         *
+         * @param Files $input
+         * @param Files|null $selected
+         * @return Files
+         */
+        private static function mergeFilesResults(RepositoryQueryResults\Files $input, ?RepositoryQueryResults\Files $selected=null): RepositoryQueryResults\Files
+        {
+            if($selected == null)
+                $selected = new RepositoryQueryResults\Files();
+
+            if($input->GitSshUrl !== null)
+                $selected->GitSshUrl = $input->GitSshUrl;
+
+            if($input->GitHttpUrl !== null)
+                $selected->GitHttpUrl = $input->GitHttpUrl;
+
+            if($input->SourceUrl !== null)
+                $selected->SourceUrl = $input->SourceUrl;
+
+            if($input->TarballUrl !== null)
+                $selected->TarballUrl = $input->TarballUrl;
+
+            if($input->ZipballUrl !== null)
+                $selected->ZipballUrl = $input->ZipballUrl;
+
+            if($input->PackageUrl !== null)
+                $selected->PackageUrl = $input->PackageUrl;
+
+            return $selected;
+        }
     }

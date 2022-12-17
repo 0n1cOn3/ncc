@@ -324,6 +324,21 @@
         const UnsupportedProjectTypeException = -1762;
 
         /**
+         * @see UnsupportedArchiveException
+         */
+        const UnsupportedArchiveException = -1763;
+
+        /**
+         * @see ArchiveException
+         */
+        const ArchiveException = -1764;
+
+        /**
+         * @see PackageFetchException
+         */
+        const PackageFetchException = -1765;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -386,6 +401,9 @@
             self::GitTagsException,
             self::AuthenticationException,
             self::NotSupportedException,
-            self::UnsupportedProjectTypeException
+            self::UnsupportedProjectTypeException,
+            self::UnsupportedArchiveException,
+            self::ArchiveException,
+            self::PackageFetchException
         ];
     }

@@ -5,10 +5,14 @@
     use Exception;
     use ncc\Abstracts\CompilerExtensions;
     use ncc\Abstracts\ConstantReferences;
+    use ncc\Abstracts\DefinedRemoteSourceType;
     use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\Options\BuildConfigurationValues;
     use ncc\Abstracts\ProjectType;
     use ncc\Classes\ComposerExtension\ComposerSourceBuiltin;
+    use ncc\Classes\GitClient;
+    use ncc\Classes\GithubExtension\GithubService;
+    use ncc\Classes\GitlabExtension\GitlabService;
     use ncc\Classes\PhpExtension\PhpCompiler;
     use ncc\CLI\Main;
     use ncc\Exceptions\AccessDeniedException;
@@ -17,17 +21,24 @@
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
+    use ncc\Exceptions\PackageFetchException;
     use ncc\Exceptions\PackagePreparationFailedException;
     use ncc\Exceptions\ProjectConfigurationNotFoundException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedProjectTypeException;
+    use ncc\Exceptions\UnsupportedRemoteSourceTypeException;
     use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Interfaces\CompilerInterface;
+    use ncc\Interfaces\RepositorySourceInterface;
     use ncc\Managers\ProjectManager;
     use ncc\ncc;
+    use ncc\Objects\DefinedRemoteSource;
     use ncc\Objects\Package;
     use ncc\Objects\ProjectConfiguration;
     use ncc\Objects\ProjectConfiguration\Assembly;
+    use ncc\Objects\RemotePackageInput;
+    use ncc\Objects\Vault\Entry;
+    use ncc\ThirdParty\jelix\Version\VersionComparator;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\Utilities\Console;
     use ncc\Utilities\Functions;
@@ -96,9 +107,12 @@
          * @throws BuildException
          * @throws UnsupportedProjectTypeException
          */
-        public static function tryCompile(string $path): string
+        public static function tryCompile(string $path, ?string $version=null): string
         {
             $project_type = Resolver::detectProjectType($path);
+
+            if($version !== null)
+                $version = Functions::convertToSemVer($version);
 
             try
             {
@@ -108,6 +122,7 @@
                 if($project_type->ProjectType == ProjectType::Ncc)
                 {
                     $project_manager = new ProjectManager($project_type->ProjectPath);
+                    $project_manager->getProjectConfiguration()->Assembly->Version = $version;
                     return $project_manager->build();
                 }
             }
@@ -118,6 +133,7 @@
 
             throw new UnsupportedProjectTypeException('The project type \'' . $project_type->ProjectType . '\' is not supported');
         }
+
 
         /**
          * Compiles the execution policies of the package

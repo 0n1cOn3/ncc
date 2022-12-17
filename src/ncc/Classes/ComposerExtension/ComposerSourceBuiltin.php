@@ -47,7 +47,6 @@
     use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
     use ncc\Utilities\RuntimeCache;
-    use ncc\Utilities\Validate;
     use SplFileInfo;
 
     class ComposerSourceBuiltin implements ServiceSourceInterface
@@ -277,15 +276,7 @@
         {
             if (array_key_exists($package_name, $version_map))
             {
-                $version = $version_map[$package_name];
-                if(stripos($version, 'v') === 0)
-                    $version = substr($version, 1);
-                if(!Validate::version($version))
-                    $version = Functions::convertToSemVer($version);
-                if(!Validate::version($version))
-                    return '1.0.0';
-
-                return $version;
+                return Functions::convertToSemVer($version_map[$package_name]);
             }
 
             return '1.0.0';
@@ -335,7 +326,7 @@
                     $dependency = new ProjectConfiguration\Dependency();
                     $dependency->Name = $package_name;
                     $dependency->SourceType = DependencySourceType::Local;
-                    $dependency->Version = self::versionMap($item->PackageName, $version_map);;
+                    $dependency->Version = self::versionMap($item->PackageName, $version_map);
                     $dependency->Source = $package_name . '.ncc';
                     $project_configuration->Build->addDependency($dependency);
                 }
@@ -357,22 +348,6 @@
             $project_configuration->Project->Compiler->MaximumVersion = CompilerExtensionSupportedVersions::PHP[(count(CompilerExtensionSupportedVersions::PHP) - 1)];
 
             return $project_configuration;
-        }
-
-        /**
-         * Extracts a version if available from the input
-         *
-         * @param string $input
-         * @return string|null
-         */
-        private static function extractVersion(string $input): ?string
-        {
-            if (stripos($input, ':'))
-            {
-                return explode(':', $input)[1];
-            }
-
-            return null;
         }
 
         /**

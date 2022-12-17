@@ -8,15 +8,13 @@
     use ncc\Abstracts\BuiltinRemoteSourceType;
     use ncc\Abstracts\CompilerExtensions;
     use ncc\Abstracts\ConstantReferences;
-    use ncc\Abstracts\DefinedRemoteSourceType;
     use ncc\Abstracts\DependencySourceType;
     use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\RemoteSourceType;
     use ncc\Abstracts\Scopes;
     use ncc\Abstracts\Versions;
     use ncc\Classes\ComposerExtension\ComposerSourceBuiltin;
-    use ncc\Classes\GithubExtension\GithubService;
-    use ncc\Classes\GitlabExtension\GitlabService;
+    use ncc\Classes\GitClient;
     use ncc\Classes\NccExtension\PackageCompiler;
     use ncc\Classes\PhpExtension\PhpInstaller;
     use ncc\CLI\Main;
@@ -28,13 +26,14 @@
     use ncc\Exceptions\MissingDependencyException;
     use ncc\Exceptions\NotImplementedException;
     use ncc\Exceptions\PackageAlreadyInstalledException;
+    use ncc\Exceptions\PackageFetchException;
     use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackageNotFoundException;
     use ncc\Exceptions\PackageParsingException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
+    use ncc\Exceptions\UnsupportedRemoteSourceTypeException;
     use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Exceptions\VersionNotFoundException;
-    use ncc\Interfaces\RepositorySourceInterface;
     use ncc\Objects\DefinedRemoteSource;
     use ncc\Objects\InstallationPaths;
     use ncc\Objects\Package;
@@ -43,9 +42,11 @@
     use ncc\Objects\ProjectConfiguration\Dependency;
     use ncc\Objects\RemotePackageInput;
     use ncc\Objects\Vault\Entry;
+    use ncc\ThirdParty\jelix\Version\VersionComparator;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\ThirdParty\theseer\DirectoryScanner\DirectoryScanner;
     use ncc\Utilities\Console;
+    use ncc\Utilities\Functions;
     use ncc\Utilities\IO;
     use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
@@ -80,6 +81,7 @@
          * Installs a local package onto the system
          *
          * @param string $package_path
+         * @param Entry|null $entry
          * @return string
          * @throws AccessDeniedException
          * @throws FileNotFoundException
@@ -340,75 +342,122 @@
 
         /**
          * @param string $source
-         * @param Entry|null $auth_entry
+         * @param Entry|null $entry
          * @return string
          * @throws InstallationException
+         * @throws NotImplementedException
+         * @throws PackageFetchException
          */
-        public function fetchFromSource(string $source, ?Entry $auth_entry=null): string
+        public function fetchFromSource(string $source, ?Entry $entry=null): string
         {
-            $parsed_source = new RemotePackageInput($source);
+            $input = new RemotePackageInput($source);
 
-            if($parsed_source->Source == null)
-                throw new InstallationException('No source specified');
+            if($input->Source == null)
+                throw new PackageFetchException('No source specified');
+            if($input->Package == null)
+                throw new PackageFetchException('No package specified');
+            if($input->Version == null)
+                $input->Version = Versions::Latest;
 
-            if($parsed_source->Package == null)
-                throw new InstallationException('No package specified');
-
-            if($parsed_source->Version == null)
-                $parsed_source->Version = Versions::Latest;
-
-            $remote_source_type = Resolver::detectRemoteSourceType($parsed_source->Source);
-
+            $remote_source_type = Resolver::detectRemoteSourceType($input->Source);
             if($remote_source_type == RemoteSourceType::Builtin)
             {
-                switch($parsed_source->Source)
+                switch($input->Source)
                 {
                     case BuiltinRemoteSourceType::Composer:
                         try
                         {
-                            return ComposerSourceBuiltin::fetch($parsed_source);
+                            return ComposerSourceBuiltin::fetch($input);
                         }
                         catch(Exception $e)
                         {
-                            throw new InstallationException('Cannot fetch package from composer source, ' . $e->getMessage(), $e);
+                            throw new PackageFetchException('Cannot fetch package from composer source, ' . $e->getMessage(), $e);
                         }
 
                     default:
-                        throw new InstallationException('Builtin source type ' . $parsed_source->Source . ' is not implemented');
+                        throw new NotImplementedException('Builtin source type ' . $input->Source . ' is not implemented');
                 }
             }
 
             if($remote_source_type == RemoteSourceType::Defined)
             {
                 $remote_source_manager = new RemoteSourcesManager();
-                $remote_source = $remote_source_manager->getRemoteSource($parsed_source->Source);
-                if($remote_source == null)
-                    throw new InstallationException('Remote source ' . $parsed_source->Source . ' is not defined');
+                $source = $remote_source_manager->getRemoteSource($input->Source);
+                if($source == null)
+                    throw new InstallationException('Remote source ' . $input->Source . ' is not defined');
 
-                /** @var RepositorySourceInterface $remote_service_client */
-                $remote_service_client = match ($remote_source->Type) {
-                    DefinedRemoteSourceType::Gitlab => GitlabService::class,
-                    DefinedRemoteSourceType::Github => GithubService::class,
-                    default => throw new InstallationException('Remote source type ' . $remote_source->Type . ' is not implemented'),
-                };
+                $repositoryQueryResults = Functions::getRepositoryQueryResults($input, $source, $entry);
 
-                try
+                if($repositoryQueryResults->Files->ZipballUrl !== null)
                 {
-                    return $remote_service_client::fetch($parsed_source, $remote_source, $auth_entry);
+                    try
+                    {
+                        $archive = Functions::downloadGitServiceFile($repositoryQueryResults->Files->ZipballUrl, $entry);
+                        return PackageCompiler::tryCompile(Functions::extractArchive($archive), $repositoryQueryResults->Version);
+                    }
+                    catch(Exception $e)
+                    {
+                        unset($e);
+                    }
                 }
-                catch(Exception $e)
+
+                if($repositoryQueryResults->Files->TarballUrl !== null)
                 {
-                    throw new InstallationException('Cannot fetch package from remote source, ' . $e->getMessage(), $e);
+                    try
+                    {
+                        $archive = Functions::downloadGitServiceFile($repositoryQueryResults->Files->TarballUrl, $entry);
+                        return PackageCompiler::tryCompile(Functions::extractArchive($archive), $repositoryQueryResults->Version);
+                    }
+                    catch(Exception $e)
+                    {
+                        unset($e);
+                    }
                 }
+
+                if($repositoryQueryResults->Files->PackageUrl !== null)
+                {
+                    try
+                    {
+                        return Functions::downloadGitServiceFile($repositoryQueryResults->Files->PackageUrl, $entry);
+                    }
+                    catch(Exception $e)
+                    {
+                        unset($e);
+                    }
+                }
+
+                if($repositoryQueryResults->Files->GitHttpUrl !== null || $repositoryQueryResults->Files->GitSshUrl !== null)
+                {
+                    try
+                    {
+                        $git_repository = GitClient::cloneRepository($repositoryQueryResults->Files->GitHttpUrl ?? $repositoryQueryResults->Files->GitSshUrl);
+
+                        foreach(GitClient::getTags($git_repository) as $tag)
+                        {
+                            if(VersionComparator::compareVersion($tag, $repositoryQueryResults->Version) === 0)
+                            {
+                                GitClient::checkout($git_repository, $tag);
+                                return PackageCompiler::tryCompile($git_repository, $repositoryQueryResults->Version);
+                            }
+                        }
+                    }
+                    catch(Exception $e)
+                    {
+                        unset($e);
+                    }
+                }
+
+                throw new PackageFetchException(sprintf('Failed to fetch package \'%s\'', $input->Package));
             }
 
-            throw new InstallationException(sprintf('Unknown remote source type %s', $remote_source_type));
+            throw new PackageFetchException(sprintf('Unknown remote source type %s', $remote_source_type));
         }
 
         /**
          * Installs a package from a source syntax (vendor/package=version@source)
          *
          * @param string $source
+         * @param Entry|null $entry
          * @return string
          * @throws InstallationException
          */
@@ -429,6 +478,7 @@
          * @param Dependency $dependency
          * @param Package $package
          * @param string $package_path
+         * @param Entry|null $entry
          * @return void
          * @throws AccessDeniedException
          * @throws FileNotFoundException
