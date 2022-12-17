@@ -4,7 +4,10 @@
 
     namespace ncc\Objects\ProjectConfiguration;
 
+    use ncc\Exceptions\InvalidBuildConfigurationException;
+    use ncc\Exceptions\InvalidDependencyConfiguration;
     use ncc\Utilities\Functions;
+    use ncc\Utilities\Validate;
 
     /**
      * @author Zi Xing Narrakas
@@ -83,7 +86,90 @@
             $this->Dependencies = [];
         }
 
-        // TODO: Add a function to validate the object data
+        /**
+         * Validates the BuildConfiguration object
+         *
+         * @param bool $throw_exception
+         * @return bool
+         * @throws InvalidBuildConfigurationException
+         */
+        public function validate(bool $throw_exception=True): bool
+        {
+            if(!Validate::nameFriendly($this->Name))
+            {
+                if($throw_exception)
+                    throw new InvalidBuildConfigurationException(sprintf('Invalid build configuration name "%s"', $this->Name));
+
+                return False;
+            }
+
+            if(!Validate::pathName($this->OutputPath))
+            {
+                if($throw_exception)
+                    throw new InvalidBuildConfigurationException(sprintf('\'output_path\' contains an invalid path name in %s', $this->Name));
+
+                return False;
+            }
+
+            if($this->DefineConstants !== null && !is_array($this->DefineConstants))
+            {
+                if($throw_exception)
+                    throw new InvalidBuildConfigurationException(sprintf('\'define_constants\' must be an array in %s', $this->Name));
+
+                return False;
+            }
+
+            if($this->ExcludeFiles !== null && !is_array($this->ExcludeFiles))
+            {
+                if($throw_exception)
+                    throw new InvalidBuildConfigurationException(sprintf('\'exclude_files\' must be an array in %s', $this->Name));
+
+                return False;
+            }
+
+            if($this->PreBuild !== null && !is_array($this->PreBuild))
+            {
+                if($throw_exception)
+                    throw new InvalidBuildConfigurationException(sprintf('\'pre_build\' must be an array in %s', $this->Name));
+
+                return False;
+            }
+
+            if($this->PostBuild !== null && !is_array($this->PostBuild))
+            {
+                if($throw_exception)
+                    throw new InvalidBuildConfigurationException(sprintf('\'post_build\' must be an array in %s', $this->Name));
+
+                return False;
+            }
+
+            if($this->Dependencies !== null && !is_array($this->Dependencies))
+            {
+                if($throw_exception)
+                    throw new InvalidBuildConfigurationException(sprintf('\'dependencies\' must be an array in %s', $this->Name));
+
+                return False;
+            }
+
+            /** @var Dependency $dependency */
+            foreach($this->Dependencies as $dependency)
+            {
+                try
+                {
+                    if (!$dependency->validate($throw_exception))
+                        return False;
+                }
+                catch (InvalidDependencyConfiguration $e)
+                {
+                    if($throw_exception)
+                        throw new InvalidBuildConfigurationException(sprintf('Invalid dependency configuration in %s: %s', $this->Name, $e->getMessage()));
+
+                    return False;
+                }
+            }
+
+            return True;
+        }
 
         /**
          * Returns an array representation of the object
