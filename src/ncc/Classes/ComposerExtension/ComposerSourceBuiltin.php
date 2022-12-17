@@ -35,7 +35,6 @@
     use ncc\ncc;
     use ncc\Objects\ComposerJson;
     use ncc\Objects\ComposerLock;
-    use ncc\Objects\Package;
     use ncc\Objects\ProjectConfiguration;
     use ncc\Objects\RemotePackageInput;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
@@ -151,8 +150,11 @@
             // Compile dependencies
             self::compilePackages($path . DIRECTORY_SEPARATOR . 'composer.lock');
 
+            $composer_lock = Functions::loadJson(IO::fread($path . DIRECTORY_SEPARATOR . 'composer.lock'), Functions::FORCE_ARRAY);
+            $version_map = self::getVersionMap(ComposerLock::fromArray($composer_lock));
+
             // Finally convert the main package's composer.json to package.json and compile it
-            ComposerSourceBuiltin::convertProject($path);
+            ComposerSourceBuiltin::convertProject($path, $version_map);
             $project_manager = new ProjectManager($path);
             $project_manager->load();
             $built_package = $project_manager->build();
@@ -195,6 +197,7 @@
             }
 
             $filesystem->mkdir($base_dir . DIRECTORY_SEPARATOR . 'build');
+            $version_map = self::getVersionMap($composer_lock);
 
             foreach ($composer_lock->Packages as $package)
             {
@@ -206,7 +209,7 @@
                     throw new PackageNotFoundException(sprintf('Package "%s" not found in composer lock file', $package->Name));
 
                 // Convert it to a NCC project configuration
-                $project_configuration = self::convertProject($package_path, $composer_package);
+                $project_configuration = self::convertProject($package_path, $version_map, $composer_package);
 
                 // Load the project
                 $project_manager = new ProjectManager($package_path);
@@ -221,6 +224,22 @@
             }
 
             return $built_packages;
+        }
+
+        /**
+         * Returns array of versions from the ComposerLock file
+         *
+         * @param ComposerLock $composerLock
+         * @return array
+         */
+        private static function getVersionMap(ComposerLock $composerLock): array
+        {
+            $version_map = [];
+            foreach($composerLock->Packages as $package)
+            {
+                $version_map[$package->Name] = $package->Version;
+            }
+            return $version_map;
         }
 
         /**
@@ -248,14 +267,39 @@
         }
 
         /**
+         * Returns a valid version from a version map
+         *
+         * @param string $package_name
+         * @param array $version_map
+         * @return string
+         */
+        private static function versionMap(string $package_name, array $version_map): string
+        {
+            if (array_key_exists($package_name, $version_map))
+            {
+                $version = $version_map[$package_name];
+                if(stripos($version, 'v') === 0)
+                    $version = substr($version, 1);
+                if(!Validate::version($version))
+                    $version = Functions::convertToSemVer($version);
+                if(!Validate::version($version))
+                    return '1.0.0';
+
+                return $version;
+            }
+
+            return '1.0.0';
+        }
+
+        /**
          * Generates a project configuration from a package selection
          * from the composer.lock file
          *
          * @param ComposerJson $composer_package
+         * @param array $version_map
          * @return ProjectConfiguration
-         * @throws Exception
          */
-        private static function generateProjectConfiguration(ComposerJson $composer_package): ProjectConfiguration
+        private static function generateProjectConfiguration(ComposerJson $composer_package, array $version_map): ProjectConfiguration
         {
             // Generate a new project configuration object
             $project_configuration = new ProjectConfiguration();
@@ -264,22 +308,11 @@
                 $project_configuration->Assembly->Name = $composer_package->Name;
             if (isset($composer_package->Description))
                 $project_configuration->Assembly->Description = $composer_package->Description;
-            if (isset($composer_package->Version))
-                $project_configuration->Assembly->Version = Functions::parseVersion($composer_package->Version);
 
+            if(isset($version_map[$composer_package->Name]))
+                $project_configuration->Assembly->Version = self::versionMap($composer_package->Name, $version_map);
             if($project_configuration->Assembly->Version == null || $project_configuration->Assembly->Version == '')
                 $project_configuration->Assembly->Version = '1.0.0';
-
-            if(!Validate::version($project_configuration->Assembly->Version))
-                $project_configuration->Assembly->Version = Functions::convertToSemVer($project_configuration->Assembly->Version);
-
-            if(!Validate::version($project_configuration->Assembly->Version))
-            {
-                Console::outWarning(sprintf('Invalid version "%s" for package "%s", using "1.0.0" instead', $project_configuration->Assembly->Version, $project_configuration->Assembly->Name));
-                $project_configuration->Assembly->Version = '1.0.0';
-            }
-
-            RuntimeCache::set(sprintf('composer_version_%s', $project_configuration->Assembly->Package), $project_configuration->Assembly->Version);
 
 
             $project_configuration->Assembly->UUID = Uuid::v1()->toRfc4122();
@@ -295,24 +328,16 @@
             {
                 foreach ($composer_package->Require as $item)
                 {
+                    // Check if the dependency is already in the project configuration
                     $package_name = self::toPackageName($item->PackageName);
-                    $package_version = $composer_package->Version;
-                    if ($package_version == null)
-                    {
-                        $package_version = '1.0.0';
-                    }
-                    else
-                    {
-                        $package_version = Functions::parseVersion($package_version);
-                    }
                     if ($package_name == null)
                         continue;
                     $dependency = new ProjectConfiguration\Dependency();
                     $dependency->Name = $package_name;
                     $dependency->SourceType = DependencySourceType::Local;
-                    $dependency->Version = $package_version;
+                    $dependency->Version = self::versionMap($item->PackageName, $version_map);;
                     $dependency->Source = $package_name . '.ncc';
-                    $project_configuration->Build->Dependencies[] = $dependency;
+                    $project_configuration->Build->addDependency($dependency);
                 }
             }
 
@@ -448,6 +473,8 @@
 
             if ($version == null)
                 $version = '*';
+            if($version == 'latest')
+                $version = '*';
 
             $tpl_file = __DIR__ . DIRECTORY_SEPARATOR . 'composer.jtpl';
             if (!file_exists($tpl_file))
@@ -566,22 +593,22 @@
         /**
          * Converts a composer project to a NCC project
          *
-         * @param mixed $composer_package
          * @param string $package_path
+         * @param array $version_map
+         * @param mixed $composer_package
          * @return ProjectConfiguration
          * @throws AccessDeniedException
          * @throws FileNotFoundException
          * @throws IOException
          * @throws MalformedJsonException
          * @throws PackagePreparationFailedException
-         * @throws Exception
          */
-        private static function convertProject(string $package_path, ?ComposerJson $composer_package=null): ProjectConfiguration
+        private static function convertProject(string $package_path, array $version_map, ?ComposerJson $composer_package=null): ProjectConfiguration
         {
             if($composer_package == null)
                 $composer_package = ComposerJson::fromArray(Functions::loadJsonFile($package_path . DIRECTORY_SEPARATOR . 'composer.json', Functions::FORCE_ARRAY));
 
-            $project_configuration = ComposerSourceBuiltin::generateProjectConfiguration($composer_package);
+            $project_configuration = ComposerSourceBuiltin::generateProjectConfiguration($composer_package, $version_map);
             $filesystem = new Filesystem();
 
             // Process the source files

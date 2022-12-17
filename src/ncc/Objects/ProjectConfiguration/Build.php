@@ -107,6 +107,44 @@
         }
 
         /**
+         * Adds a new dependency to the build, if it doesn't already exist
+         *
+         * @param Dependency $dependency
+         * @return void
+         */
+        public function addDependency(Dependency $dependency)
+        {
+            foreach($this->Dependencies as $dep)
+            {
+                if($dep->Name == $dependency->Name)
+                {
+                    $this->removeDependency($dep);
+                    break;
+                }
+            }
+
+            $this->Dependencies[] = $dependency;
+        }
+
+        /**
+         * Removes a dependency from the build
+         *
+         * @param string $name
+         * @return void
+         */
+        private function removeDependency(string $name)
+        {
+            foreach($this->Dependencies as $key => $dep)
+            {
+                if($dep->Name == $name)
+                {
+                    unset($this->Dependencies[$key]);
+                    return;
+                }
+            }
+        }
+
+        /**
          * Validates the build configuration object
          *
          * @param bool $throw_exception

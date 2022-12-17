@@ -115,24 +115,8 @@
          */
         public function postInstall(InstallationPaths $installationPaths): void
         {
-            $static_files_exists = false;
-            if($this->package->Header->Options !== null && isset($this->package->Header->Options['static_files']))
-            {
-                $static_files = $this->package->Header->Options['static_files'];
-                $static_files_path = $installationPaths->getBinPath() . DIRECTORY_SEPARATOR . 'static_autoload.bin';
-
-                foreach($static_files as $file)
-                {
-                    if(!file_exists($file))
-                        throw new InstallationException(sprintf('Static file %s does not exist', $file));
-                }
-
-                $static_files_exists = true;
-                IO::fwrite($static_files_path, ZiProto::encode($static_files));
-            }
-
             $autoload_path = $installationPaths->getBinPath() . DIRECTORY_SEPARATOR . 'autoload.php';
-            $autoload_src = $this->generateAutoload($installationPaths->getSourcePath(), $autoload_path, $static_files_exists);
+            $autoload_src = $this->generateAutoload($installationPaths->getSourcePath(), $autoload_path);
             IO::fwrite($autoload_path, $autoload_src);
         }
 
@@ -294,7 +278,7 @@
          * @throws IOException
          * @throws NoUnitsFoundException
          */
-        private function generateAutoload(string $src, string $output, bool $ignore_units=false): string
+        private function generateAutoload(string $src, string $output, bool $ignore_units=true): string
         {
             // Construct configuration
             $configuration = new Config([$src]);
