@@ -7,6 +7,12 @@
     use Exception;
     use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\NccBuildFlags;
+    use ncc\CLI\Commands\BuildMenu;
+    use ncc\CLI\Management\ConfigMenu;
+    use ncc\CLI\Management\CredentialMenu;
+    use ncc\CLI\Management\PackageManagerMenu;
+    use ncc\CLI\Management\ProjectMenu;
+    use ncc\CLI\Management\SourcesMenu;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\RuntimeException;
     use ncc\ncc;

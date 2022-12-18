@@ -1,6 +1,6 @@
 <?php
 
-    namespace ncc\CLI;
+    namespace ncc\CLI\Management;
 
     use Exception;
     use ncc\Abstracts\ConsoleColors;

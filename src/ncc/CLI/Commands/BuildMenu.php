@@ -1,6 +1,6 @@
 <?php
 
-    namespace ncc\CLI;
+    namespace ncc\CLI\Commands;
 
     use Exception;
     use ncc\Abstracts\Options\BuildConfigurationValues;
