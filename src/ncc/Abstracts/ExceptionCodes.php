@@ -339,6 +339,16 @@
         const PackageFetchException = -1765;
 
         /**
+         * @see InvalidBuildConfigurationException
+         */
+        const InvalidBuildConfigurationException = -1766;
+
+        /**
+         * @see InvalidBuildConfigurationNameException
+         */
+        const InvalidDependencyConfiguration = -1767;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -404,6 +414,8 @@
             self::UnsupportedProjectTypeException,
             self::UnsupportedArchiveException,
             self::ArchiveException,
-            self::PackageFetchException
+            self::PackageFetchException,
+            self::InvalidBuildConfigurationException,
+            self::InvalidDependencyConfiguration,
         ];
     }
