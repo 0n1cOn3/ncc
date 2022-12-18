@@ -268,9 +268,29 @@
          */
         public static function nameFriendly(string $input): bool
         {
+            if(strlen($input) == 0)
+                return false;
             if (!preg_match('/^[a-zA-Z0-9_]+$/', $input))
                 return false;
             if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $input))
+                return false;
+
+            return true;
+        }
+
+        /**
+         * Validates if the given input is a valid path name
+         *
+         * @param string $input
+         * @return bool
+         */
+        public static function pathName(string $input): bool
+        {
+            if(strlen($input) == 0)
+                return false;
+            if (!preg_match('/^[a-zA-Z0-9_\-\/]+$/', $input))
+                return false;
+            if (!preg_match('/^[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/', $input))
                 return false;
 
             return true;
