@@ -6,6 +6,7 @@
 
     use ncc\Abstracts\Options\BuildConfigurationValues;
     use ncc\Exceptions\BuildConfigurationNotFoundException;
+    use ncc\Exceptions\InvalidBuildConfigurationException;
     use ncc\Exceptions\InvalidConstantNameException;
     use ncc\Exceptions\InvalidProjectBuildConfiguration;
     use ncc\Utilities\Functions;
@@ -112,7 +113,7 @@
          * @param Dependency $dependency
          * @return void
          */
-        public function addDependency(Dependency $dependency)
+        public function addDependency(Dependency $dependency): void
         {
             foreach($this->Dependencies as $dep)
             {
@@ -132,7 +133,7 @@
          * @param string $name
          * @return void
          */
-        private function removeDependency(string $name)
+        private function removeDependency(string $name): void
         {
             foreach($this->Dependencies as $key => $dep)
             {
@@ -149,13 +150,13 @@
          *
          * @param bool $throw_exception
          * @return bool
+         * @throws BuildConfigurationNotFoundException
+         * @throws InvalidBuildConfigurationException
          * @throws InvalidConstantNameException
          * @throws InvalidProjectBuildConfiguration
          */
         public function validate(bool $throw_exception=True): bool
         {
-            // TODO: Implement validation for Configurations, Dependencies and ExcludedFiles
-
             // Check the defined constants
             foreach($this->DefineConstants as $name => $value)
             {
@@ -177,6 +178,37 @@
                     return false;
                 }
             }
+
+            foreach($this->Configurations as $configuration)
+            {
+                try
+                {
+                    if (!$configuration->validate($throw_exception))
+                        return false;
+                }
+                catch (InvalidBuildConfigurationException $e)
+                {
+                    throw new InvalidBuildConfigurationException(sprintf('Error in build configuration \'%s\'', $configuration->Name), $e);
+                }
+            }
+
+            if($this->DefaultConfiguration == null)
+            {
+                if($throw_exception)
+                    throw new InvalidProjectBuildConfiguration('The default build configuration is not set');
+
+                return false;
+            }
+
+            if(!Validate::nameFriendly($this->DefaultConfiguration))
+            {
+                if($throw_exception)
+                    throw new InvalidProjectBuildConfiguration('The default build configuration name \'' . $this->DefaultConfiguration . '\' is not valid');
+
+                return false;
+            }
+
+            $this->getBuildConfiguration($this->DefaultConfiguration);
 
             return true;
         }
