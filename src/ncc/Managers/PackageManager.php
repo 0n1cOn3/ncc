@@ -53,6 +53,7 @@
     use ncc\Utilities\Validate;
     use ncc\ZiProto\ZiProto;
     use SplFileInfo;
+    use Throwable;
 
     class PackageManager
     {
@@ -387,6 +388,7 @@
                     throw new InstallationException('Remote source ' . $input->Source . ' is not defined');
 
                 $repositoryQueryResults = Functions::getRepositoryQueryResults($input, $source, $entry);
+                $exceptions = [];
 
                 if($repositoryQueryResults->Files->ZipballUrl !== null)
                 {
@@ -395,9 +397,9 @@
                         $archive = Functions::downloadGitServiceFile($repositoryQueryResults->Files->ZipballUrl, $entry);
                         return PackageCompiler::tryCompile(Functions::extractArchive($archive), $repositoryQueryResults->Version);
                     }
-                    catch(Exception $e)
+                    catch(Throwable $e)
                     {
-                        unset($e);
+                        $exceptions[] = $e;
                     }
                 }
 
@@ -410,7 +412,7 @@
                     }
                     catch(Exception $e)
                     {
-                        unset($e);
+                        $exceptions[] = $e;
                     }
                 }
 
@@ -422,7 +424,7 @@
                     }
                     catch(Exception $e)
                     {
-                        unset($e);
+                        $exceptions[] = $e;
                     }
                 }
 
@@ -443,11 +445,36 @@
                     }
                     catch(Exception $e)
                     {
-                        unset($e);
+                        $exceptions[] = $e;
                     }
                 }
 
-                throw new PackageFetchException(sprintf('Failed to fetch package \'%s\'', $input->Package));
+                // Recursively create an exception with the previous exceptions as the previous exception
+                $exception = null;
+
+                if(count($exceptions) > 0)
+                {
+                    foreach($exceptions as $e)
+                    {
+                        if($exception == null)
+                        {
+                            $exception = new PackageFetchException($e->getMessage(), $e);
+                        }
+                        else
+                        {
+                            if($e->getMessage() == $exception->getMessage())
+                                continue;
+
+                            $exception = new PackageFetchException($e->getMessage(), $exception);
+                        }
+                    }
+                }
+                else
+                {
+                    $exception = new PackageFetchException('Cannot fetch package from remote source, no assets found');
+                }
+
+                throw $exception;
             }
 
             throw new PackageFetchException(sprintf('Unknown remote source type %s', $remote_source_type));
