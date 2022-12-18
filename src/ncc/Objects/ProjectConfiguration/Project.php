@@ -70,7 +70,9 @@
 
             $ReturnResults[($bytecode ? Functions::cbc('compiler') : 'compiler')] = $this->Compiler->toArray($bytecode);
             $ReturnResults[($bytecode ? Functions::cbc('options') : 'options')] = $this->Options;
-            $ReturnResults[($bytecode ? Functions::cbc('update_source') : 'update_source')] = $this->UpdateSource->toArray($bytecode);
+
+            if($this->UpdateSource !== null)
+                $ReturnResults[($bytecode ? Functions::cbc('update_source') : 'update_source')] = $this->UpdateSource->toArray($bytecode);
 
             return $ReturnResults;
         }
