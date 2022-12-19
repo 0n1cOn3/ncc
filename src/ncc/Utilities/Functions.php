@@ -918,4 +918,28 @@
 
             return $selected;
         }
+
+        /**
+         * Attempts to cast the correct type of the given value
+         *
+         * @param string $input
+         * @return float|int|mixed|string
+         */
+        public static function stringTypeCast(string $input)
+        {
+            if (is_numeric($input))
+            {
+                if (strpos($input, '.') !== false)
+                    return (float)$input;
+
+                if (ctype_digit($input))
+                    return (int)$input;
+            }
+            elseif (in_array(strtolower($input), ['true', 'false']))
+            {
+                return filter_var($input, FILTER_VALIDATE_BOOLEAN);
+            }
+
+            return (string)$input;
+        }
     }
