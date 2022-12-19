@@ -4,11 +4,17 @@
 
     namespace ncc\Objects\PackageLock;
 
+    use ncc\Abstracts\Scopes;
+    use ncc\Exceptions\InvalidPackageNameException;
+    use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\VersionNotFoundException;
     use ncc\Objects\Package;
     use ncc\Objects\ProjectConfiguration\UpdateSource;
     use ncc\ThirdParty\jelix\Version\VersionComparator;
+    use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\Utilities\Functions;
+    use ncc\Utilities\PathFinder;
+    use ncc\Utilities\Resolver;
 
     class PackageEntry
     {
@@ -192,6 +198,24 @@
             }
 
             return $r;
+        }
+
+        /**
+         * @return string
+         * @throws InvalidPackageNameException
+         * @throws InvalidScopeException
+         */
+        public function getDataPath(): string
+        {
+            $path = PathFinder::getPackageDataPath($this->Name);
+
+            if(!file_exists($path) && Resolver::resolveScope() == Scopes::System)
+            {
+                $filesystem = new Filesystem();
+                $filesystem->mkdir($path, 0777);
+            }
+
+            return $path;
         }
 
         /**

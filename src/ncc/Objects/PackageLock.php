@@ -65,6 +65,7 @@
                 $package_entry->addVersion($package, $install_path, true);
                 $package_entry->Name = $package->Assembly->Package;
                 $package_entry->UpdateSource = $package->Header->UpdateSource;
+                $package_entry->getDataPath();
                 $this->Packages[$package->Assembly->Package] = $package_entry;
                 $this->update();
 
@@ -73,6 +74,7 @@
 
             $this->Packages[$package->Assembly->Package]->UpdateSource = $package->Header->UpdateSource;
             $this->Packages[$package->Assembly->Package]->addVersion($package, true);
+            $this->Packages[$package->Assembly->Package]->getDataPath();
             $this->update();
         }
 

@@ -10,6 +10,7 @@
     use ncc\Classes\PhpExtension\PhpRuntime;
     use ncc\Exceptions\ImportException;
     use ncc\Exceptions\PackageLockException;
+    use ncc\Exceptions\PackageNotFoundException;
     use ncc\Exceptions\VersionNotFoundException;
     use ncc\Managers\PackageManager;
     use ncc\Objects\PackageLock\VersionEntry;
@@ -135,6 +136,26 @@
 
 
             self::addImport($package, $version);
+        }
+
+        /**
+         * Returns the data path of the package
+         *
+         * @param string $package
+         * @return string
+         * @throws Exceptions\InvalidPackageNameException
+         * @throws Exceptions\InvalidScopeException
+         * @throws PackageLockException
+         * @throws PackageNotFoundException
+         */
+        public static function getDataPath(string $package): string
+        {
+            $package = self::getPackageManager()->getPackage($package);
+
+            if($package == null)
+                throw new PackageNotFoundException(sprintf('Package %s not found', $package));
+
+            return $package->getDataPath();
         }
 
         /**

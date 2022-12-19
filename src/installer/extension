@@ -4,7 +4,11 @@
     use ncc\Exceptions\ConstantReadonlyException;
     use ncc\Exceptions\ImportException;
     use ncc\Exceptions\InvalidConstantNameException;
-    use ncc\ncc;
+use ncc\Exceptions\InvalidPackageNameException;
+use ncc\Exceptions\InvalidScopeException;
+use ncc\Exceptions\PackageLockException;
+use ncc\Exceptions\PackageNotFoundException;
+use ncc\ncc;
     use ncc\Runtime;
 
     if(!defined('NCC_INIT'))
@@ -110,6 +114,24 @@
             function consts_delete(string $package, string $name): void
             {
                 Runtime\Constants::delete($package, $name);
+            }
+        }
+
+        if(!function_exists('get_data_path'))
+        {
+            /**
+             * Returns the data path of the package
+             *
+             * @param string $package
+             * @return string
+             * @throws InvalidPackageNameException
+             * @throws InvalidScopeException
+             * @throws PackageLockException
+             * @throws PackageNotFoundException
+             */
+            function get_data_path(string $package): string
+            {
+                return Runtime::getDataPath($package);
             }
         }
     }

@@ -4,6 +4,7 @@
 
     use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
+    use ncc\Exceptions\InvalidPackageNameException;
     use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\RunnerExecutionException;
     use ncc\ThirdParty\Symfony\Process\ExecutableFinder;
@@ -202,6 +203,22 @@
             }
 
             return $results;
+        }
+
+        /**
+         * Returns the path where package data is located
+         *
+         * @param string $package
+         * @return string
+         * @throws InvalidPackageNameException
+         * @throws InvalidScopeException
+         */
+        public static function getPackageDataPath(string $package): string
+        {
+            if(!Validate::packageName($package))
+                throw new InvalidPackageNameException($package);
+
+            return self::getDataPath() . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . $package;
         }
 
         /**
