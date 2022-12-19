@@ -546,6 +546,8 @@
                 new CliHelpSection(['list'], 'Lists all installed packages on the system'),
                 new CliHelpSection(['install', '--package', '-p'], 'Installs a specified NCC package'),
                 new CliHelpSection(['install', '--package', '-p', '--version', '-v'], 'Installs a specified NCC package version'),
+                new CliHelpSection(['install', '-p', '--skip-dependencies'], 'Installs a specified NCC package but skips the installation of dependencies'),
+                new CliHelpSection(['install', '-p', '--reinstall'], 'Installs a specified NCC package, reinstall if already installed'),
                 new CliHelpSection(['uninstall', '--package', '-p'], 'Uninstalls a specified NCC package'),
                 new CliHelpSection(['uninstall', '--package', '-p', '--version', '-v'], 'Uninstalls a specified NCC package version'),
                 new CliHelpSection(['uninstall-all'], 'Uninstalls all packages'),
