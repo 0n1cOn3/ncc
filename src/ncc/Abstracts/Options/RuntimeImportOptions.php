@@ -1,6 +1,6 @@
 <?php
 
-    namespace ncc\Abstracts;
+    namespace ncc\Abstracts\Options;
 
     abstract class RuntimeImportOptions
     {
