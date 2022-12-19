@@ -732,15 +732,22 @@
             $scanner = new DirectoryScanner();
             $filesystem = new Filesystem();
 
-            /** @var SplFileInfo $item */
-            /** @noinspection PhpRedundantOptionalArgumentInspection */
-            foreach($scanner($version_entry->Location, true) as $item)
+            if($filesystem->exists($version_entry->Location))
             {
-                if(is_file($item->getPath()))
+                /** @var SplFileInfo $item */
+                /** @noinspection PhpRedundantOptionalArgumentInspection */
+                foreach($scanner($version_entry->Location, true) as $item)
                 {
-                    Console::outDebug(sprintf('deleting %s', $item->getPath()));
-                    $filesystem->remove($item->getPath());
+                    if(is_file($item->getPath()))
+                    {
+                        Console::outDebug(sprintf('deleting %s', $item->getPath()));
+                        $filesystem->remove($item->getPath());
+                    }
                 }
+            }
+            else
+            {
+                Console::outWarning(sprintf('warning: package location %s does not exist', $version_entry->Location));
             }
 
             $filesystem->remove($version_entry->Location);
