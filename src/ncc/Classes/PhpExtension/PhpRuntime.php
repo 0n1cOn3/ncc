@@ -2,7 +2,7 @@
 
     namespace ncc\Classes\PhpExtension;
 
-    use ncc\Abstracts\RuntimeImportOptions;
+    use ncc\Abstracts\Options\RuntimeImportOptions;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;

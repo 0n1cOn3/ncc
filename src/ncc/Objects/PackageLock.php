@@ -5,6 +5,7 @@
     namespace ncc\Objects;
 
     use ncc\Abstracts\Versions;
+    use ncc\Exceptions\VersionNotFoundException;
     use ncc\Objects\PackageLock\PackageEntry;
     use ncc\Utilities\Functions;
 
@@ -132,6 +133,40 @@
             }
 
             return null;
+        }
+
+        /**
+         * Determines if the requested package exists in the package lock
+         *
+         * @param string $package
+         * @param string|null $version
+         * @return bool
+         */
+        public function packageExists(string $package, ?string $version=null): bool
+        {
+            $package_entry = $this->getPackage($package);
+            if($package_entry == null)
+                return false;
+
+            if($version !== null)
+            {
+                try
+                {
+                    $version_entry = $package_entry->getVersion($version);
+                }
+                catch (VersionNotFoundException $e)
+                {
+                    unset($e);
+                    return false;
+                }
+
+                if($version_entry == null)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /**

@@ -10,6 +10,7 @@
     use ncc\Abstracts\ConstantReferences;
     use ncc\Abstracts\DependencySourceType;
     use ncc\Abstracts\LogLevel;
+    use ncc\Abstracts\Options\InstallPackageOptions;
     use ncc\Abstracts\RemoteSourceType;
     use ncc\Abstracts\Scopes;
     use ncc\Abstracts\Versions;
@@ -83,6 +84,7 @@
          *
          * @param string $package_path
          * @param Entry|null $entry
+         * @param array $options
          * @return string
          * @throws AccessDeniedException
          * @throws FileNotFoundException
@@ -98,7 +100,7 @@
          * @throws UnsupportedRunnerException
          * @throws VersionNotFoundException
          */
-        public function install(string $package_path, ?Entry $entry=null): string
+        public function install(string $package_path, ?Entry $entry=null, array $options=[]): string
         {
             if(Resolver::resolveScope() !== Scopes::System)
                 throw new AccessDeniedException('Insufficient permission to install packages');
@@ -107,9 +109,6 @@
                 throw new FileNotFoundException('The specified file \'' . $package_path .' \' does not exist or is not readable.');
 
             $package = Package::load($package_path);
-
-            if($this->getPackageVersion($package->Assembly->Package, $package->Assembly->Version) !== null)
-                throw new PackageAlreadyInstalledException('The package ' . $package->Assembly->Package . '=' . $package->Assembly->Version . ' is already installed');
 
             $extension = $package->Header->CompilerExtension->Extension;
             $installation_paths = new InstallationPaths($this->PackagesPath . DIRECTORY_SEPARATOR . $package->Assembly->Package . '=' . $package->Assembly->Version);
@@ -120,16 +119,51 @@
                 default => throw new UnsupportedCompilerExtensionException('The compiler extension \'' . $extension . '\' is not supported'),
             };
 
+            if($this->getPackageVersion($package->Assembly->Package, $package->Assembly->Version) !== null)
+            {
+                if(in_array(InstallPackageOptions::Reinstall, $options))
+                {
+                    if($this->getPackageLockManager()->getPackageLock()->packageExists(
+                        $package->Assembly->Package, $package->Assembly->Version
+                    ))
+                    {
+                        $this->getPackageLockManager()->getPackageLock()->removePackageVersion(
+                            $package->Assembly->Package, $package->Assembly->Version
+                        );
+                    }
+                }
+                else
+                {
+                    throw new PackageAlreadyInstalledException('The package ' . $package->Assembly->Package . '=' . $package->Assembly->Version . ' is already installed');
+                }
+            }
+
             $execution_pointer_manager = new ExecutionPointerManager();
             PackageCompiler::compilePackageConstants($package, [
                 ConstantReferences::Install => $installation_paths
             ]);
 
             // Process all the required dependencies before installing the package
-            if($package->Dependencies !== null && count($package->Dependencies) > 0)
+            if($package->Dependencies !== null && count($package->Dependencies) > 0 && !in_array(InstallPackageOptions::SkipDependencies, $options))
             {
                 foreach($package->Dependencies as $dependency)
                 {
+                    if(in_array(InstallPackageOptions::Reinstall, $options))
+                    {
+                        // Uninstall the dependency if the option Reinstall is passed on
+                        if($this->getPackageLockManager()->getPackageLock()->packageExists($dependency->Name, $dependency->Version))
+                        {
+                            if($dependency->Version == null)
+                            {
+                                $this->uninstallPackage($dependency->Name);
+                            }
+                            else
+                            {
+                                $this->uninstallPackageVersion($dependency->Name, $dependency->Version);
+                            }
+                        }
+                    }
+
                     $this->processDependency($dependency, $package, $package_path, $entry);
                 }
             }

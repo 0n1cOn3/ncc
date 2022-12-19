@@ -4,6 +4,7 @@
 
     use Exception;
     use ncc\Abstracts\ConsoleColors;
+    use ncc\Abstracts\Options\InstallPackageOptions;
     use ncc\Abstracts\Scopes;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\PackageLockException;
@@ -263,6 +264,18 @@
                 $user_confirmation = (bool)($args['y'] ?? $args['Y']);
             }
 
+            $installer_options = [];
+
+            if((Functions::cbool($args['skip-dependencies'] ?? false)))
+            {
+                $installer_options[] = InstallPackageOptions::SkipDependencies;
+            }
+
+            if(Functions::cbool($args['reinstall'] ?? false))
+            {
+                $installer_options[] = InstallPackageOptions::Reinstall;
+            }
+
             try
             {
                 $package = Package::load($path);
@@ -294,38 +307,43 @@
                 Console::out('  Trademark: ' . Console::formatColor($package->Assembly->Trademark, ConsoleColors::LightGreen));
             Console::out((string)null);
 
-            if(count($package->Dependencies) > 0)
+            if(count($package->Dependencies) > 0 && !in_array(InstallPackageOptions::Reinstall, $installer_options))
             {
                 $dependencies = [];
                 foreach($package->Dependencies as $dependency)
                 {
-                    $require_dependency = true;
-
-                    try
+                    if(in_array(InstallPackageOptions::Reinstall, $installer_options))
                     {
-                        $dependency_package = $package_manager->getPackage($dependency->Name);
+                        $require_dependency = true;
                     }
-                    catch (PackageLockException $e)
-                    {
-                        unset($e);
-                        $dependency_package = null;
-                    }
-
-                    if($dependency_package !== null)
+                    else
                     {
                         try
                         {
-                            $dependency_version = $dependency_package->getVersion($dependency->Version);
+                            $dependency_package = $package_manager->getPackage($dependency->Name);
                         }
-                        catch (VersionNotFoundException $e)
+                        catch (PackageLockException $e)
                         {
                             unset($e);
-                            $dependency_version = null;
+                            $dependency_package = null;
                         }
 
-                        if($dependency_version !== null)
+                        if($dependency_package !== null)
                         {
-                            $require_dependency = false;
+                            try
+                            {
+                                $dependency_version = $dependency_package->getVersion($dependency->Version);
+                            }
+                            catch (VersionNotFoundException $e)
+                            {
+                                unset($e);
+                                $dependency_version = null;
+                            }
+
+                            if($dependency_version !== null)
+                            {
+                                $require_dependency = false;
+                            }
                         }
                     }
 
@@ -338,8 +356,11 @@
                     }
                 }
 
-                Console::out('The package requires the following dependencies:');
-                Console::out(sprintf('%s', implode(PHP_EOL, $dependencies)));
+                if($dependencies !== null && count($dependencies) > 0)
+                {
+                    Console::out('The package requires the following dependencies:');
+                    Console::out(sprintf('%s', implode(PHP_EOL, $dependencies)));
+                }
             }
 
             Console::out(sprintf('Extension: %s',
@@ -359,11 +380,13 @@
             if(!$user_confirmation)
                 $user_confirmation = Console::getBooleanInput(sprintf('Do you want to install %s', $package->Assembly->Package));
 
+
+
             if($user_confirmation)
             {
                 try
                 {
-                    $package_manager->install($path, $credential);
+                    $package_manager->install($path, $credential, $installer_options);
                     Console::out(sprintf('Package %s installed successfully', $package->Assembly->Package));
                 }
                 catch(Exception $e)
