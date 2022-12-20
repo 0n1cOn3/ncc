@@ -98,7 +98,6 @@
                 throw new ImportException(sprintf('Version %s of %s is not installed', $version, $package), $e);
             }
 
-
             try
             {
                 if (self::isImported($package, $version))
