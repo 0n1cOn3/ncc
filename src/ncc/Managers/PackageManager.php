@@ -674,7 +674,15 @@
                 $exploded = explode('=', $package);
                 try
                 {
-                    foreach ($this->getPackage($exploded[0])?->getVersion($exploded[1])?->Dependencies as $dependency)
+                    $package = $this->getPackage($exploded[0]);
+                    if($package == null)
+                        throw new PackageNotFoundException('Package ' . $exploded[0] . ' not found');
+
+                    $version = $package->getVersion($exploded[1]);
+                    if($version == null)
+                        throw new VersionNotFoundException('Version ' . $exploded[1] . ' not found for package ' . $exploded[0]);
+
+                    foreach ($version->Dependencies as $dependency)
                     {
                         if(!in_array($dependency->PackageName . '=' . $dependency->Version, $tree))
                             $packages[] = $dependency->PackageName . '=' . $dependency->Version;
