@@ -86,6 +86,8 @@
          */
         public static function clearCache(bool $clear_memory=true, bool $clear_files=true): void
         {
+            Console::outDebug('clearing cache');
+
             if($clear_memory)
             {
                 Console::outDebug(sprintf('clearing memory cache (%d entries)', count(self::$cache)));

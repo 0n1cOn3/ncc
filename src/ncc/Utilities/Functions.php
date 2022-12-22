@@ -942,4 +942,40 @@
 
             return (string)$input;
         }
+
+        /**
+         * Finalizes the permissions
+         *
+         * @return void
+         * @throws InvalidScopeException
+         */
+        public static function finalizePermissions()
+        {
+            if(Resolver::resolveScope() !== Scopes::System)
+                return;
+
+            Console::outVerbose('Finalizing permissions...');
+            $filesystem = new Filesystem();
+
+            try
+            {
+                if($filesystem->exists(PathFinder::getDataPath() . DIRECTORY_SEPARATOR . 'data'))
+                    $filesystem->chmod(PathFinder::getDataPath() . DIRECTORY_SEPARATOR . 'data', 0777, 0000, true);
+            }
+            catch(Exception $e)
+            {
+                Console::outWarning(sprintf('Failed to finalize permissions for %s: %s', PathFinder::getDataPath() . DIRECTORY_SEPARATOR . 'data', $e->getMessage()));
+            }
+
+            try
+            {
+                if($filesystem->exists(PathFinder::getCachePath()))
+                    $filesystem->chmod(PathFinder::getCachePath(), 0777, 0000, true);
+            }
+            catch(Exception $e)
+            {
+                Console::outWarning(sprintf('Failed to finalize permissions for %s: %s', PathFinder::getDataPath() . DIRECTORY_SEPARATOR . 'data', $e->getMessage()));
+            }
+
+        }
     }

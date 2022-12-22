@@ -17,6 +17,7 @@
     use ncc\Exceptions\RuntimeException;
     use ncc\ncc;
     use ncc\Utilities\Console;
+    use ncc\Utilities\Functions;
     use ncc\Utilities\Resolver;
     use ncc\Utilities\RuntimeCache;
 
@@ -182,8 +183,8 @@
          */
         public static function shutdown(): void
         {
-            Console::outDebug('clearing cache');
             RuntimeCache::clearCache();
+            Functions::finalizePermissions();
         }
 
     }
