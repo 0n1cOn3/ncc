@@ -312,6 +312,8 @@
                 $dependencies = [];
                 foreach($package->Dependencies as $dependency)
                 {
+                    $require_dependency = false;
+
                     if(in_array(InstallPackageOptions::Reinstall, $installer_options))
                     {
                         $require_dependency = true;
