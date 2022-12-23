@@ -959,8 +959,8 @@
 
             try
             {
-                if($filesystem->exists(PathFinder::getDataPath() . DIRECTORY_SEPARATOR . 'data'))
-                    $filesystem->chmod(PathFinder::getDataPath() . DIRECTORY_SEPARATOR . 'data', 0777, 0000, true);
+                if($filesystem->exists(PathFinder::getDataPath(Scopes::System)))
+                    $filesystem->chmod(PathFinder::getDataPath(Scopes::System), 0777, 0000, true);
             }
             catch(Exception $e)
             {
@@ -969,8 +969,8 @@
 
             try
             {
-                if($filesystem->exists(PathFinder::getCachePath()))
-                    $filesystem->chmod(PathFinder::getCachePath(), 0777, 0000, true);
+                if($filesystem->exists(PathFinder::getCachePath(Scopes::System)))
+                    $filesystem->chmod(PathFinder::getCachePath(Scopes::System), 0777, 0000, true);
             }
             catch(Exception $e)
             {

@@ -218,7 +218,7 @@
             if(!Validate::packageName($package))
                 throw new InvalidPackageNameException($package);
 
-            return self::getDataPath() . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . $package;
+            return self::getDataPath(Scopes::System) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . $package;
         }
 
         /**
