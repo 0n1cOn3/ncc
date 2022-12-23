@@ -32,7 +32,6 @@
     use ncc\Exceptions\PackageNotFoundException;
     use ncc\Exceptions\PackageParsingException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
-    use ncc\Exceptions\UnsupportedRemoteSourceTypeException;
     use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Exceptions\VersionNotFoundException;
     use ncc\Objects\DefinedRemoteSource;
