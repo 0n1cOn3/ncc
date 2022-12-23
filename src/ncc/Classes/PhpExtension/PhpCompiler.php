@@ -214,7 +214,6 @@
                 $lib_path = $selected_build_configuration->OutputPath . DIRECTORY_SEPARATOR . 'libs';
                 if($filesystem->exists($lib_path))
                     $filesystem->remove($lib_path);
-                $filesystem->mkdir($lib_path);
 
                 Console::outVerbose('Scanning for dependencies... ');
                 foreach($selected_dependencies as $dependency)
@@ -230,6 +229,10 @@
                                 $package = $package_lock_manager->getPackageLock()->getPackage($dependency->Name);
                                 $version = $package->getVersion($dependency->Version);
                                 Console::outDebug(sprintf('copying shadow package %s=%s to %s', $dependency->Name, $dependency->Version, $out_path));
+
+                                if(!$filesystem->exists($lib_path))
+                                    $filesystem->mkdir($lib_path);
+
                                 $filesystem->copy($version->Location, $out_path);
                                 $dependency->Source = 'libs' . DIRECTORY_SEPARATOR . sprintf('%s=%s.lib', $dependency->Name, $dependency->Version);
 
