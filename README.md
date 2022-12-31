@@ -12,24 +12,40 @@ or issues please report them to the [GitHub Issue Tracker](https://git.n64.cc/in
 At the moment NCC is currently being used while developing other software, this serves as a test run to
 improve on changes for the next version.
 
-### Notes
+### Version History
 
- > Compiler extensions requires their own set of dependencies to be met, for example Java compilers will require JDK
+ - 1.0.0 Alpha - Initial release ([changelog](changelog/v1.0.0_alpha.md))
 
- > NCC is designed to run only on a PHP 8.0+ environment, compiler extensions can have support for different PHP versions.
-
- > Third-party dependencies and included libraries has a dedicated namespace for `ncc` to avoid user land conflicts if
- > the user wishes to install and use one of the same dependencies that NCC uses.
 
 ## Authors
+
  - Zi Xing Narrakas (netkas) <[netkas@n64.cc](mailto:netkas@64.cc)>
 
+
 ## Special Thanks
+
  - Marc Gutt (mgutt) <[marc@gutt.it](mailto:marc@gutt.it)>
  - Debusschère Alexandre ([debuss](https://github.com/debuss)) 
 
+
 ## Copyright
+
 - Copyright (c) 2022-2022, Nosial - All Rights Reserved
+
+
+## Contributing
+
+We welcome contributions to NCC! If you have an idea for how to improve the project, please don't hesitate to reach out.
+There are many ways to contribute, and we appreciate all forms of support.
+
+For more information on how to contribute, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+
+
+## Code of Conduct
+
+We are committed to maintaining a welcoming and inclusive environment for all contributors. Please read and follow our
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
 
 # Licenses
 
