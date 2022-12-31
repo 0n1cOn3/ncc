@@ -62,6 +62,14 @@
         public $Main;
 
         /**
+         * If Main is not null, and this is true.
+         * NCC Will create a symlink to the main executable in the installation directory.
+         *
+         * @var bool
+         */
+        public $CreateSymlink;
+
+        /**
          * An array of constants to define by default
          *
          * @var string[]
@@ -106,6 +114,7 @@
             $this->DefineConstants = [];
             $this->Dependencies = [];
             $this->Configurations = [];
+            $this->CreateSymlink = false;
         }
 
         /**
@@ -277,7 +286,10 @@
            if($this->Scope !== null)
                 $ReturnResults[($bytecode ? Functions::cbc('scope') : 'scope')] = $this->Scope;
            if($this->Main !== null)
-                $ReturnResults[($bytecode ? Functions::cbc('main') : 'main')] = $this->Main;
+           {
+               $ReturnResults[($bytecode ? Functions::cbc('main') : 'main')] = $this->Main;
+               $ReturnResults[($bytecode ? Functions::cbc('create_symlink') : 'create_symlink')] = $this->CreateSymlink;
+           }
            if($this->DefineConstants !== null && count($this->DefineConstants) > 0)
                 $ReturnResults[($bytecode ? Functions::cbc('define_constants') : 'define_constants')] = $this->DefineConstants;
            if($this->PreBuild !== null && count($this->PreBuild) > 0)
@@ -322,6 +334,7 @@
             $BuildObject->Options = (Functions::array_bc($data, 'options') ?? []);
             $BuildObject->Scope = Functions::array_bc($data, 'scope');
             $BuildObject->Main = Functions::array_bc($data, 'main');
+            $BuildObject->CreateSymlink = (Functions::array_bc($data, 'create_symlink') ?? false);
             $BuildObject->DefineConstants = (Functions::array_bc($data, 'define_constants') ?? []);
             $BuildObject->PreBuild = (Functions::array_bc($data, 'pre_build') ?? []);
             $BuildObject->PostBuild = (Functions::array_bc($data, 'post_build') ?? []);
