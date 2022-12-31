@@ -2,10 +2,11 @@
 
     /** @noinspection PhpMissingFieldTypeInspection */
 
-    namespace ncc\Objects\ProjectConfiguration;
+    namespace ncc\Objects\ProjectConfiguration\Build;
 
     use ncc\Exceptions\InvalidBuildConfigurationException;
     use ncc\Exceptions\InvalidDependencyConfiguration;
+    use ncc\Objects\ProjectConfiguration\Dependency;
     use ncc\Utilities\Functions;
     use ncc\Utilities\Validate;
 

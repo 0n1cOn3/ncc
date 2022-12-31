@@ -333,7 +333,7 @@
             }
 
             // Create a build configuration
-            $build_configuration = new ProjectConfiguration\BuildConfiguration();
+            $build_configuration = new ProjectConfiguration\Build\BuildConfiguration();
             $build_configuration->Name = 'default';
             $build_configuration->OutputPath = 'build';
 

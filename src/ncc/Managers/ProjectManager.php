@@ -140,12 +140,12 @@
             $this->ProjectConfiguration->Build->DefineConstants['ASSEMBLY_UID'] = '%ASSEMBLY.UID%';
 
             // Generate configurations
-            $DebugConfiguration = new ProjectConfiguration\BuildConfiguration();
+            $DebugConfiguration = new ProjectConfiguration\Build\BuildConfiguration();
             $DebugConfiguration->Name = 'debug';
             $DebugConfiguration->OutputPath = 'build/debug';
             $DebugConfiguration->DefineConstants["DEBUG"] = '1'; // Debugging constant if the program wishes to check for this
             $this->ProjectConfiguration->Build->Configurations[] = $DebugConfiguration;
-            $ReleaseConfiguration = new ProjectConfiguration\BuildConfiguration();
+            $ReleaseConfiguration = new ProjectConfiguration\Build\BuildConfiguration();
             $ReleaseConfiguration->Name = 'release';
             $ReleaseConfiguration->OutputPath = 'build/release';
             $ReleaseConfiguration->DefineConstants["DEBUG"] = '0'; // Debugging constant if the program wishes to check for this

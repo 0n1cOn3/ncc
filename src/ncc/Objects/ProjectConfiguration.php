@@ -21,7 +21,7 @@
     use ncc\Exceptions\UnsupportedExtensionVersionException;
     use ncc\Objects\ProjectConfiguration\Assembly;
     use ncc\Objects\ProjectConfiguration\Build;
-    use ncc\Objects\ProjectConfiguration\BuildConfiguration;
+    use ncc\Objects\ProjectConfiguration\Build\BuildConfiguration;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
     use ncc\Objects\ProjectConfiguration\Installer;
     use ncc\Objects\ProjectConfiguration\Project;

@@ -9,6 +9,7 @@
     use ncc\Exceptions\InvalidBuildConfigurationException;
     use ncc\Exceptions\InvalidConstantNameException;
     use ncc\Exceptions\InvalidProjectBuildConfiguration;
+    use ncc\Objects\ProjectConfiguration\Build\BuildConfiguration;
     use ncc\Utilities\Functions;
     use ncc\Utilities\Validate;
 
