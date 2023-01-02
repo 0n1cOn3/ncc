@@ -12,6 +12,7 @@
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\RuntimeException;
     use ncc\Objects\Vault;
+    use ncc\Utilities\Console;
     use ncc\Utilities\IO;
     use ncc\Utilities\PathFinder;
     use ncc\Utilities\Resolver;
@@ -61,6 +62,8 @@
          */
         public function constructStore(): void
         {
+            Console::outDebug(sprintf('constructing credentials store at %s', $this->CredentialsPath));
+
             // Do not continue the function if the file already exists, if the file is damaged a separate function
             // is to be executed to fix the damaged file.
             if(file_exists($this->CredentialsPath))
@@ -86,6 +89,8 @@
          */
         private function loadVault(): void
         {
+            Console::outDebug(sprintf('loading credentials store from %s', $this->CredentialsPath));
+
             if($this->Vault !== null)
                 return;
 
@@ -114,6 +119,8 @@
          */
         public function saveVault(): void
         {
+            Console::outDebug(sprintf('saving credentials store to %s', $this->CredentialsPath));
+
             if(Resolver::resolveScope() !== Scopes::System)
                 throw new AccessDeniedException('Cannot save credentials store without system permissions');
 
