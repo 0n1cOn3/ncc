@@ -5,7 +5,6 @@
     namespace ncc\Managers;
 
     use Exception;
-    use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\Scopes;
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
@@ -50,6 +49,8 @@
          */
         public function load(): void
         {
+            Console::outDebug(sprintf('loading configuration file from %s', PathFinder::getConfigurationFile()));
+
             $this->Configuration = RuntimeCache::get('ncc.yaml');
             if($this->Configuration !== null)
                 return;
@@ -68,6 +69,8 @@
          */
         public function save(): void
         {
+            Console::outDebug(sprintf('saving configuration file to %s', PathFinder::getConfigurationFile()));
+
             if(Resolver::resolveScope() !== Scopes::System)
                 throw new AccessDeniedException('Cannot save configuration file, insufficient permissions');
 
@@ -89,6 +92,8 @@
          */
         public function getProperty(string $property)
         {
+            Console::outDebug(sprintf('getting property %s', $property));
+
             Console::outDebug($property);
             $current_selection = $this->getConfiguration();
             foreach(explode('.', strtolower($property)) as $property)
@@ -121,6 +126,8 @@
          */
         public function updateProperty(string $property, $value): bool
         {
+            Console::outDebug(sprintf('updating property %s', $property));
+
             $keys = explode('.', $property);
             $current = &$this->Configuration;
             foreach ($keys as $k)
