@@ -22,6 +22,7 @@
          */
         public static function cloneRepository(string $url): string
         {
+            Console::outVerbose('Cloning repository: ' . $url);
             $path = Functions::getTmpDir();
             $process = new Process(["git", "clone", $url, $path]);
             $process->setTimeout(3600); // 1 hour
@@ -33,7 +34,8 @@
             if (!$process->isSuccessful())
                 throw new GitCloneException($process->getErrorOutput());
 
-            Console::outVerbose('Repository cloned to ' . $path);
+            Console::outVerbose('Repository cloned to: ' . $path);
+
             return $path;
         }
 
@@ -46,6 +48,7 @@
          */
         public static function checkout(string $path, string $branch)
         {
+            Console::outVerbose('Checking out branch' . $branch);
             $process = new Process(["git", "checkout", $branch], $path);
             $process->setTimeout(3600); // 1 hour
             $process->run(function ($type, $buffer)
@@ -63,7 +66,7 @@
             if (!$process->isSuccessful())
                 throw new GitCheckoutException($process->getErrorOutput());
 
-            Console::outVerbose('Checked out branch ' . $branch);
+            Console::outVerbose('Checked out branch: ' . $branch);
         }
 
         /**
@@ -75,6 +78,7 @@
          */
         public static function getTags(string $path): array
         {
+            Console::outVerbose('Getting tags for repository: ' . $path);
             $process = new Process(["git", "fetch", '--all', '--tags'] , $path);
             $process->setTimeout(3600); // 1 hour
             $process->run(function ($type, $buffer)
@@ -96,6 +100,12 @@
                 throw new GitTagsException($process->getErrorOutput());
 
             $tags = explode(PHP_EOL, $process->getOutput());
+            $tags = array_filter($tags, function ($tag)
+            {
+                return !empty($tag);
+            });
+
+            Console::outDebug('found ' . count($tags) . ' tags');
             return array_filter($tags);
         }
 
