@@ -22,6 +22,7 @@
     use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\InstallationException;
+    use ncc\Exceptions\InvalidPackageNameException;
     use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\MissingDependencyException;
@@ -89,6 +90,7 @@
          * @throws FileNotFoundException
          * @throws IOException
          * @throws InstallationException
+         * @throws InvalidScopeException
          * @throws MissingDependencyException
          * @throws NotImplementedException
          * @throws PackageAlreadyInstalledException
@@ -98,6 +100,7 @@
          * @throws UnsupportedCompilerExtensionException
          * @throws UnsupportedRunnerException
          * @throws VersionNotFoundException
+         * @throws InvalidPackageNameException
          */
         public function install(string $package_path, ?Entry $entry=null, array $options=[]): string
         {
@@ -393,9 +396,12 @@
             if($input->Version == null)
                 $input->Version = Versions::Latest;
 
+            Console::outVerbose('Fetching package ' . $input->Package . ' from ' . $input->Source . ' (' . $input->Version . ')');
+
             $remote_source_type = Resolver::detectRemoteSourceType($input->Source);
             if($remote_source_type == RemoteSourceType::Builtin)
             {
+                Console::outDebug('using builtin source ' . $input->Source);
                 switch($input->Source)
                 {
                     case BuiltinRemoteSourceType::Composer:
@@ -415,6 +421,7 @@
 
             if($remote_source_type == RemoteSourceType::Defined)
             {
+                Console::outDebug('using defined source ' . $input->Source);
                 $remote_source_manager = new RemoteSourcesManager();
                 $source = $remote_source_manager->getRemoteSource($input->Source);
                 if($source == null)
@@ -427,11 +434,13 @@
                 {
                     try
                     {
+                        Console::outDebug(sprintf('fetching package %s from %s', $input->Package, $repositoryQueryResults->Files->ZipballUrl));
                         $archive = Functions::downloadGitServiceFile($repositoryQueryResults->Files->ZipballUrl, $entry);
                         return PackageCompiler::tryCompile(Functions::extractArchive($archive), $repositoryQueryResults->Version);
                     }
                     catch(Throwable $e)
                     {
+                        Console::outDebug('cannot fetch package from zipball url, ' . $e->getMessage());
                         $exceptions[] = $e;
                     }
                 }
@@ -440,11 +449,13 @@
                 {
                     try
                     {
+                        Console::outDebug(sprintf('fetching package %s from %s', $input->Package, $repositoryQueryResults->Files->TarballUrl));
                         $archive = Functions::downloadGitServiceFile($repositoryQueryResults->Files->TarballUrl, $entry);
                         return PackageCompiler::tryCompile(Functions::extractArchive($archive), $repositoryQueryResults->Version);
                     }
                     catch(Exception $e)
                     {
+                        Console::outDebug('cannot fetch package from tarball url, ' . $e->getMessage());
                         $exceptions[] = $e;
                     }
                 }
@@ -453,10 +464,12 @@
                 {
                     try
                     {
+                        Console::outDebug(sprintf('fetching package %s from %s', $input->Package, $repositoryQueryResults->Files->PackageUrl));
                         return Functions::downloadGitServiceFile($repositoryQueryResults->Files->PackageUrl, $entry);
                     }
                     catch(Exception $e)
                     {
+                        Console::outDebug('cannot fetch package from package url, ' . $e->getMessage());
                         $exceptions[] = $e;
                     }
                 }
@@ -465,6 +478,7 @@
                 {
                     try
                     {
+                        Console::outDebug(sprintf('fetching package %s from %s', $input->Package, $repositoryQueryResults->Files->GitHttpUrl ?? $repositoryQueryResults->Files->GitSshUrl));
                         $git_repository = GitClient::cloneRepository($repositoryQueryResults->Files->GitHttpUrl ?? $repositoryQueryResults->Files->GitSshUrl);
 
                         foreach(GitClient::getTags($git_repository) as $tag)
@@ -475,9 +489,12 @@
                                 return PackageCompiler::tryCompile($git_repository, $repositoryQueryResults->Version);
                             }
                         }
+
+                        Console::outDebug('cannot fetch package from git repository, no matching tag found');
                     }
                     catch(Exception $e)
                     {
+                        Console::outDebug('cannot fetch package from git repository, ' . $e->getMessage());
                         $exceptions[] = $e;
                     }
                 }
@@ -525,6 +542,7 @@
         {
             try
             {
+                Console::outVerbose(sprintf('Installing package from source %s', $source));
                 $package = $this->fetchFromSource($source, $entry);
                 return $this->install($package, $entry);
             }
@@ -544,6 +562,8 @@
          * @throws FileNotFoundException
          * @throws IOException
          * @throws InstallationException
+         * @throws InvalidPackageNameException
+         * @throws InvalidScopeException
          * @throws MissingDependencyException
          * @throws NotImplementedException
          * @throws PackageAlreadyInstalledException
@@ -562,41 +582,42 @@
 
             if ($dependent_package !== null && $dependency->Version !== null && Validate::version($dependency->Version))
             {
+                Console::outDebug('dependency has version constraint, checking if package is installed');
                 $dependent_version = $this->getPackageVersion($dependency->Name, $dependency->Version);
                 if ($dependent_version !== null)
                     $dependency_met = true;
             }
             elseif ($dependent_package !== null && $dependency->Version == null)
             {
+                Console::outDebug(sprintf('dependency %s has no version specified, assuming dependency is met', $dependency->Name));
                 $dependency_met = true;
             }
 
-            if ($dependency->SourceType !== null)
+            Console::outDebug('dependency met: ' . ($dependency_met ? 'true' : 'false'));
+
+            if ($dependency->SourceType !== null && !$dependency_met)
             {
-                if(!$dependency_met)
+                Console::outVerbose(sprintf('Installing dependency %s=%s for %s=%s', $dependency->Name, $dependency->Version, $package->Assembly->Package, $package->Assembly->Version));
+                switch ($dependency->SourceType)
                 {
-                    Console::outVerbose(sprintf('Installing dependency %s=%s for %s=%s', $dependency->Name, $dependency->Version, $package->Assembly->Package, $package->Assembly->Version));
-                    switch ($dependency->SourceType)
-                    {
-                        case DependencySourceType::Local:
-                            Console::outDebug('installing from local source ' . $dependency->Source);
-                            $basedir = dirname($package_path);
-                            if (!file_exists($basedir . DIRECTORY_SEPARATOR . $dependency->Source))
-                                throw new FileNotFoundException($basedir . DIRECTORY_SEPARATOR . $dependency->Source);
-                            $this->install($basedir . DIRECTORY_SEPARATOR . $dependency->Source);
-                            break;
+                    case DependencySourceType::Local:
+                        Console::outDebug('installing from local source ' . $dependency->Source);
+                        $basedir = dirname($package_path);
+                        if (!file_exists($basedir . DIRECTORY_SEPARATOR . $dependency->Source))
+                            throw new FileNotFoundException($basedir . DIRECTORY_SEPARATOR . $dependency->Source);
+                        $this->install($basedir . DIRECTORY_SEPARATOR . $dependency->Source);
+                        break;
 
-                        case DependencySourceType::StaticLinking:
-                            throw new PackageNotFoundException('Static linking not possible, package ' . $dependency->Name . ' is not installed');
+                    case DependencySourceType::StaticLinking:
+                        throw new PackageNotFoundException('Static linking not possible, package ' . $dependency->Name . ' is not installed');
 
-                        case DependencySourceType::RemoteSource:
-                            Console::outDebug('installing from remote source ' . $dependency->Source);
-                            $this->installFromSource($dependency->Source, $entry);
-                            break;
+                    case DependencySourceType::RemoteSource:
+                        Console::outDebug('installing from remote source ' . $dependency->Source);
+                        $this->installFromSource($dependency->Source, $entry);
+                        break;
 
-                        default:
-                            throw new NotImplementedException('Dependency source type ' . $dependency->SourceType . ' is not implemented');
-                    }
+                    default:
+                        throw new NotImplementedException('Dependency source type ' . $dependency->SourceType . ' is not implemented');
                 }
             }
             else
@@ -614,6 +635,7 @@
          */
         public function getPackage(string $package): ?PackageEntry
         {
+            Console::outDebug('getting package ' . $package);
             return $this->getPackageLockManager()->getPackageLock()->getPackage($package);
         }
 
@@ -628,6 +650,7 @@
          */
         public function getPackageVersion(string $package, string $version): ?VersionEntry
         {
+            Console::outDebug('getting package version ' . $package . '=' . $version);
             return $this->getPackage($package)?->getVersion($version);
         }
 
@@ -638,9 +661,11 @@
          * @return VersionEntry|null
          * @throws VersionNotFoundException
          * @throws PackageLockException
+         * @noinspection PhpUnused
          */
         public function getLatestVersion(string $package): ?VersionEntry
         {
+            Console::outDebug('getting latest version of package ' . $package);
             return $this->getPackage($package)?->getVersion($this->getPackage($package)?->getLatestVersion());
         }
 
@@ -775,12 +800,15 @@
 
             if($filesystem->exists($version_entry->Location))
             {
+                Console::outVerbose(sprintf('Removing package files from %s', $version_entry->Location));
+
                 /** @var SplFileInfo $item */
                 /** @noinspection PhpRedundantOptionalArgumentInspection */
                 foreach($scanner($version_entry->Location, true) as $item)
                 {
                     if(is_file($item->getPath()))
                     {
+                        Console::outDebug('removing file ' . $item->getPath());
                         Console::outDebug(sprintf('deleting %s', $item->getPath()));
                         $filesystem->remove($item->getPath());
                     }
@@ -828,6 +856,7 @@
             foreach($package_entry->getVersions() as $version)
             {
                 $version_entry = $package_entry->getVersion($version);
+
                 try
                 {
                     $this->uninstallPackageVersion($package, $version_entry->Version);
@@ -846,6 +875,8 @@
          */
         private static function initData(Package $package, InstallationPaths $paths): void
         {
+            Console::outVerbose(sprintf('Initializing data for %s', $package->Assembly->Name));
+
             // Create data files
             $dependencies = [];
             foreach($package->Dependencies as $dependency)
@@ -868,6 +899,7 @@
             {
                 try
                 {
+                    Console::outDebug(sprintf('generating data file %s', $file));
                     IO::fwrite($file, $data);
                 }
                 catch (IOException $e)
