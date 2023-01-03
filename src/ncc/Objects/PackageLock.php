@@ -5,8 +5,11 @@
     namespace ncc\Objects;
 
     use ncc\Abstracts\Versions;
+    use ncc\Exceptions\InvalidPackageNameException;
+    use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\VersionNotFoundException;
     use ncc\Objects\PackageLock\PackageEntry;
+    use ncc\Utilities\Console;
     use ncc\Utilities\Functions;
 
     class PackageLock
@@ -56,9 +59,13 @@
          * @param Package $package
          * @param string $install_path
          * @return void
+         * @throws InvalidPackageNameException
+         * @throws InvalidScopeException
          */
         public function addPackage(Package $package, string $install_path): void
         {
+            Console::outVerbose("Adding package {$package->Assembly->Package} to package lock file");
+
             if(!isset($this->Packages[$package->Assembly->Package]))
             {
                 $package_entry = new PackageEntry();
@@ -88,6 +95,8 @@
          */
         public function removePackageVersion(string $package, string $version): bool
         {
+            Console::outVerbose(sprintf('Removing package %s version %s from package lock file', $package, $version));
+
             if(isset($this->Packages[$package]))
             {
                 $r = $this->Packages[$package]->removeVersion($version);
@@ -110,9 +119,11 @@
          *
          * @param string $package
          * @return bool
+         * @noinspection PhpUnused
          */
         public function removePackage(string $package): bool
         {
+            Console::outVerbose(sprintf('Removing package %s from package lock file', $package));
             if(isset($this->Packages[$package]))
             {
                 unset($this->Packages[$package]);
@@ -130,6 +141,8 @@
          */
         public function getPackage(string $package): ?PackageEntry
         {
+            Console::outDebug(sprintf('getting package %s from package lock file', $package));
+
             if(isset($this->Packages[$package]))
             {
                 return $this->Packages[$package];
