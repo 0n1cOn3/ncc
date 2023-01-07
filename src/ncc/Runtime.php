@@ -8,13 +8,16 @@
     use ncc\Abstracts\CompilerExtensions;
     use ncc\Abstracts\Versions;
     use ncc\Classes\PhpExtension\PhpRuntime;
+    use ncc\Exceptions\ConstantReadonlyException;
     use ncc\Exceptions\ImportException;
+    use ncc\Exceptions\InvalidConstantNameException;
     use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackageNotFoundException;
     use ncc\Exceptions\VersionNotFoundException;
     use ncc\Managers\PackageManager;
     use ncc\Objects\PackageLock\VersionEntry;
     use ncc\Objects\ProjectConfiguration\Dependency;
+    use ncc\Runtime\Constants;
 
     class Runtime
     {
@@ -133,7 +136,6 @@
                 throw new ImportException(sprintf('Failed to import package %s', $package), $e);
             }
 
-
             self::addImport($package, $version);
         }
 
@@ -175,5 +177,32 @@
         public static function getImportedPackages(): array
         {
             return array_keys(self::$imported_packages);
+        }
+
+        /**
+         * Returns a registered constant
+         *
+         * @param string $package
+         * @param string $name
+         * @return string|null
+         */
+        public static function getConstant(string $package, string $name): ?string
+        {
+            return Constants::get($package, $name);
+        }
+
+        /**
+         * Registers a new constant
+         *
+         * @param string $package
+         * @param string $name
+         * @param string $value
+         * @return void
+         * @throws ConstantReadonlyException
+         * @throws InvalidConstantNameException
+         */
+        public static function setConstant(string $package, string $name, string $value): void
+        {
+            Constants::register($package, $name, $value);
         }
     }
