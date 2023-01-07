@@ -134,4 +134,37 @@
                 return Runtime::getDataPath($package);
             }
         }
+
+        if(!function_exists('get_constant'))
+        {
+            /**
+             * Returns the value of a constant defined in NCC's runtime environment
+             *
+             * @param string $package
+             * @param string $name
+             * @return string|null
+             */
+            function get_constant(string $package, string $name): ?string
+            {
+                return Runtime::getConstant($package, $name);
+            }
+        }
+
+        if(!function_exists('set_constant'))
+        {
+            /**
+             * Sets the value of a constant defined in NCC's runtime environment
+             *
+             * @param string $package
+             * @param string $name
+             * @param string $value
+             * @return void
+             * @throws ConstantReadonlyException
+             * @throws InvalidConstantNameException
+             */
+            function set_constant(string $package, string $name, string $value): void
+            {
+                Runtime::setConstant($package, $name, $value);
+            }
+        }
     }
