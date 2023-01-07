@@ -6,9 +6,8 @@
     use ncc\Abstracts\SpecialConstants\DateTimeConstants;
     use ncc\Abstracts\SpecialConstants\InstallConstants;
     use ncc\Abstracts\SpecialConstants\AssemblyConstants;
+    use ncc\Abstracts\SpecialConstants\RuntimeConstants;
     use ncc\Objects\InstallationPaths;
-    use ncc\Objects\Package;
-    use ncc\Objects\ProjectConfiguration;
     use ncc\Objects\ProjectConfiguration\Assembly;
 
     class ConstantCompiler
@@ -123,6 +122,30 @@
             $input = str_replace(DateTimeConstants::c, date('c', $timestamp), $input);
             $input = str_replace(DateTimeConstants::r, date('r', $timestamp), $input);
             $input = str_replace(DateTimeConstants::u, date('u', $timestamp), $input);
+
+            return $input;
+        }
+
+        /**
+         * @param string|null $input
+         * @return string|null
+         * @noinspection PhpUnnecessaryLocalVariableInspection
+         */
+        public static function compileRuntimeConstants(?string $input): ?string
+        {
+            if ($input == null)
+                return null;
+
+            if(function_exists('getcwd'))
+                $input = str_replace(RuntimeConstants::CWD, getcwd(), $input);
+            if(function_exists('getmypid'))
+                $input = str_replace(RuntimeConstants::PID, getmypid(), $input);
+            if(function_exists('getmyuid'))
+                $input = str_replace(RuntimeConstants::UID, getmyuid(), $input);
+            if(function_exists('getmygid'))
+                $input = str_replace(RuntimeConstants::GID, getmygid(), $input);
+            if(function_exists('get_current_user'))
+                $input = str_replace(RuntimeConstants::User, get_current_user(), $input);
 
             return $input;
         }
