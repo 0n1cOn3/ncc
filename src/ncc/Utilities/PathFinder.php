@@ -179,7 +179,7 @@
          * @return string
          * @throws InvalidScopeException
          */
-        public static function getRemouteSources(string $scope=Scopes::Auto, bool $win32=false): string
+        public static function getRemoteSources(string $scope=Scopes::Auto, bool $win32=false): string
         {
             return self::getDataPath($scope, $win32) . DIRECTORY_SEPARATOR . 'sources';
         }
