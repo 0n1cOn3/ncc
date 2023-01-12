@@ -163,9 +163,10 @@
                 return;
             }
 
+            Console::out('Entries:');
             foreach($entries as $entry)
             {
-                Console::out(sprintf('%s%s', $entry->getName(), ($entry->isEncrypted() ? ' (encrypted)' : '')));
+                Console::out(sprintf(' - %s (%s)', $entry->getName(), $entry->isEncrypted() ? ' (encrypted)' : ''));
             }
 
             Console::out('Total: ' . count($entries));

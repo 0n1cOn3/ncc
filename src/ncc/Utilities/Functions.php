@@ -929,7 +929,7 @@
         {
             if (is_numeric($input))
             {
-                if (strpos($input, '.') !== false)
+                if (str_contains($input, '.'))
                     return (float)$input;
 
                 if (ctype_digit($input))

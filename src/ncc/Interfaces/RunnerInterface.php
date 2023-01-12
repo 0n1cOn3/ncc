@@ -7,7 +7,6 @@
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\RunnerExecutionException;
     use ncc\Objects\ExecutionPointers\ExecutionPointer;
-    use ncc\Objects\InstallationPaths;
     use ncc\Objects\Package\ExecutionUnit;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy;
     use ncc\ThirdParty\Symfony\Process\Process;

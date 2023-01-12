@@ -11,4 +11,6 @@
         const DateTime = 'date_time';
 
         const Install = 'install';
+
+        const Runtime = 'runtime';
     }

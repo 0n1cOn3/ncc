@@ -185,17 +185,25 @@
          */
         public static function writePackage(string $path, Package $package, ProjectConfiguration $configuration, string $build_configuration=BuildConfigurationValues::DefaultConfiguration): string
         {
+            Console::outVerbose(sprintf('Writing package to %s', $path));
+
             // Write the package to disk
             $FileSystem = new Filesystem();
             $BuildConfiguration = $configuration->Build->getBuildConfiguration($build_configuration);
             if(!$FileSystem->exists($path . $BuildConfiguration->OutputPath))
+            {
+                Console::outDebug(sprintf('creating output directory %s', $path . $BuildConfiguration->OutputPath));
                 $FileSystem->mkdir($path . $BuildConfiguration->OutputPath);
+            }
 
             // Finally write the package to the disk
             $FileSystem->mkdir($path . $BuildConfiguration->OutputPath);
             $output_file = $path . $BuildConfiguration->OutputPath . DIRECTORY_SEPARATOR . $package->Assembly->Package . '.ncc';
             if($FileSystem->exists($output_file))
+            {
+                Console::outDebug(sprintf('removing existing package %s', $output_file));
                 $FileSystem->remove($output_file);
+            }
             $FileSystem->touch($output_file);
 
             try
@@ -211,34 +219,12 @@
         }
 
         /**
-         * Compiles the special formatted constants
-         *
-         * @param Package $package
-         * @param int $timestamp
-         * @return array
-         */
-        public static function compileRuntimeConstants(Package $package, int $timestamp): array
-        {
-            $compiled_constants = [];
-
-            foreach($package->Header->RuntimeConstants as $name => $value)
-            {
-                $compiled_constants[$name] = self::compileConstants($value, [
-                    ConstantReferences::Assembly => $package->Assembly,
-                    ConstantReferences::DateTime => $timestamp,
-                    ConstantReferences::Build => null
-                ]);
-            }
-
-            return $compiled_constants;
-        }
-
-        /**
          * Compiles the constants in the package object
          *
          * @param Package $package
          * @param array $refs
          * @return void
+         * @noinspection PhpParameterByRefIsNotUsedAsReferenceInspection
          */
         public static function compilePackageConstants(Package &$package, array $refs): void
         {
@@ -247,6 +233,7 @@
                 $assembly = [];
                 foreach($package->Assembly->toArray() as $key => $value)
                 {
+                    Console::outDebug(sprintf('compiling consts Assembly.%s (%s)', $key, implode(', ', array_keys($refs))));
                     $assembly[$key] = self::compileConstants($value, $refs);
                 }
                 $package->Assembly = Assembly::fromArray($assembly);
@@ -258,11 +245,29 @@
                 $units = [];
                 foreach($package->ExecutionUnits as $executionUnit)
                 {
+                    Console::outDebug(sprintf('compiling execution unit consts %s (%s)', $executionUnit->Name, implode(', ', array_keys($refs))));
                     $units[] = self::compileExecutionUnitConstants($executionUnit, $refs);
                 }
                 $package->ExecutionUnits = $units;
                 unset($units);
             }
+
+            $compiled_constants = [];
+            foreach($package->Header->RuntimeConstants as $name => $value)
+            {
+                Console::outDebug(sprintf('compiling runtime const %s (%s)', $name, implode(', ', array_keys($refs))));
+                $compiled_constants[$name] = self::compileConstants($value, $refs);
+            }
+
+            $options = [];
+            foreach($package->Header->Options as $name => $value)
+            {
+                Console::outDebug(sprintf('compiling options const %s (%s)', $name, implode(', ', array_keys($refs))));
+                $options[$name] = self::compileConstants($value, $refs);
+            }
+            $package->Header->Options = $options;
+
+            $package->Header->RuntimeConstants = $compiled_constants;
         }
 
         /**
@@ -343,6 +348,9 @@
 
             if(isset($refs[ConstantReferences::Install]))
                 $value = ConstantCompiler::compileInstallConstants($value, $refs[ConstantReferences::Install]);
+
+            if(isset($refs[ConstantReferences::Runtime]))
+                $value = ConstantCompiler::compileRuntimeConstants($value);
 
             return $value;
         }

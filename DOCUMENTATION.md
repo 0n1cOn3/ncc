@@ -9,10 +9,10 @@ NCC, from basic installation, basic usage, standards and much more.
    - What is NCC?
    - Advantages over other software
  
- ------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------
 
 
-# Introduction (May 24, 2022)
+# Introduction
 
 This section serves the basic introduction of NCC, what it's used for and how you can
 use it in your own projects or use it to run and build other projects that are designed

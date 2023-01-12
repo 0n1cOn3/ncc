@@ -2,7 +2,6 @@
 
     namespace ncc\Interfaces;
 
-    use ncc\Abstracts\Versions;
     use ncc\Exceptions\MissingDependencyException;
     use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackageNotFoundException;

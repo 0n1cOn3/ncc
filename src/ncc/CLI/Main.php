@@ -7,7 +7,7 @@
     use Exception;
     use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\NccBuildFlags;
-    use ncc\CLI\Commands\BuildMenu;
+    use ncc\CLI\Commands\BuildCommand;
     use ncc\CLI\Management\ConfigMenu;
     use ncc\CLI\Management\CredentialMenu;
     use ncc\CLI\Management\PackageManagerMenu;
@@ -114,7 +114,7 @@
                             exit(0);
 
                         case 'build':
-                            BuildMenu::start(self::$args);
+                            BuildCommand::start(self::$args);
                             exit(0);
 
                         case 'cred':

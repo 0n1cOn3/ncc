@@ -309,7 +309,6 @@
             }
 
             // Install execution units
-            // TODO: Implement symlink support
             if(count($package->ExecutionUnits) > 0)
             {
                 $execution_pointer_manager = new ExecutionPointerManager();
@@ -323,6 +322,13 @@
                 }
 
                 IO::fwrite($installation_paths->getDataPath() . DIRECTORY_SEPARATOR . 'exec', ZiProto::encode($unit_paths));
+            }
+
+            if(isset($package->Header->Options['create_symlink']) && $package->Header->Options['create_symlink'])
+            {
+                $paths = [
+                    DIRECTORY_SEPARATOR . 'usr' . DIRECTORY_SEPARATOR . 'bin'
+                ];
             }
 
             // Execute the post-installation stage after the installation is complete

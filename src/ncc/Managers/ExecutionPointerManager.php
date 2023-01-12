@@ -155,7 +155,8 @@
             }
 
             $bin_file = $package_bin_path . DIRECTORY_SEPARATOR . hash('haval128,4', $unit->ExecutionPolicy->Name);
-            $bin_file .= match ($unit->ExecutionPolicy->Runner) {
+            $bin_file .= match ($unit->ExecutionPolicy->Runner)
+            {
                 Runners::bash => BashRunner::getFileExtension(),
                 Runners::php => PhpRunner::getFileExtension(),
                 Runners::perl => PerlRunner::getFileExtension(),
@@ -183,6 +184,7 @@
 
             if($temporary)
             {
+                Console::outVerbose(sprintf('Adding temporary ExecutionUnit \'%s\' for %s', $unit->ExecutionPolicy->Name, $package));
                 $this->TemporaryUnits[] = [
                     'package' => $package,
                     'version' => $version,
@@ -273,6 +275,22 @@
             }
 
             return $results;
+        }
+
+        public function getUnit(string $package, string $version, string $name): ExecutionUnit
+        {
+            Console::outVerbose(sprintf('getting execution unit %s for %s', $name, $package));
+
+            $package_id = $this->getPackageId($package, $version);
+            $package_config_path = $this->RunnerPath . DIRECTORY_SEPARATOR . $package_id . '.inx';
+
+            if(!file_exists($package_config_path))
+                throw new NoAvailableUnitsException('No ExecutionUnits available for ' . $package);
+
+            $execution_pointers = ExecutionPointers::fromArray(ZiProto::decode(IO::fread($package_config_path)));
+            $unit = $execution_pointers->getUnit($name);
+
+
         }
 
         /**

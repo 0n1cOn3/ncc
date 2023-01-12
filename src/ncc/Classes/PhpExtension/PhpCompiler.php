@@ -23,7 +23,6 @@
     use ncc\Exceptions\VersionNotFoundException;
     use ncc\Interfaces\CompilerInterface;
     use ncc\Managers\PackageLockManager;
-    use ncc\ncc;
     use ncc\Objects\Package;
     use ncc\Objects\ProjectConfiguration;
     use ncc\ThirdParty\nikic\PhpParser\ParserFactory;
@@ -92,6 +91,10 @@
             $this->package->Dependencies = $this->project->Build->Dependencies;
             $this->package->MainExecutionPolicy = $this->project->Build->Main;
 
+            // Add the option to create a symbolic link to the package
+            if($this->project->Build->CreateSymlink)
+                $this->package->Header->Options['create_symlink'] = true;
+
             // Add both the defined constants from the build configuration and the global constants.
             // Global constants are overridden
             $this->package->Header->RuntimeConstants = [];
@@ -104,6 +107,7 @@
             $this->package->Header->CompilerExtension = $this->project->Project->Compiler;
             $this->package->Header->CompilerVersion = NCC_VERSION_NUMBER;
             $this->package->Header->Options = $this->project->Project->Options;
+
 
             Console::outDebug('scanning project files');
             Console::outDebug('theseer\DirectoryScanner - Copyright (c) 2009-2014 Arne Blankerts <arne@blankerts.de> All rights reserved.');

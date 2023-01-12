@@ -31,6 +31,13 @@
         public $Options;
 
         /**
+         * An array of environment variables to pass on to the process
+         *
+         * @var array|null
+         */
+        public $EnvironmentVariables;
+
+        /**
          * Indicates if the output should be displayed or suppressed
          *
          * @var bool|null
@@ -38,19 +45,31 @@
         public $Silent;
 
         /**
-         * Indicates if the process should run in Tty mode (Overrides Silent mode)
+         * Indicates if the process should run in Tty mode (Overrides Silent & Pty mode)
          *
          * @var bool|null
          */
         public $Tty;
 
         /**
+         * Indicates if the process should run in Pty mode (Overrides Silent mode)
+         *
+         * @var bool|null
+         */
+        public $Pty;
+
+        /**
          * The number of seconds to wait before giving up on the process, will automatically execute the error handler
          * if one is set.
          *
-         * @var int
+         * @var int|null
          */
         public $Timeout;
+
+        /**
+         * @var int|null
+         */
+        public $IdleTimeout;
 
         /**
          * Public Constructor
@@ -60,6 +79,7 @@
             $this->Tty = false;
             $this->Silent = false;
             $this->Timeout = null;
+            $this->IdleTimeout = null;
             $this->WorkingDirectory = "%CWD%";
         }
 
@@ -82,6 +102,9 @@
             if($this->Options !== null)
                 $results[($bytecode ? Functions::cbc("options") : "options")] = $this->Options;
 
+            if($this->EnvironmentVariables !== null)
+                $results[($bytecode ? Functions::cbc("environment_variables") : "environment_variables")] = $this->EnvironmentVariables;
+
             if($this->Silent !== null)
                 $results[($bytecode ? Functions::cbc("silent") : "silent")] = (bool)$this->Silent;
 
@@ -90,6 +113,9 @@
 
             if($this->Timeout !== null)
                 $results[($bytecode ? Functions::cbc("timeout") : "timeout")] = (int)$this->Timeout;
+
+            if($this->IdleTimeout !== null)
+                $results[($bytecode ? Functions::cbc("idle_timeout") : "idle_timeout")] = (int)$this->IdleTimeout;
 
             return $results;
         }
@@ -107,9 +133,11 @@
             $object->Target = Functions::array_bc($data, 'target');
             $object->WorkingDirectory = Functions::array_bc($data, 'working_directory');
             $object->Options = Functions::array_bc($data, 'options');
+            $object->EnvironmentVariables = Functions::array_bc($data, 'environment_variables');
             $object->Silent = Functions::array_bc($data, 'silent');
             $object->Tty = Functions::array_bc($data, 'tty');
             $object->Timeout = Functions::array_bc($data, 'timeout');
+            $object->IdleTimeout = Functions::array_bc($data, 'idle_timeout');
 
             return $object;
         }

@@ -81,7 +81,6 @@
 
             $this->Packages[$package->Assembly->Package]->UpdateSource = $package->Header->UpdateSource;
             $this->Packages[$package->Assembly->Package]->addVersion($package, $install_path, true);
-            $this->Packages[$package->Assembly->Package]->addVersion($package, $install_path, true);
             $this->Packages[$package->Assembly->Package]->getDataPath();
             $this->update();
         }
@@ -127,6 +126,7 @@
             if(isset($this->Packages[$package]))
             {
                 unset($this->Packages[$package]);
+                $this->update();
                 return true;
             }
 

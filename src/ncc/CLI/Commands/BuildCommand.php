@@ -7,8 +7,9 @@
     use ncc\Managers\ProjectManager;
     use ncc\Objects\CliHelpSection;
     use ncc\Utilities\Console;
+    use ncc\Utilities\Functions;
 
-    class BuildMenu
+    class BuildCommand
     {
         /**
          * Displays the main help menu
@@ -103,7 +104,7 @@
                 new CliHelpSection(['build', '--config'], 'Builds the current project with a specified build configuration')
             ];
 
-            $options_padding = \ncc\Utilities\Functions::detectParametersPadding($options) + 4;
+            $options_padding = Functions::detectParametersPadding($options) + 4;
 
             Console::out('Usage: ncc build [options]');
             Console::out('Options:' . PHP_EOL);

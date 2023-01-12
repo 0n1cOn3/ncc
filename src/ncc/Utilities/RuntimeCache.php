@@ -32,7 +32,6 @@
          */
         public static function set($key, $value): mixed
         {
-            Console::outDebug($key);
             self::$cache[$key] = $value;
             return $value;
         }
@@ -45,7 +44,6 @@
          */
         public static function get($key): mixed
         {
-            Console::outDebug($key);
             if(isset(self::$cache[$key]))
                 return self::$cache[$key];
 

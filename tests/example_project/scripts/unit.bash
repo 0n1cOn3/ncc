@@ -1,3 +1,3 @@
 echo "Hello World!"
-read -p "What is your name? " name
+read -r -p "What is your name? " name
 echo "Hello $name"
