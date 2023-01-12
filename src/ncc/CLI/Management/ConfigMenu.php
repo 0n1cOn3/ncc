@@ -83,7 +83,7 @@
                 {
                     if(Resolver::resolveScope() !== Scopes::System)
                     {
-                        Console::outError('Insufficent permissions, cannot modify configuration values', true, 1);
+                        Console::outError('Insufficient permissions, cannot modify configuration values', true, 1);
                         return;
                     }
 
