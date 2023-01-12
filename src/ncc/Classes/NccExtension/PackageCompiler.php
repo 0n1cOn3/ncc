@@ -262,11 +262,26 @@
             $options = [];
             foreach($package->Header->Options as $name => $value)
             {
-                Console::outDebug(sprintf('compiling options const %s (%s)', $name, implode(', ', array_keys($refs))));
-                $options[$name] = self::compileConstants($value, $refs);
-            }
-            $package->Header->Options = $options;
+                if(is_array($value))
+                {
+                    $options[$name] = [];
+                    foreach($value as $key => $val)
+                    {
+                        if(!is_string($val))
+                            continue;
 
+                        Console::outDebug(sprintf('compiling option %s.%s (%s)', $name, $key, implode(', ', array_keys($refs))));
+                        $options[$name][$key] = self::compileConstants($val, $refs);
+                    }
+                }
+                else
+                {
+                    Console::outDebug(sprintf('compiling option %s (%s)', $name, implode(', ', array_keys($refs))));
+                    $options[$name] = self::compileConstants((string)$value, $refs);
+                }
+            }
+
+            $package->Header->Options = $options;
             $package->Header->RuntimeConstants = $compiled_constants;
         }
 
