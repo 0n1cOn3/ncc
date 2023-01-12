@@ -4,7 +4,6 @@
 
     namespace ncc\Objects\ProjectConfiguration;
 
-    use ncc\Objects\InstallationPaths;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy\Execute;
     use ncc\Objects\ProjectConfiguration\ExecutionPolicy\ExitHandlers;
     use ncc\Utilities\Functions;

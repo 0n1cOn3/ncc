@@ -2,7 +2,6 @@
 
     namespace ncc\Utilities;
 
-    use ncc\Abstracts\Runners;
     use ncc\Abstracts\Scopes;
     use ncc\Exceptions\InvalidPackageNameException;
     use ncc\Exceptions\InvalidScopeException;

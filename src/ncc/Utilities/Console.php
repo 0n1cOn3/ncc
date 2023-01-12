@@ -9,8 +9,6 @@
     use ncc\Abstracts\LogLevel;
     use ncc\CLI\Main;
     use ncc\ncc;
-    use ncc\Objects\CliHelpSection;
-    use ncc\ThirdParty\Symfony\Process\ExecutableFinder;
     use Throwable;
 
     class Console

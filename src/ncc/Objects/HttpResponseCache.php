@@ -4,8 +4,6 @@
 
     namespace ncc\Objects;
 
-    use ncc\Utilities\RuntimeCache;
-
     class HttpResponseCache
     {
         /**

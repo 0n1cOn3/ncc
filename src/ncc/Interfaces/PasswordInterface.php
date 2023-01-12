@@ -2,8 +2,6 @@
 
     namespace ncc\Interfaces;
 
-    use ncc\Abstracts\AuthenticationType;
-
     interface PasswordInterface
     {
         /**

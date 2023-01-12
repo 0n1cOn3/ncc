@@ -6,7 +6,6 @@
 
     use ncc\Abstracts\EncoderType;
     use ncc\Abstracts\Versions;
-    use ncc\Utilities\Console;
 
     class MagicBytes
     {

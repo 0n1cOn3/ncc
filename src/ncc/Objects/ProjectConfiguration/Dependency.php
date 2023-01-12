@@ -4,7 +4,6 @@
 
     namespace ncc\Objects\ProjectConfiguration;
 
-    use ncc\Abstracts\DependencySourceType;
     use ncc\Exceptions\InvalidDependencyConfiguration;
     use ncc\Utilities\Functions;
     use ncc\Utilities\Validate;

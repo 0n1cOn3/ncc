@@ -19,7 +19,6 @@
     use ncc\Objects\Vault\Entry;
     use ncc\ThirdParty\jelix\Version\VersionComparator;
     use ncc\Utilities\Functions;
-    use ncc\Utilities\Validate;
 
     class GithubService implements  RepositorySourceInterface
     {

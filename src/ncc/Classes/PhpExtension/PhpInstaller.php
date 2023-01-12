@@ -13,7 +13,6 @@
     use ncc\Exceptions\ComponentChecksumException;
     use ncc\Exceptions\ComponentDecodeException;
     use ncc\Exceptions\FileNotFoundException;
-    use ncc\Exceptions\InstallationException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\NoUnitsFoundException;
     use ncc\Exceptions\ResourceChecksumException;
@@ -31,7 +30,6 @@
     use ncc\ThirdParty\theseer\Autoload\Factory;
     use ncc\Utilities\Base64;
     use ncc\Utilities\IO;
-    use ncc\ZiProto\ZiProto;
     use ReflectionClass;
     use ReflectionException;
     use RuntimeException;
