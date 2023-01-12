@@ -626,7 +626,7 @@
                         throw new NotImplementedException('Dependency source type ' . $dependency->SourceType . ' is not implemented');
                 }
             }
-            else
+            elseif(!$dependency_met)
             {
                 throw new MissingDependencyException(sprintf('The dependency %s=%s for %s=%s is not met', $dependency->Name, $dependency->Version, $package->Assembly->Package, $package->Assembly->Version));
             }
