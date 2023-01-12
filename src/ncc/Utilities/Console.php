@@ -19,6 +19,11 @@
         private static $largestTickLength = 0;
 
         /**
+         * @var float|int
+         */
+        private static $lastTickTime;
+
+        /**
          * Inline Progress bar, created by dealnews.com.
          *
          * @param int $value
@@ -118,13 +123,35 @@
             };
 
             $tick_time = (string)microtime(true);
+
             if(strlen($tick_time) > self::$largestTickLength)
+            {
                 self::$largestTickLength = strlen($tick_time);
+            }
+
             if(strlen($tick_time) < self::$largestTickLength)
+            {
                 /** @noinspection PhpRedundantOptionalArgumentInspection */
                 $tick_time = str_pad($tick_time, (strlen($tick_time) + (self::$largestTickLength - strlen($tick_time))), ' ', STR_PAD_RIGHT);
+            }
 
-            return '[' . $tick_time . '] ' . $input;
+            $fmt_tick = $tick_time;
+            if(self::$lastTickTime !== null)
+            {
+                $timeDiff = microtime(true) - self::$lastTickTime;
+
+                if ($timeDiff > 1.0)
+                {
+                    $fmt_tick = Console::formatColor($tick_time, ConsoleColors::LightRed);
+                }
+                elseif ($timeDiff > 0.5)
+                {
+                    $fmt_tick = Console::formatColor($tick_time, ConsoleColors::LightYellow);
+                }
+            }
+
+            self::$lastTickTime = $tick_time;
+            return '[' . $fmt_tick . '] ' . $input;
         }
 
         /**
@@ -181,6 +208,14 @@
                 $trace_msg .= Console::formatColor($backtrace[1]['function'] . '()', ConsoleColors::LightGreen);
                 $trace_msg .= ' > ';
             }
+
+            /**  Apply syntax highlighting using regular expressions  */
+
+            // Hyperlinks
+            $message = preg_replace('/(https?:\/\/[^\s]+)/', Console::formatColor('$1', ConsoleColors::LightBlue), $message);
+
+            // File Paths
+            $message = preg_replace('/(\/[^\s]+)/', Console::formatColor('$1', ConsoleColors::LightCyan), $message);
 
             /** @noinspection PhpUnnecessaryStringCastInspection */
             $message = self::setPrefix(LogLevel::Debug, (string)$trace_msg . $message);
