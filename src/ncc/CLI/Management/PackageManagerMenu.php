@@ -85,6 +85,20 @@
                 }
             }
 
+            if(isset($args['sdc']))
+            {
+                try
+                {
+                    self::semiDecompile($args);
+                    return;
+                }
+                catch(Exception $e)
+                {
+                    Console::outException('List Failed', $e, 1);
+                    return;
+                }
+            }
+
             self::displayOptions();
             exit(0);
         }
@@ -115,6 +129,91 @@
                     self::printTree($value, $prefix . ($isLast ? '   ' : $symbols['line']));
                 }
             }
+        }
+
+        /**
+         * Semi-Decompiles a package and prints it to the console
+         *
+         * @param $args
+         * @return void
+         * @throws FileNotFoundException
+         */
+        private static function semiDecompile($args): void
+        {
+            $path = ($args['package'] ?? $args['p']);
+
+            if(!file_exists($path) || !is_file($path) || !is_readable($path))
+                throw new FileNotFoundException('The specified file \'' . $path .' \' does not exist or is not readable.');
+
+            try
+            {
+                $package = Package::load($path);
+            }
+            catch(Exception $e)
+            {
+                Console::outException('Error while loading package', $e, 1);
+                return;
+            }
+
+            Console::out('magic_bytes: ' . json_encode(($package->MagicBytes?->toArray() ?? []), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            Console::out('header: ' . json_encode(($package->Header?->toArray() ?? []), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            Console::out('assembly: ' . json_encode(($package->Assembly?->toArray() ?? []), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            Console::out('main: ' . ($package->MainExecutionPolicy ?? 'N/A'));
+            Console::out('installer: ' . ($package->Installer?->toArray() ?? 'N/A'));
+
+            if($package->Dependencies !== null && count($package->Dependencies) > 0)
+            {
+                Console::out('dependencies:');
+                foreach($package->Dependencies as $dependency)
+                {
+                    Console::out('  - ' . json_encode($dependency->toArray(), JSON_UNESCAPED_SLASHES));
+                }
+            }
+            else
+            {
+                Console::out('dependencies: N/A');
+            }
+
+            if($package->ExecutionUnits !== null && count($package->ExecutionUnits) > 0)
+            {
+                Console::out('execution_units:');
+                foreach($package->ExecutionUnits as $unit)
+                {
+                    Console::out('  - ' . json_encode($unit->toArray(), JSON_UNESCAPED_SLASHES));
+                }
+            }
+            else
+            {
+                Console::out('execution_units: N/A');
+            }
+
+            if($package->Resources !== null && count($package->Resources) > 0)
+            {
+                Console::out('resources:');
+                foreach($package->Resources as $resource)
+                {
+                    Console::out('  - ' . sprintf('%s - (%s)', $resource->Name, Functions::b2u(strlen($resource->Data))));
+                }
+            }
+            else
+            {
+                Console::out('resources: N/A');
+            }
+
+            if($package->Components !== null && count($package->Components) > 0)
+            {
+                Console::out('components:');
+                foreach($package->Components as $component)
+                {
+                    Console::out('  - ' . sprintf('#%s %s - %s', $component->DataType, $component->Name, json_encode(($component->Flags ?? []), JSON_UNESCAPED_SLASHES)));
+                }
+            }
+            else
+            {
+                Console::out('components: N/A');
+            }
+
+            exit(0);
         }
 
         /**
@@ -314,11 +413,7 @@
                 {
                     $require_dependency = false;
 
-                    if(in_array(InstallPackageOptions::Reinstall, $installer_options))
-                    {
-                        $require_dependency = true;
-                    }
-                    else
+                    if(!in_array(InstallPackageOptions::SkipDependencies, $installer_options))
                     {
                         try
                         {
@@ -342,10 +437,8 @@
                                 $dependency_version = null;
                             }
 
-                            if($dependency_version !== null)
-                            {
-                                $require_dependency = false;
-                            }
+                            if($dependency_version == null)
+                                $require_dependency = true;
                         }
                     }
 
@@ -553,6 +646,7 @@
                 new CliHelpSection(['uninstall', '--package', '-p'], 'Uninstalls a specified NCC package'),
                 new CliHelpSection(['uninstall', '--package', '-p', '--version', '-v'], 'Uninstalls a specified NCC package version'),
                 new CliHelpSection(['uninstall-all'], 'Uninstalls all packages'),
+                new CliHelpSection(['sdc', '--package', '-p'], '(Debug) Semi-decompiles a specified NCC package and prints the result to the console'),
             ];
 
             $options_padding = Functions::detectParametersPadding($options) + 4;
