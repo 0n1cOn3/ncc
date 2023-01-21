@@ -18,7 +18,7 @@ before_script:
 
 build:
     script:
-    - make redist tar
+    - make redist
     artifacts:
         paths:
-        - build/build.tar.gz
+        - build/src
