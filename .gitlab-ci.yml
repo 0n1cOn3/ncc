@@ -3,7 +3,7 @@ image: php:8.1
 before_script:
     # Install some stuff that the image doesn't come with
     - apt update -yqq
-    - apt install git libpq-dev libzip-dev zip make -yqq
+    - apt install git libpq-dev libzip-dev zip make wget -yqq
 
     # Install phive
     - wget -O phive.phar https://phar.io/releases/phive.phar
