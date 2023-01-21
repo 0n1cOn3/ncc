@@ -1,5 +1,5 @@
 PHPCC=/usr/bin/php
-PHPAB=/usr/bin/phpab
+PHPAB=/usr/local/bin/phpab
 BUILD_PATH=build
 SRC_PATH=src
 
