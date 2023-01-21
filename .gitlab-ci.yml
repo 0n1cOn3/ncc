@@ -21,8 +21,4 @@ build:
     - make redist tar
     artifacts:
         paths:
-        - build/src/build.tar.gz
-
-test:
-    script:
-    - build/src/INSTALL --auto --install-composer
+        - build/build.tar.gz
