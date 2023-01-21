@@ -106,7 +106,7 @@ redist: autoload
 	cp -rf $(SRC_PATH)/default_repositories/*.json $(BUILD_PATH)/src/repositories
 
 tar: redist
-	cd $(BUILD_PATH)/src; tar -czvf ../ncc.tar.gz *
+	cd $(BUILD_PATH)/src; tar -czvf ../build.tar.gz *
 
 clean:
 	rm -rf $(BUILD_PATH)

@@ -11,7 +11,7 @@ before_script:
     #- gpg --keyserver hkps://keys.openpgp.org --recv-keys 0x9D8A98B29B2D5D79
     #- gpg --verify phive.phar.asc phive.phar
     - chmod +x phive.phar
-    - sudo mv phive.phar /usr/local/bin/phive
+    - mv phive.phar /usr/local/bin/phive
 
     # install phpab
     - phive install phpab --global --trust-gpg-keys 0x2A8299CE842DD38C
@@ -21,7 +21,7 @@ build:
     - make redist tar
     artifacts:
         paths:
-        - build/src/ncc.tar.gz
+        - build/src/build.tar.gz
 
 test:
     script:
