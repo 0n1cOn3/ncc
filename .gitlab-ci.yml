@@ -16,13 +16,13 @@ before_script:
     # install phpab
     - phive install phpab --global --trust-gpg-keys 0x2A8299CE842DD38C
 
-build-job:
+build:
     script:
     - make redist
     rules:
     - if: $CI_COMMIT_BRANCH
 
-release-job:
+release:
     script:
     - make redist
     artifacts:
