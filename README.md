@@ -16,6 +16,15 @@ improve on changes for the next version.
 
  - 1.0.0 Alpha - Initial release ([changelog](changelog/v1.0.0_alpha.md))
 
+## Repository Mirrors
+
+The official repository for NCC is hosted on [GitLab](https://git.n64.cc/intellivoid/ncc), however, you can also find
+mirrors of the repository mirrored on different platforms, including 
+community powered mirrors. (more to come)
+
+ - [git.it-kuny.ch](https://git.it-kuny.ch)
+ - [git.martinvlba.eu](https://git.martinvlba.eu/Nosial/ncc)
+
 
 # Contributing
 
