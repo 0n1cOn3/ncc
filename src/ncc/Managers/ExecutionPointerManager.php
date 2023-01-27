@@ -286,42 +286,6 @@
         }
 
         /**
-         * Returns an existing ExecutionUnit for a package version
-         *
-         * @param string $package
-         * @param string $version
-         * @param string $name
-         * @return ExecutionPointers\ExecutionPointer
-         * @throws AccessDeniedException
-         * @throws FileNotFoundException
-         * @throws IOException
-         */
-        public function getUnit(string $package, string $version, string $name): ExecutionPointers\ExecutionPointer
-        {
-            /** @noinspection DuplicatedCode */
-            if(Resolver::resolveScope() !== Scopes::System)
-                throw new AccessDeniedException('Cannot remove ExecutionUnit \'' . $name .'\' for ' . $package . ', insufficient permissions');
-
-            Console::outVerbose(sprintf('Removing ExecutionUnit \'%s\' for %s', $name, $package));
-
-            $package_id = $this->getPackageId($package, $version);
-            $package_config_path = $this->RunnerPath . DIRECTORY_SEPARATOR . $package_id . '.inx';
-            $package_bin_path = $this->RunnerPath . DIRECTORY_SEPARATOR . $package_id;
-
-            Console::outDebug(sprintf('package_id=%s', $package_id));
-            Console::outDebug(sprintf('package_config_path=%s', $package_config_path));
-            Console::outDebug(sprintf('package_bin_path=%s', $package_bin_path));
-
-            $filesystem = new Filesystem();
-            if(!$filesystem->exists($package_config_path))
-            {
-                throw new FileNotFoundException(sprintf('Path \'%s\' does not exist', $package_config_path));
-            }
-            $execution_pointers = ExecutionPointers::fromArray(ZiProto::decode(IO::fread($package_config_path)));
-            return $execution_pointers->getUnit($name);
-        }
-
-        /**
          * Executes a unit
          *
          * @param string $package
