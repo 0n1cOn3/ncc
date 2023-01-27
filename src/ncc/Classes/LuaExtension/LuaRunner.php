@@ -23,7 +23,7 @@
             $execution_unit = new ExecutionUnit();
             $policy->Execute->Target = null;
             $execution_unit->ExecutionPolicy = $policy;
-            $execution_unit->Data = Base64::encode(IO::fread($path));
+            $execution_unit->Data = IO::fread($path);
 
             return $execution_unit;
         }
@@ -34,17 +34,5 @@
         public static function getFileExtension(): string
         {
             return '.lua';
-        }
-
-        /**
-         * @inheritDoc
-         */
-        public static function prepareProcess(ExecutionPointer $pointer): Process
-        {
-            $lua_bin = PathFinder::findRunner(Runners::lua);
-
-            if($pointer->ExecutionPolicy->Execute->Options !== null && count($pointer->ExecutionPolicy->Execute->Options) > 0)
-                return new Process(array_merge([$lua_bin, $pointer->FilePointer], $pointer->ExecutionPolicy->Execute->Options));
-            return new Process([$lua_bin, $pointer->FilePointer]);
         }
     }

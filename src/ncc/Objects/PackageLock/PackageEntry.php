@@ -5,6 +5,7 @@
     namespace ncc\Objects\PackageLock;
 
     use ncc\Abstracts\Scopes;
+    use ncc\Abstracts\Versions;
     use ncc\Exceptions\InvalidPackageNameException;
     use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\VersionNotFoundException;
@@ -64,6 +65,9 @@
          */
         public function getVersion(string $version, bool $throw_exception=false): ?VersionEntry
         {
+            if($version == Versions::Latest)
+                $version = $this->LatestVersion;
+
             foreach($this->Versions as $versionEntry)
             {
                 if($versionEntry->Version == $version)
@@ -141,6 +145,9 @@
             $version->ExecutionUnits = $package->ExecutionUnits;
             $version->MainExecutionPolicy = $package->MainExecutionPolicy;
             $version->Location = $install_path;
+
+            foreach($version->ExecutionUnits as $unit)
+                $unit->Data = null;
 
             foreach($package->Dependencies as $dependency)
             {

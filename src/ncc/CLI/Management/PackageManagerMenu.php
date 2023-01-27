@@ -256,6 +256,7 @@
                             $package_version = $package_manager->getPackageVersion($package, $version);
                             if($package_version == null)
                                 continue;
+
                             Console::out(sprintf('%s=%s (%s)',
                                 Console::formatColor($package, ConsoleColors::LightGreen),
                                 Console::formatColor($version, ConsoleColors::LightMagenta),
@@ -265,9 +266,10 @@
                         catch(Exception $e)
                         {
                             unset($e);
-                            Console::out(sprintf('%s=%s',
+                            Console::out(sprintf('%s=%s (%s)',
                                 Console::formatColor($package, ConsoleColors::LightGreen),
-                                Console::formatColor($version, ConsoleColors::LightMagenta)
+                                Console::formatColor($version, ConsoleColors::LightMagenta),
+                                Console::formatColor('N/A', ConsoleColors::LightRed)
                             ));
                         }
                     }

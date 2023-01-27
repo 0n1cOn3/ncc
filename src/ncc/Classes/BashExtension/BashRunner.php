@@ -26,7 +26,7 @@
                 throw new FileNotFoundException($path);
             $policy->Execute->Target = null;
             $execution_unit->ExecutionPolicy = $policy;
-            $execution_unit->Data = Base64::encode(IO::fread($path));
+            $execution_unit->Data = IO::fread($path);
 
             return $execution_unit;
         }
@@ -37,17 +37,5 @@
         public static function getFileExtension(): string
         {
             return '.bash';
-        }
-
-        /**
-         * @inheritDoc
-         */
-        public static function prepareProcess(ExecutionPointer $pointer): Process
-        {
-            $bash_bin = PathFinder::findRunner(Runners::bash);
-
-            if($pointer->ExecutionPolicy->Execute->Options !== null && count($pointer->ExecutionPolicy->Execute->Options) > 0)
-                return new Process(array_merge([$bash_bin, '-c', $pointer->FilePointer], $pointer->ExecutionPolicy->Execute->Options));
-            return new Process([$bash_bin, '-c', $pointer->FilePointer]);
         }
     }

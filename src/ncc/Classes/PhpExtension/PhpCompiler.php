@@ -92,14 +92,14 @@
             $this->package->MainExecutionPolicy = $this->project->Build->Main;
 
             // Add the option to create a symbolic link to the package
-            if($this->project->Build->CreateSymlink)
+            if(isset($this->project->Project->Options['create_symlink']) && $this->project->Project->Options['create_symlink'] === True)
                 $this->package->Header->Options['create_symlink'] = true;
 
             // Add both the defined constants from the build configuration and the global constants.
             // Global constants are overridden
             $this->package->Header->RuntimeConstants = [];
             $this->package->Header->RuntimeConstants = array_merge(
-                ($selected_build_configuration?->DefineConstants ?? []),
+                ($selected_build_configuration->DefineConstants ?? []),
                 ($this->project->Build->DefineConstants ?? []),
                 ($this->package->Header->RuntimeConstants ?? [])
             );
@@ -108,6 +108,10 @@
             $this->package->Header->CompilerVersion = NCC_VERSION_NUMBER;
             $this->package->Header->Options = $this->project->Project->Options;
 
+            if($this->project->Project->UpdateSource !== null)
+            {
+                $this->package->Header->UpdateSource = $this->project->Project->UpdateSource;
+            }
 
             Console::outDebug('scanning project files');
             Console::outDebug('theseer\DirectoryScanner - Copyright (c) 2009-2014 Arne Blankerts <arne@blankerts.de> All rights reserved.');
@@ -161,8 +165,8 @@
                 }
 
                 // Clear previous excludes and includes
-                $DirectoryScanner->setExcludes([]);
-                $DirectoryScanner->setIncludes([]);
+                $DirectoryScanner->setExcludes();
+                $DirectoryScanner->setIncludes();
 
                 // Ignore component files
                 if($selected_build_configuration->ExcludeFiles !== null && count($selected_build_configuration->ExcludeFiles) > 0)
@@ -423,7 +427,7 @@
          */
         public function compileExecutionPolicies(): void
         {
-            PackageCompiler::compileExecutionPolicies($this->path, $this->project);
+            $this->package->ExecutionUnits = PackageCompiler::compileExecutionPolicies($this->path, $this->project);
         }
 
         /**

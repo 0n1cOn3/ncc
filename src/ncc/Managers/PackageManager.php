@@ -309,13 +309,15 @@
             }
 
             // Install execution units
-            if(count($package->ExecutionUnits) > 0)
+            if($package->ExecutionUnits !== null && count($package->ExecutionUnits) > 0)
             {
                 $execution_pointer_manager = new ExecutionPointerManager();
                 $unit_paths = [];
 
+                /** @var Package\ExecutionUnit $executionUnit */
                 foreach($package->ExecutionUnits as $executionUnit)
                 {
+                    Console::outDebug(sprintf('processing execution unit %s', $executionUnit->ExecutionPolicy->Name));
                     $execution_pointer_manager->addUnit($package->Assembly->Package, $package->Assembly->Version, $executionUnit);
                     $current_steps += 1;
                     Console::inlineProgressBar($current_steps, $steps);
@@ -751,14 +753,21 @@
                 try
                 {
                     $version_entry = $this->getPackageVersion($package_e[0], $package_e[1]);
-                    $tree[$package] = null;
-                    if($version_entry->Dependencies !== null && count($version_entry->Dependencies) > 0)
+                    if($version_entry == null)
                     {
-                        $tree[$package] = [];
-                        foreach($version_entry->Dependencies as $dependency)
+                        Console::outWarning('Version ' . $package_e[1] . ' of package ' . $package_e[0] . ' not found');
+                    }
+                    else
+                    {
+                        $tree[$package] = null;
+                        if($version_entry->Dependencies !== null && count($version_entry->Dependencies) > 0)
                         {
-                            $dependency_name = sprintf('%s=%s', $dependency->PackageName, $dependency->Version);
-                            $tree[$package] = $this->getPackageTree($tree[$package], $dependency_name);
+                            $tree[$package] = [];
+                            foreach($version_entry->Dependencies as $dependency)
+                            {
+                                $dependency_name = sprintf('%s=%s', $dependency->PackageName, $dependency->Version);
+                                $tree[$package] = $this->getPackageTree($tree[$package], $dependency_name);
+                            }
                         }
                     }
                 }

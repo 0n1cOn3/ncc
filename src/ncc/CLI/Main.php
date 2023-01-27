@@ -8,6 +8,7 @@
     use ncc\Abstracts\LogLevel;
     use ncc\Abstracts\NccBuildFlags;
     use ncc\CLI\Commands\BuildCommand;
+    use ncc\CLI\Commands\ExecCommand;
     use ncc\CLI\Management\ConfigMenu;
     use ncc\CLI\Management\CredentialMenu;
     use ncc\CLI\Management\PackageManagerMenu;
@@ -107,36 +108,40 @@
                     {
                         default:
                             Console::out('Unknown command ' . strtolower(self::$args['ncc-cli']));
-                            exit(1);
+                            break;
 
                         case 'project':
                             ProjectMenu::start(self::$args);
-                            exit(0);
+                            break;
 
                         case 'build':
                             BuildCommand::start(self::$args);
-                            exit(0);
+                            break;
+
+                        case 'exec':
+                            ExecCommand::start(self::$args);
+                            break;
 
                         case 'cred':
                             CredentialMenu::start(self::$args);
-                            exit(0);
+                            break;
 
                         case 'package':
                             PackageManagerMenu::start(self::$args);
-                            exit(0);
+                            break;
 
                         case 'config':
                             ConfigMenu::start(self::$args);
-                            exit(0);
+                            break;
 
                         case 'source':
                             SourcesMenu::start(self::$args);
-                            exit(0);
+                            break;
 
                         case '1':
                         case 'help':
                             HelpMenu::start(self::$args);
-                            exit(0);
+                            break;
                     }
                 }
                 catch(Exception $e)
@@ -145,6 +150,7 @@
                     exit(1);
                 }
 
+                exit(0);
             }
         }
 

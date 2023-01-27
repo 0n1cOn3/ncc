@@ -33,6 +33,7 @@
          * Public Constructor with optional ExecutionUnit parameter to construct object from
          *
          * @param ExecutionUnit|null $unit
+         * @param string|null $bin_file
          */
         public function __construct(?ExecutionUnit $unit=null, ?string $bin_file=null)
         {
@@ -72,6 +73,9 @@
             $object->ID = Functions::array_bc($data, 'id');
             $object->ExecutionPolicy = Functions::array_bc($data, 'execution_policy');
             $object->FilePointer = Functions::array_bc($data, 'file_pointer');
+
+            if($object->ExecutionPolicy !== null)
+                $object->ExecutionPolicy = ExecutionPolicy::fromArray($object->ExecutionPolicy);
 
             return $object;
         }

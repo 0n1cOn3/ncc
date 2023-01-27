@@ -479,7 +479,8 @@
             self::prepareProcess($process, $tmp_dir, $options);
 
             Console::outDebug(sprintf('executing %s', $process->getCommandLine()));
-            $process->run(function ($type, $buffer) {
+            $process->run(function ($type, $buffer)
+            {
                 Console::out($buffer, false);
             });
 

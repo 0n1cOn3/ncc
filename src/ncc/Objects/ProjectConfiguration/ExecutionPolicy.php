@@ -94,7 +94,7 @@
             $object->Name = Functions::array_bc($data, 'name');
             $object->Runner = Functions::array_bc($data, 'runner');
             $object->Message = Functions::array_bc($data, 'message');
-            $object->Execute = Functions::array_bc($data, 'exec');
+            $object->Execute = Functions::array_bc($data, 'execute');
             $object->ExitHandlers = Functions::array_bc($data, 'exit_handlers');
 
             if($object->Execute !== null)

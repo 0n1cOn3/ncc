@@ -7,6 +7,7 @@
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Objects\ExecutionPointers\ExecutionPointer;
     use ncc\Objects\Package\ExecutionUnit;
+    use ncc\Utilities\Functions;
     use ncc\Utilities\Validate;
 
     class ExecutionPointers
@@ -41,8 +42,10 @@
          * Adds an Execution Unit as a pointer
          *
          * @param ExecutionUnit $unit
+         * @param string $bin_file
          * @param bool $overwrite
          * @return bool
+         * @throws FileNotFoundException
          */
         public function addUnit(ExecutionUnit $unit, string $bin_file, bool $overwrite=true): bool
         {
@@ -96,6 +99,7 @@
          */
         public function getUnit(string $name): ?ExecutionPointer
         {
+            /** @var ExecutionPointer $pointer */
             foreach($this->Pointers as $pointer)
             {
                 if($pointer->ExecutionPolicy->Name == $name)
@@ -148,7 +152,11 @@
             {
                 $pointers[] = $pointer->toArray($bytecode);
             }
-            return $pointers;
+            return [
+                ($bytecode ? Functions::cbc('package') : 'package')  => $this->Package,
+                ($bytecode ? Functions::cbc('version') : 'version')  => $this->Version,
+                ($bytecode ? Functions::cbc('pointers') : 'pointers') => $pointers
+            ];
         }
 
         /**
@@ -161,9 +169,18 @@
         {
             $object = new self();
 
-            foreach($data as $datum)
+            $object->Version = Functions::array_bc($data, 'version');
+            $object->Package = Functions::array_bc($data, 'package');
+            $object->Pointers = Functions::array_bc($data, 'pointers');
+
+            if($object->Pointers !== null)
             {
-                $object->Pointers[] = ExecutionPointer::fromArray($datum);
+                $pointers = [];
+                foreach($object->Pointers as $pointer)
+                {
+                    $pointers[] = ExecutionPointer::fromArray($pointer);
+                }
+                $object->Pointers = $pointers;
             }
 
             return $object;

@@ -9,6 +9,7 @@
     use ncc\Abstracts\Scopes;
     use ncc\Classes\BashExtension\BashRunner;
     use ncc\Classes\LuaExtension\LuaRunner;
+    use ncc\Classes\NccExtension\ConstantCompiler;
     use ncc\Classes\PerlExtension\PerlRunner;
     use ncc\Classes\PhpExtension\PhpRunner;
     use ncc\Classes\PythonExtension\Python2Runner;
@@ -109,6 +110,7 @@
          */
         private function getPackageId(string $package, string $version): string
         {
+            Console::outDebug(sprintf('calculating package id for %s=%s', $package, $version));
             return hash('haval128,4', $package . $version);
         }
 
@@ -263,8 +265,14 @@
             $package_id = $this->getPackageId($package, $version);
             $package_config_path = $this->RunnerPath . DIRECTORY_SEPARATOR . $package_id . '.inx';
 
+            Console::outDebug(sprintf('package_id=%s', $package_id));
+            Console::outDebug(sprintf('package_config_path=%s', $package_config_path));
+
             if(!file_exists($package_config_path))
+            {
+                Console::outWarning(sprintf('Path \'%s\' does not exist', $package_config_path));
                 return [];
+            }
 
             $execution_pointers = ExecutionPointers::fromArray(ZiProto::decode(IO::fread($package_config_path)));
             $results = [];
@@ -277,20 +285,40 @@
             return $results;
         }
 
-        public function getUnit(string $package, string $version, string $name): ExecutionUnit
+        /**
+         * Returns an existing ExecutionUnit for a package version
+         *
+         * @param string $package
+         * @param string $version
+         * @param string $name
+         * @return ExecutionPointers\ExecutionPointer
+         * @throws AccessDeniedException
+         * @throws FileNotFoundException
+         * @throws IOException
+         */
+        public function getUnit(string $package, string $version, string $name): ExecutionPointers\ExecutionPointer
         {
-            Console::outVerbose(sprintf('getting execution unit %s for %s', $name, $package));
+            /** @noinspection DuplicatedCode */
+            if(Resolver::resolveScope() !== Scopes::System)
+                throw new AccessDeniedException('Cannot remove ExecutionUnit \'' . $name .'\' for ' . $package . ', insufficient permissions');
+
+            Console::outVerbose(sprintf('Removing ExecutionUnit \'%s\' for %s', $name, $package));
 
             $package_id = $this->getPackageId($package, $version);
             $package_config_path = $this->RunnerPath . DIRECTORY_SEPARATOR . $package_id . '.inx';
+            $package_bin_path = $this->RunnerPath . DIRECTORY_SEPARATOR . $package_id;
 
-            if(!file_exists($package_config_path))
-                throw new NoAvailableUnitsException('No ExecutionUnits available for ' . $package);
+            Console::outDebug(sprintf('package_id=%s', $package_id));
+            Console::outDebug(sprintf('package_config_path=%s', $package_config_path));
+            Console::outDebug(sprintf('package_bin_path=%s', $package_bin_path));
 
+            $filesystem = new Filesystem();
+            if(!$filesystem->exists($package_config_path))
+            {
+                throw new FileNotFoundException(sprintf('Path \'%s\' does not exist', $package_config_path));
+            }
             $execution_pointers = ExecutionPointers::fromArray(ZiProto::decode(IO::fread($package_config_path)));
-            $unit = $execution_pointers->getUnit($name);
-
-
+            return $execution_pointers->getUnit($name);
         }
 
         /**
@@ -299,16 +327,17 @@
          * @param string $package
          * @param string $version
          * @param string $name
-         * @return void
+         * @param array $args
+         * @return int
          * @throws AccessDeniedException
          * @throws ExecutionUnitNotFoundException
          * @throws FileNotFoundException
          * @throws IOException
          * @throws NoAvailableUnitsException
-         * @throws UnsupportedRunnerException
          * @throws RunnerExecutionException
+         * @throws UnsupportedRunnerException
          */
-        public function executeUnit(string $package, string $version, string $name): void
+        public function executeUnit(string $package, string $version, string $name, array $args=[]): int
         {
             Console::outVerbose(sprintf('executing unit %s for %s', $name, $package));
 
@@ -327,23 +356,33 @@
             Console::outDebug(sprintf('unit=%s', $unit->ExecutionPolicy->Name));
             Console::outDebug(sprintf('runner=%s', $unit->ExecutionPolicy->Runner));
             Console::outDebug(sprintf('file=%s', $unit->FilePointer));
+            Console::outDebug(sprintf('pass_thru_args=%s', json_encode($args, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
 
-            $process = match (strtolower($unit->ExecutionPolicy->Runner))
+            // Handle the arguments
+            if($unit->ExecutionPolicy->Execute->Options !== null && count($unit->ExecutionPolicy->Execute->Options) > 0)
             {
-                Runners::bash => BashRunner::prepareProcess($unit),
-                Runners::php => PhpRunner::prepareProcess($unit),
-                Runners::perl => PerlRunner::prepareProcess($unit),
-                Runners::python => PythonRunner::prepareProcess($unit),
-                Runners::python2 => Python2Runner::prepareProcess($unit),
-                Runners::python3 => Python3Runner::prepareProcess($unit),
-                Runners::lua => LuaRunner::prepareProcess($unit),
-                default => throw new UnsupportedRunnerException('The runner \'' . $unit->ExecutionPolicy->Runner . '\' is not supported'),
-            };
+                $args = array_merge($args, $unit->ExecutionPolicy->Execute->Options);
+
+                foreach($unit->ExecutionPolicy->Execute->Options as $option)
+                {
+                    $args[] = ConstantCompiler::compileRuntimeConstants($option);
+                }
+            }
+
+            $process = new Process(array_merge([
+                PathFinder::findRunner(strtolower($unit->ExecutionPolicy->Runner)),
+                $unit->FilePointer
+            ], $args));
 
             if($unit->ExecutionPolicy->Execute->WorkingDirectory !== null)
-                $process->setWorkingDirectory($unit->ExecutionPolicy->Execute->WorkingDirectory);
+            {
+                $process->setWorkingDirectory(ConstantCompiler::compileRuntimeConstants($unit->ExecutionPolicy->Execute->WorkingDirectory));
+            }
+
             if($unit->ExecutionPolicy->Execute->Timeout !== null)
+            {
                 $process->setTimeout((float)$unit->ExecutionPolicy->Execute->Timeout);
+            }
 
             if($unit->ExecutionPolicy->Execute->Silent)
             {
@@ -364,6 +403,8 @@
             Console::outDebug(sprintf('timeout=%s', ($process->getTimeout() ?? 0)));
             Console::outDebug(sprintf('silent=%s', ($unit->ExecutionPolicy->Execute->Silent ? 'true' : 'false')));
             Console::outDebug(sprintf('tty=%s', ($unit->ExecutionPolicy->Execute->Tty ? 'true' : 'false')));
+            Console::outDebug(sprintf('options=%s', implode(' ', $args)));
+            Console::outDebug(sprintf('cmd=%s', $process->getCommandLine()));
 
             try
             {
@@ -402,6 +443,8 @@
                     $this->handleExit($package, $version, $unit->ExecutionPolicy->ExitHandlers->Error, $process);
                 }
             }
+
+            return $process->getExitCode();
         }
 
         /**

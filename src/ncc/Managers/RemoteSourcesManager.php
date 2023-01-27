@@ -37,7 +37,7 @@
         public function __construct()
         {
             /** @noinspection PhpUnhandledExceptionInspection */
-            $this->DefinedSourcesPath = PathFinder::getRemouteSources(Scopes::System);
+            $this->DefinedSourcesPath = PathFinder::getRemoteSources(Scopes::System);
 
             $this->load();
         }

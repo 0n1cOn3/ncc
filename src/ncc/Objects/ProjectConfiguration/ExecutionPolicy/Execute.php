@@ -24,9 +24,9 @@
         public $WorkingDirectory;
 
         /**
-         * An array of options to pass on to the process
+         * Options to pass to the process
          *
-         * @var array|null
+         * @var array
          */
         public $Options;
 
@@ -50,13 +50,6 @@
          * @var bool|null
          */
         public $Tty;
-
-        /**
-         * Indicates if the process should run in Pty mode (Overrides Silent mode)
-         *
-         * @var bool|null
-         */
-        public $Pty;
 
         /**
          * The number of seconds to wait before giving up on the process, will automatically execute the error handler

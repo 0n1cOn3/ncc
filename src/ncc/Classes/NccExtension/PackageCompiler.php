@@ -157,6 +157,8 @@
             /** @var ProjectConfiguration\ExecutionPolicy $policy */
             foreach($configuration->ExecutionPolicies as $policy)
             {
+                Console::outVerbose(sprintf('Compiling Execution Policy %s', $policy->Name));
+
                 if($total_items > 5)
                 {
                     Console::inlineProgressBar($processed_items, $total_items);
@@ -245,7 +247,7 @@
                 $units = [];
                 foreach($package->ExecutionUnits as $executionUnit)
                 {
-                    Console::outDebug(sprintf('compiling execution unit consts %s (%s)', $executionUnit->Name, implode(', ', array_keys($refs))));
+                    Console::outDebug(sprintf('compiling execution unit consts %s (%s)', $executionUnit->ExecutionPolicy->Name, implode(', ', array_keys($refs))));
                     $units[] = self::compileExecutionUnitConstants($executionUnit, $refs);
                 }
                 $package->ExecutionUnits = $units;

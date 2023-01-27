@@ -64,6 +64,7 @@
                 else
                 {
                     Console::outError('The selected source directory \'' . $full_path . '\' was not found or is not a directory', true, 1);
+                    return;
                 }
             }
             else

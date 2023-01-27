@@ -26,7 +26,7 @@
             if(!file_exists($path) && !is_file($path))
                 throw new FileNotFoundException($path);
             $execution_unit->ExecutionPolicy = $policy;
-            $execution_unit->Data = Base64::encode(IO::fread($path));
+            $execution_unit->Data = IO::fread($path);
 
             return $execution_unit;
         }
@@ -37,17 +37,5 @@
         public static function getFileExtension(): string
         {
             return '.pl';
-        }
-
-        /**
-         * @inheritDoc
-         */
-        public static function prepareProcess(ExecutionPointer $pointer): Process
-        {
-            $perl_bin = PathFinder::findRunner(Runners::perl);
-
-            if($pointer->ExecutionPolicy->Execute->Options !== null && count($pointer->ExecutionPolicy->Execute->Options) > 0)
-                return new Process(array_merge([$perl_bin, $pointer->FilePointer], $pointer->ExecutionPolicy->Execute->Options));
-            return new Process([$perl_bin, $pointer->FilePointer]);
         }
     }

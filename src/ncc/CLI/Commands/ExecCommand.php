@@ -4,9 +4,8 @@
 
     use Exception;
     use ncc\Managers\ExecutionPointerManager;
+    use ncc\Managers\PackageLockManager;
     use ncc\Objects\CliHelpSection;
-    use ncc\Objects\Package\ExecutionUnit;
-    use ncc\ThirdParty\Symfony\Process\Process;
     use ncc\Utilities\Console;
     use ncc\Utilities\Functions;
 
@@ -21,8 +20,9 @@
         public static function start($args): void
         {
             $package = $args['package'] ?? null;
-            $version = $args['version'] ?? 'latest';
-            $entry = $args['entry'] ?? null;
+            $version = $args['exec-version'] ?? 'latest';
+            $unit_name = $args['exec-unit'] ?? 'main';
+            $set_args = $args['exec-args'] ?? null;
 
             if($package == null)
             {
@@ -30,24 +30,32 @@
                 exit(0);
             }
 
-            $arguments = [];
-            $whitelist_arguments = [
-                'package',
-                'version',
-                'entry',
-                'help',
-            ];
-            foreach($args as $key => $value)
-            {
-                if(!in_array($key, $whitelist_arguments))
-                    $arguments[$key] = $value;
-            }
-
+            $package_lock_manager = new PackageLockManager();
             $execution_pointer_manager = new ExecutionPointerManager();
 
             try
             {
-                $units = $execution_pointer_manager->getUnits($package, $version);
+                $package_entry = $package_lock_manager->getPackageLock()->getPackage($package);
+            }
+            catch(Exception $e)
+            {
+                Console::outException('Package ' . $package . ' is not installed', $e, 1);
+                return;
+            }
+
+            try
+            {
+                $version_entry = $package_entry->getVersion($version);
+            }
+            catch(Exception $e)
+            {
+                Console::outException('Version ' . $version . ' is not installed', $e, 1);
+                return;
+            }
+
+            try
+            {
+                $units = $execution_pointer_manager->getUnits($package_entry->Name, $version_entry->Version);
             }
             catch(Exception $e)
             {
@@ -55,70 +63,30 @@
                 return;
             }
 
-            if(!isset($units[$entry]))
+            if(!in_array($unit_name, $units))
             {
-                Console::outError(sprintf('Cannot find execution point \'%s\' in package \'%s\'', $entry, $package), true, 1);
+                Console::outError(sprintf('Unit \'%s\' is not configured for package \'%s\'', $unit_name, $package), true, 1);
                 return;
             }
 
-            /** @var ExecutionUnit $exec_unit */
-            $exec_unit = $units[$entry];
-            $exec_path = '';
+            $options = [];
 
-            $process = new Process(array_merge([$exec_path], $arguments));
-            if($exec_unit->ExecutionPolicy->Execute->Pty !== null)
-                $process->setPty($exec_unit->ExecutionPolicy->Execute->Pty);
-
-            if($exec_unit->ExecutionPolicy->Execute->Tty !== null)
+            if($set_args != null)
             {
-                $process->setTty($exec_unit->ExecutionPolicy->Execute->Tty);
-                $process->setPty(false);
+                global $argv;
+                $args_index = array_search('--exec-args', $argv);
+                $options = array_slice($argv, $args_index + 1);
             }
 
-            if($exec_unit->ExecutionPolicy->Execute->WorkingDirectory !== null)
-                $process->setWorkingDirectory($exec_unit->ExecutionPolicy->Execute->WorkingDirectory);
-            if($exec_unit->ExecutionPolicy->Execute->EnvironmentVariables !== null)
-                $process->setEnv($exec_unit->ExecutionPolicy->Execute->EnvironmentVariables);
-            if($exec_unit->ExecutionPolicy->Execute->Timeout !== null)
-                $process->setTimeout($exec_unit->ExecutionPolicy->Execute->Timeout);
-            if($exec_unit->ExecutionPolicy->Execute->IdleTimeout !== null)
-                $process->setIdleTimeout($exec_unit->ExecutionPolicy->Execute->IdleTimeout);
-            if($exec_unit->ExecutionPolicy->Execute->Options !== null)
-                $process->setOptions($exec_unit->ExecutionPolicy->Execute->Options);
-
-            if($process->isTty() || $process->isPty())
+            try
             {
-                $process->start();
-                $process->wait();
+                exit($execution_pointer_manager->executeUnit($package_entry->Name, $version_entry->Version, $unit_name, $options));
             }
-            else
+            catch(Exception $e)
             {
-                $process->start();
-
-                while($process->isRunning())
-                {
-                    if($exec_unit->ExecutionPolicy->Execute->Silent)
-                    {
-                        $process->wait();
-                    }
-                    else
-                    {
-                        $process->waitUntil(function($type, $buffer)
-                        {
-                            if($type == Process::ERR)
-                            {
-                                Console::outError($buffer);
-                            }
-                            else
-                            {
-                                Console::out($buffer);
-                            }
-                        });
-                    }
-                }
+                Console::outException(sprintf('Cannot execute execution point \'%s\' in package \'%s\'', $unit_name, $package), $e, 1);
+                return;
             }
-
-            exit(0);
         }
 
         /**
@@ -131,8 +99,9 @@
             $options = [
                 new CliHelpSection(['help'], 'Displays this help menu about the value command'),
                 new CliHelpSection(['exec', '--package'], '(Required) The package to execute'),
-                new CliHelpSection(['--version'], '(default: latest) The version of the package to execute'),
-                new CliHelpSection(['--entry'], '(default: main) The entry point of the package to execute'),
+                new CliHelpSection(['--exec-version'], '(default: latest) The version of the package to execute'),
+                new CliHelpSection(['--exec-unit'], '(default: main) The unit point of the package to execute'),
+                new CliHelpSection(['--exec-args'], '(optional) Anything past this point will be passed to the execution unit'),
             ];
 
             $options_padding = Functions::detectParametersPadding($options) + 4;
@@ -148,8 +117,8 @@
             Console::out('   <arguments>   The arguments to pass to the program');
             Console::out(PHP_EOL . 'Example Usage:' . PHP_EOL);
             Console::out('   ncc exec --package com.example.program');
-            Console::out('   ncc exec --package com.example.program --version 1.0.0');
-            Console::out('   ncc exec --package com.example.program --version 1.0.0 --entry setup');
-            Console::out('   ncc exec --package com.example.program --foo --bar --extra=test');
+            Console::out('   ncc exec --package com.example.program --exec-version 1.0.0');
+            Console::out('   ncc exec --package com.example.program --exec-version 1.0.0 --unit setup');
+            Console::out('   ncc exec --package com.example.program --exec-args --foo --bar --extra=test');
         }
     }

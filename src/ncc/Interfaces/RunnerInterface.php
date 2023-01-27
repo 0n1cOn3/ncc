@@ -32,12 +32,4 @@
          */
         public static function getFileExtension(): string;
 
-        /**
-         * Prepares a process object for the execution pointer
-         *
-         * @param ExecutionPointer $pointer
-         * @return Process
-         * @throws RunnerExecutionException
-         */
-        public static function prepareProcess(ExecutionPointer $pointer): Process;
     }

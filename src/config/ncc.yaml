@@ -19,9 +19,6 @@ ncc:
 php:
   # The main executable path for PHP that NCC should use
   executable_path: "/usr/bin/php"
-  runtime:
-    # Whether to initialize NCC when running `require('ncc');`
-    initialize_on_require: true
 
 git:
   # if git is enabled or not

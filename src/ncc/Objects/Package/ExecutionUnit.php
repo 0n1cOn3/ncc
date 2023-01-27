@@ -55,6 +55,9 @@
             $object->ExecutionPolicy = Functions::array_bc($data, 'execution_policy');
             $object->Data = Functions::array_bc($data, 'data');
 
+            if($object->ExecutionPolicy !== null)
+                $object->ExecutionPolicy = ExecutionPolicy::fromArray($object->ExecutionPolicy);
+
             return $object;
         }
 
