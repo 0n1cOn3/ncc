@@ -174,7 +174,9 @@ the Makefile task will automatically rebuild the checksum file for you.
 
 # Uninstalling NCC
 
- - Uninstalling NCC is easy, simply delete the directory where ncc was installed to, by default this is `/etc/ncc`.
+Uninstalling NCC is easy, simply delete the directory where ncc was installed to, by default this is `/etc/ncc`.
+
+**Note:**
  - To delete all the data that ncc has created, you can also delete the `/var/ncc` directory.
  - Finally, remove the symlink that was created in `/usr/local/bin`to the `ncc` entry point file.
 
