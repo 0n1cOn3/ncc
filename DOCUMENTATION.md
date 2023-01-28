@@ -24,6 +24,14 @@ NCC, from basic installation, basic usage, standards and much more.
   * [project.json structure](#projectjson-structure)
     * [project](#project)
     * [project.compiler](#projectcompiler)
+    * [project.update_source](#projectupdatesource)
+* [Remote Sources](#remote-sources)
+  * [Supported sources](#supported-sources)
+  * [Default sources](#default-sources)
+  * [Managing sources](#managing-sources)
+    * [Adding a source](#adding-a-source)
+    * [Removing a source](#removing-a-source)
+    * [Listing sources](#listing-sources)
 * [Naming a package](#naming-a-package)
   * [Naming conventions](#naming-conventions)
   * [References](#references)
@@ -176,6 +184,9 @@ the Makefile task will automatically rebuild the checksum file for you.
 
 Uninstalling NCC is easy, simply delete the directory where ncc was installed to, by default this is `/etc/ncc`.
 
+It's recommended to run `ncc package --uninstall-all` before uninstalling ncc, this will uninstall all the packages
+that were installed using ncc and remove any artifacts that were created by these packages.
+
 **Note:**
  - To delete all the data that ncc has created, you can also delete the `/var/ncc` directory.
  - Finally, remove the symlink that was created in `/usr/local/bin`to the `ncc` entry point file.
@@ -247,6 +258,106 @@ the program.
 | minimum_version | `string` | No       | The minimum version of the compiler extension that the project requires to compile the program |
 | maximum_version | `string` | No       | The maximum version of the compiler extension that the project requires to compile the program |
 
+### project.update_source
+
+The `project.update_source` field contains information about the source where the program can fetch updates from.
+
+| Name | Type     | Required | Description                                               |
+|------|----------|----------|-----------------------------------------------------------|
+|source| `string` | Yes      | The source where the program can fetch updates from, see  |
+
+------------------------------------------------------------------------------------
+
+# Remote Sources
+
+Remote Sources are the locations where packages can be downloaded from, they are similar to repositories in other package
+managers. They follow a simple syntax that allows you to specify the type of source, the location of the source, and more.
+
+Examples of sources are:
+
+- `symfony/process=latest@composer` - This is a package from the `symfony/process` package from the `composer` source
+- `nosial/libs.config=latest@n64` - This is a package from the `nosial/libs.config` package from the `git.n64.cc` source
+
+A full example syntax may look like this:
+
+```
+<vendor>/<package>:<branch>=<version>@<source name>
+```
+
+This syntax is used to specify a package from a source, the syntax is split into 4 parts:
+
+- The vendor of the package
+- The name of the package
+- The branch of the package (optional)
+- The version of the package (optional)
+- The name of the source (needs to be configured in ncc)
+
+## Supported sources
+
+NCC supports the following sources:
+
+- `github` - This source uses the GitHub API to fetch packages from GitHub (Included in the default sources)
+- `gitlab` - This source uses the GitLab API to fetch packages from GitLab (Can be used with self-hosted GitLab instances)
+
+Additional support for other sources will be added in the future.
+
+## Default sources
+
+NCC comes with a few default sources that are configured by default, these sources are:
+
+- packagist.org (`composer`) **Note:** This is an internal source that uses `composer` to fetch packages from packagist.org.
+  this is not configurable by the user.
+- api.github.com (`github`)
+- gitlab.com (`gitlab`)
+- git.n64.cc (`n64`)
+- gitgud.io (`gitgud`)
+
+Additional sources can be added by the user. See [Adding a source](#adding-a-source) for more information.
+
+## Managing sources
+
+You can manage sources using the `source` command in the ncc command-line tool. This command can be used to add, remove,
+and list sources. For more information about the `source` command, you can run `ncc source --help` to display the help
+message.
+
+### Adding a source
+
+To add a source, you can use the `add` command in the ncc `source` command-line tool.
+
+```shell
+ncc source add --name "github" --type "github" --host "github.com" --ssl
+```
+
+This command will add a new source called `github` with the type `github` and the host `github.com`, the `--ssl` option
+will tell ncc to use HTTPS instead of HTTP when fetching packages from this source.
+
+The reason to specify the type of source is to tell ncc what API to use when fetching packages from this source, for
+example if you specify the type as `github` then ncc will use the GitHub API to fetch packages from this source so it's
+important to specify the correct type when adding a source.
+
+> **Note:** You need root permissions to add a source
+
+
+### Removing a source
+
+To remove a source, you can use the `remove` command in the ncc `source` command-line tool.
+
+```shell
+ncc source remove --name "github"
+```
+
+> **Note:** You need root permissions to remove a source
+
+> **Note:** Removing a source also removes the ability for some packages to be fetched or updated from this source
+
+
+### Listing sources
+
+To list all the sources, you can use the `list` command in the ncc `source` command-line tool.
+
+```shell
+ncc source list
+```
 
 ------------------------------------------------------------------------------------
 
