@@ -34,6 +34,8 @@ NCC, from basic installation, basic usage, standards and much more.
     * [Listing sources](#listing-sources)
   * [Credential Management](#credential-management)
     * [Adding credentials](#adding-credentials)
+    * [Removing credentials](#removing-credentials)
+    * [Listing credentials](#listing-credentials)
 * [Naming a package](#naming-a-package)
   * [Naming conventions](#naming-conventions)
   * [References](#references)
