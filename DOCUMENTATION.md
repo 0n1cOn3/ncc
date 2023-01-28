@@ -32,6 +32,8 @@ NCC, from basic installation, basic usage, standards and much more.
     * [Adding a source](#adding-a-source)
     * [Removing a source](#removing-a-source)
     * [Listing sources](#listing-sources)
+  * [Credential Management](#credential-management)
+    * [Adding credentials](#adding-credentials)
 * [Naming a package](#naming-a-package)
   * [Naming conventions](#naming-conventions)
   * [References](#references)
@@ -357,6 +359,62 @@ To list all the sources, you can use the `list` command in the ncc `source` comm
 
 ```shell
 ncc source list
+```
+
+## Credential Management
+
+Some sources require credentials to be able to fetch packages from them, for example the `gitlab` source requires
+credentials to be able to fetch packages from a self-hosted GitLab instance. NCC supports storing credentials for
+sources in a secure way using the `cred` command in the ncc command-line tool.
+
+### Adding credentials
+
+To add credentials for a source, you can use the `add` command in the ncc `cred` command-line tool.
+
+```shell
+ncc cred add --alias "My Alias" --auth-type login --username "myusername" --password "mypassword"
+```
+
+To add a private access token as a credential, you can specify the `--auth-type` as `pat` and specify the token as
+`--token` instead of providing `--username` and `--password`.
+
+```shell
+ncc cred add --alias "My Alias" --auth-type pat --token="mytoken"
+```
+
+By default, ncc will encrypt the entry except for the alias using the password/token that you provide.
+
+However, because it's encrypted you will need to provide the password/token when using the credential since ncc will
+not be able to decrypt the entry without a password. To avoid being asked for the password/token every time you use the
+credential, you can pass on the `--no-encryption` option to the `cred` command-line tool.
+
+```shell
+ncc cred add --alias "My Alias" --auth-type login --username "myusername" --password "mypassword" --no-encryption
+```
+
+Encryption is applied individually to each credential, so you can have some credentials encrypted and some not encrypted.
+
+> **Note:** You need root permissions to add credentials
+
+
+### Removing credentials
+
+To remove credentials, you can use the `remove` command in the ncc `cred` command-line tool.
+
+```shell
+ncc cred remove --alias "My Alias"
+```
+
+> **Note:** You need root permissions to remove credentials
+
+
+### Listing credentials
+
+To list all the credentials, you can use the `list` command in the ncc `cred` command-line tool. this will return
+a list of all the credentials that are stored in the credential store with additional information about each entry.
+
+```shell
+ncc cred list
 ```
 
 ------------------------------------------------------------------------------------
