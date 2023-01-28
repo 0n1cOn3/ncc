@@ -25,6 +25,8 @@ NCC, from basic installation, basic usage, standards and much more.
     * [project](#project)
     * [project.compiler](#projectcompiler)
     * [project.update_source](#projectupdatesource)
+    * [project.update_source.repository](#projectupdatesourcerepository)
+    * [assembly](#assembly)
 * [Remote Sources](#remote-sources)
   * [Supported sources](#supported-sources)
   * [Default sources](#default-sources)
@@ -36,6 +38,10 @@ NCC, from basic installation, basic usage, standards and much more.
     * [Adding credentials](#adding-credentials)
     * [Removing credentials](#removing-credentials)
     * [Listing credentials](#listing-credentials)
+* [UUIDs](#uuids)
+* [Versioning](#versioning)
+  * [Version Format](#version-format)
+  * [Version Format Compatibility](#version-format-compatibility)
 * [Naming a package](#naming-a-package)
   * [Naming conventions](#naming-conventions)
   * [References](#references)
@@ -266,9 +272,42 @@ the program.
 
 The `project.update_source` field contains information about the source where the program can fetch updates from.
 
-| Name | Type     | Required | Description                                               |
-|------|----------|----------|-----------------------------------------------------------|
-|source| `string` | Yes      | The source where the program can fetch updates from, see  |
+| Name       | Type                               | Required | Description                                                                                                           |
+|------------|------------------------------------|----------|-----------------------------------------------------------------------------------------------------------------------|
+| source     | `string`                           | Yes      | The source where the program can fetch updates from, see [Remote Sources](#remote-sources) for additional information |
+| repository | `project.update_source.repository` | Yes      | The source to configure in NCC when installing the package                                                            |
+
+### project.update_source.repository
+
+The `project.update_source.repository` field contains information about the source to configure in NCC when installing
+the package. This allows you to set up a remote source that your package can use to fetch updates from, this is useful
+if you want to distribute your program to other people.
+
+It would be useful to read more about [Remote Sources](#remote-sources) before continuing.
+
+| Name | Type     | Required | Description                                                                           |
+|------|----------|----------|---------------------------------------------------------------------------------------|
+| name | `string` | Yes      | The name of the source to configure in NCC when installing the package (eg; `github`) |
+| type | `string` | Yes      | The API type to use with this source, see [Supported sources](#supported-sources)     |
+| host | `string` | Yes      | The host of the source, this is the domain name of the source (eg; `api.github.com`)  |
+| ssl  | `bool`   | No       | Whether to use SSL or not when connecting to this source                              |
+
+
+### assembly
+
+The `assembly` field contains metadata about the program, such as the name, version, description, so on.
+
+| Name        | Type     | Required | Description                                                                                                                                                                                                  |
+|-------------|----------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name        | `string` | Yes      | The name of the package, this is used to display the name of the package (eg; `Example Program`)                                                                                                             |
+| package     | `string` | Yes      | The package name of the program, this is used to identify the package and to avoid conflicts with other packages that may have the same name, see [Package names](#package-names) for additional information |
+| description | `string` | No       | The description of the package, this is used to display a description of the package when installing                                                                                                         |
+| company     | `string` | No       | The company that created the package, this is used to display the company that created the package when installing                                                                                           |
+| product     | `string` | No       | The product that the package is a part of, this is used to display the product that the package is a part of when installing                                                                                 |
+| copyright   | `string` | No       | The copyright of the package                                                                                                                                                                                 |
+| trademark   | `string` | No       | The trademark of the package                                                                                                                                                                                 |
+| version     | `string` | Yes      | The version of the package, see [Versioning](#versioning) for additional information                                                                                                                         |
+| uuid        | `string` | No       | The UUID of the package, see [UUIDs](#uuids) for additional information                                                                                                                                      |
 
 ------------------------------------------------------------------------------------
 
@@ -418,6 +457,53 @@ a list of all the credentials that are stored in the credential store with addit
 ```shell
 ncc cred list
 ```
+
+------------------------------------------------------------------------------------
+
+# UUIDs
+
+UUIDs are used to uniquely identify a package, at the moment ncc doesn't do anything meaningful with UUIDs but in the
+future it will be used to identify packages and to prevent conflicts between packages with the same name.
+
+The standard UUID format used is version 1, which is a time-based UUID. This means that the UUID is generated using
+the current time and the MAC address of the computer that generated the UUID.
+
+``````
+xxxxxxxx-xxxx-1xxx-yxxx-xxxxxxxxxxxx
+``````
+
+UUIDs are automatically generated when a package is created, you can also manually specify a UUID by editing the
+`project.json` file in the project directory, this field is found under `assembly.uuid`, see [assembly](#assembly) for
+more information.
+
+> **Note:** Invalid UUIDs will cause the package to be rejected by ncc
+
+------------------------------------------------------------------------------------
+
+# Versioning
+
+NCC uses a standard versioning system, this system is based on the [Semantic Versioning](https://semver.org/) system.
+
+## Version Format
+
+The version format is as follows:
+
+``````
+MAJOR.MINOR.PATCH
+``````
+
+- `MAJOR` is the major version of the package, this version is incremented when a major change is made to the package
+- `MINOR` is the minor version of the package, this version is incremented when a minor change is made to the package
+- `PATCH` is the patch version of the package, this version is incremented when a patch is made to the package
+
+
+## Version Format Compatibility
+
+NCC will attempt to convert non-compatible versions to a compatible version when it comes to installing packages that
+isn't built for ncc.
+
+> **Note:** NCC will reject packages with invalid version numbers, sometimes this can happen when the compatibility layer
+fails or when the version number is invalid.
 
 ------------------------------------------------------------------------------------
 
