@@ -115,6 +115,27 @@
         }
 
         /**
+         * Returns the path to the execution pointer file
+         *
+         * @param string $package
+         * @param string $version
+         * @param string $name
+         * @return string
+         * @throws FileNotFoundException
+         */
+        public function getEntryPointPath(string $package, string $version, string $name): string
+        {
+            $package_id = $this->getPackageId($package, $version);
+            $package_bin_path = $this->RunnerPath . DIRECTORY_SEPARATOR . $package_id;
+            $entry_point_path = $package_bin_path . DIRECTORY_SEPARATOR . hash('haval128,4', $name) . '.entrypoint';
+
+            if(!file_exists($entry_point_path))
+                throw new FileNotFoundException('Cannot find entry point for ' . $package . '=' . $version . '.' . $name);
+
+            return $entry_point_path;
+        }
+
+        /**
          * Adds a new Execution Unit to the
          *
          * @param string $package
@@ -139,10 +160,12 @@
             $package_id = $this->getPackageId($package, $version);
             $package_config_path = $this->RunnerPath . DIRECTORY_SEPARATOR . $package_id . '.inx';
             $package_bin_path = $this->RunnerPath . DIRECTORY_SEPARATOR . $package_id;
+            $entry_point_path = $package_bin_path . DIRECTORY_SEPARATOR . hash('haval128,4', $unit->ExecutionPolicy->Name) . '.entrypoint';
 
             Console::outDebug(sprintf('package_id=%s', $package_id));
             Console::outDebug(sprintf('package_config_path=%s', $package_config_path));
             Console::outDebug(sprintf('package_bin_path=%s', $package_bin_path));
+            Console::outDebug(sprintf('entry_point_path=%s', $entry_point_path));
 
             $filesystem = new Filesystem();
 
@@ -183,6 +206,16 @@
             IO::fwrite($bin_file, $unit->Data);
             $execution_pointers->addUnit($unit, $bin_file);
             IO::fwrite($package_config_path, ZiProto::encode($execution_pointers->toArray(true)));
+
+            $entry_point = sprintf("#!%s\nncc exec --package=\"%s\" --exec-version=\"%s\" --exec-unit=\"%s\" --exec-args \"$@\"",
+                '/bin/bash',
+                $package, $version, $unit->ExecutionPolicy->Name
+            );
+
+            if(file_exists($entry_point_path))
+                $filesystem->remove($entry_point_path);
+            IO::fwrite($entry_point_path, $entry_point);
+            chmod($entry_point_path, 0755);
 
             if($temporary)
             {
@@ -333,10 +366,9 @@
                 }
             }
 
-            $process = new Process(array_merge([
-                PathFinder::findRunner(strtolower($unit->ExecutionPolicy->Runner)),
-                $unit->FilePointer
-            ], $args));
+            $process = new Process(array_merge(
+                [PathFinder::findRunner(strtolower($unit->ExecutionPolicy->Runner)), $unit->FilePointer], $args)
+            );
 
             if($unit->ExecutionPolicy->Execute->WorkingDirectory !== null)
             {

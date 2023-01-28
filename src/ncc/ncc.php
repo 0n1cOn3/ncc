@@ -2,6 +2,9 @@
 
     namespace ncc;
     
+    use ncc\Exceptions\AccessDeniedException;
+    use ncc\Exceptions\FileNotFoundException;
+    use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
     use ncc\Exceptions\RuntimeException;
     use ncc\Objects\NccVersionInformation;
@@ -34,8 +37,10 @@
          *
          * @param boolean $reload Indicates if the cached version is to be ignored and the version file to be reloaded and validated
          * @return NccVersionInformation
-         * @throws Exceptions\FileNotFoundException
-         * @throws Exceptions\RuntimeException
+         * @throws AccessDeniedException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws RuntimeException
          */
         public static function getVersionInformation(bool $reload=False): NccVersionInformation
         {

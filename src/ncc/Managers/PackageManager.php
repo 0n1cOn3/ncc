@@ -326,11 +326,14 @@
                 IO::fwrite($installation_paths->getDataPath() . DIRECTORY_SEPARATOR . 'exec', ZiProto::encode($unit_paths));
             }
 
+            // After execution units are installed, create a symlink if needed
             if(isset($package->Header->Options['create_symlink']) && $package->Header->Options['create_symlink'])
             {
-                $paths = [
-                    DIRECTORY_SEPARATOR . 'usr' . DIRECTORY_SEPARATOR . 'bin'
-                ];
+                if($package->MainExecutionPolicy === null)
+                    throw new InstallationException('Cannot create symlink, no main execution policy is defined');
+
+                $SymlinkManager = new SymlinkManager();
+                $SymlinkManager->add($package->Assembly->Package, $package->MainExecutionPolicy);
             }
 
             // Execute the post-installation stage after the installation is complete
@@ -847,6 +850,9 @@
                         Console::outDebug(sprintf('warning: removing execution unit %s failed', $executionUnit->ExecutionPolicy->Name));
                 }
             }
+
+            $symlink_manager = new SymlinkManager();
+            $symlink_manager->sync();
         }
 
         /**

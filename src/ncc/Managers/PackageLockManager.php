@@ -125,6 +125,17 @@
             {
                 throw new PackageLockException('Cannot save the package lock file to disk', $e);
             }
+
+            try
+            {
+                Console::outDebug('synchronizing symlinks');
+                $symlink_manager = new SymlinkManager();
+                $symlink_manager->sync();
+            }
+            catch(Exception $e)
+            {
+                throw new PackageLockException('Failed to synchronize symlinks', $e);
+            }
         }
 
         /**

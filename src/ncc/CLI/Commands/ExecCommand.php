@@ -118,7 +118,7 @@
             Console::out(PHP_EOL . 'Example Usage:' . PHP_EOL);
             Console::out('   ncc exec --package com.example.program');
             Console::out('   ncc exec --package com.example.program --exec-version 1.0.0');
-            Console::out('   ncc exec --package com.example.program --exec-version 1.0.0 --unit setup');
+            Console::out('   ncc exec --package com.example.program --exec-version 1.0.0 --exec-unit setup');
             Console::out('   ncc exec --package com.example.program --exec-args --foo --bar --extra=test');
         }
     }
