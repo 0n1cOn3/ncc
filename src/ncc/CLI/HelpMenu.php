@@ -106,7 +106,7 @@ namespace ncc\CLI;
             Console::out('Commands:');
             Console::outHelpSections([
                 new CliHelpSection(['build'], 'Builds the current project'),
-                new CliHelpSection(['main'], 'Executes the main entrypoint of a package')
+                new CliHelpSection(['exec'], 'Executes the main entrypoint of a package')
             ]);
         }
     }
