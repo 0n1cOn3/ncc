@@ -2,6 +2,8 @@
 
     namespace ncc\Abstracts;
 
+    use ncc\Exceptions\SymlinkException;
+
     /**
      * @author Zi Xing Narrakas
      * @copyright Copyright (C) 2022-2022. Nosial - All Rights Reserved.
@@ -349,6 +351,11 @@
         const InvalidDependencyConfiguration = -1767;
 
         /**
+         * @see SymlinkException
+         */
+        const SymlinkException = -1768;
+
+        /**
          * All the exception codes from NCC
          */
         const All = [
@@ -417,5 +424,6 @@
             self::PackageFetchException,
             self::InvalidBuildConfigurationException,
             self::InvalidDependencyConfiguration,
+            self::SymlinkException,
         ];
     }
