@@ -37,6 +37,9 @@ NCC, from basic installation, basic usage, standards and much more.
       * [execution_policy.exit_handlers](#executionpolicyexithandlers)
       * [exit_handler](#exithandler)
     * [installer](#installer)
+    * [build](#build)
+    * [dependency](#dependency)
+      * [Source Types](#source-types)
 * [Execution Policies](#execution-policies)
   * [Supported Runners](#supported-runners)
   * [Configuring Runners](#configuring-runners)
@@ -451,6 +454,50 @@ policy does not exist.
 | post_uninstall | `string[]` | No       | The execution policies to run after the uninstallation of the package.  |
 | pre_update     | `string[]` | No       | The execution policies to run before the update of the package.         |
 | post_update    | `string[]` | No       | The execution policies to run after the update of the package.          |
+
+
+### build
+
+The `build` field contains the configuration for the build process of the package. This field is required and must be
+configured correctly for the package to be built successfully.
+
+| Name                  | Type                    | Required | Description                                                                                                                |
+|-----------------------|-------------------------|----------|----------------------------------------------------------------------------------------------------------------------------|
+| source_path           | `string`                | Yes      | The path to the source directory of the package. (eg; src)                                                                 |
+| default_configuration | `string`                | Yes      | The default build configuration to use when building the package.                                                          |
+| exclude_files         | `string[]`              | No       | The files to exclude from the build process.                                                                               |
+| options               | `string[]`              | No       | The options to pass to the build process.                                                                                  |
+| main                  | `string`                | No       | The main execution policy to run when the package is executed, this is like the main entry point of the package.           |
+| define_constants      | `string[]`              | No       | Environment constants to define during the execution of your program, these values can be accessed by the NCC Runtime API. |
+| pre_build             | `string[]`              | No       | The execution policies to run before the build process.                                                                    |
+| post_build            | `string[]`              | No       | The execution policies to run after the build process.                                                                     |
+| dependencies          | `dependency[]`          | No       | The dependencies that the package requires                                                                                 |
+| configurations        | `build_configuration[]` | No       | Predefined build configurations that can be used to produce different builds of the package                                |
+
+### dependency
+
+The `dependency` object contains information about a dependency that the package requires.
+
+| Name        | Type     | Required | Description                                                                                                                                                               |
+|-------------|----------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name        | `string` | Yes      | The package name of the dependency (eg; com.example.package)                                                                                                              |
+| source_type | `string` | No       | Where NCC should get the dependency from, accepted values are `static`, `local` or `remote`. If not specified, NCC will assume `remote`.                                  |
+| source      | `string` | No       | The source of the dependency, this can a remote source (see [Remote Sources](#remote-sources)) if the source is `remote` or a a local file path if the source is `static` |
+| version     | `string` | No       | The version of the dependency to use, if not specified, NCC will use the latest version of the dependency. (eg; 'latest')                                                 |
+
+#### Source Types
+
+Dependency source types are used to specify where NCC should get the dependency from, these are:
+
+- `static` - This source type is used to specify that the dependency is a local file path, this is useful for dependencies
+that are not available on the remote package repository or to bundle dependencies with the package. You can only link to 
+pre-compiled .ncc packages, otherwise NCC will fail to install the package.
+- `local` - This source type is used to specify that the dependency is a local package that is already installed on the
+system. This is useful for dependencies that are already installed on the system, and you want to use them in your package
+but doesn't necessarily need to pull them from a remote repository or local path. NCC expects the package to be installed
+otherwise installing the package will fail unless `--skip-dependencies` is specified.
+- `remote` - This source type is used to specify that the dependency is a remote package that is available on the remote
+repository. This is the recommended source type to use for dependencies that are available on the remote repository.
 
 ------------------------------------------------------------------------------------
 
