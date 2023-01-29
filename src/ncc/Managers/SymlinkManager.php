@@ -7,7 +7,7 @@
     use Exception;
     use ncc\Abstracts\Scopes;
     use ncc\Exceptions\AccessDeniedException;
-    use ncc\Exceptions\IOException;
+    use ncc\Exceptions\SymlinkException;
     use ncc\Objects\SymlinkDictionary\SymlinkEntry;
     use ncc\ThirdParty\Symfony\Filesystem\Filesystem;
     use ncc\Utilities\Console;
@@ -65,7 +65,7 @@
          *
          * @return void
          * @throws AccessDeniedException
-         * @throws IOException
+         * @throws SymlinkException
          */
         public function load(): void
         {
@@ -110,7 +110,7 @@
          * @param bool $throw_exception
          * @return void
          * @throws AccessDeniedException
-         * @throws IOException
+         * @throws SymlinkException
          */
         private function save(bool $throw_exception=true): void
         {
@@ -132,7 +132,7 @@
             catch(Exception $e)
             {
                 if($throw_exception)
-                    throw new IOException(sprintf('failed to save symlink dictionary to %s', $this->SymlinkDictionaryPath), $e);
+                    throw new SymlinkException(sprintf('failed to save symlink dictionary to %s', $this->SymlinkDictionaryPath), $e);
 
                 Console::outWarning(sprintf('failed to save symlink dictionary to %s', $this->SymlinkDictionaryPath));
             }
@@ -182,7 +182,7 @@
          * @param string $unit
          * @return void
          * @throws AccessDeniedException
-         * @throws IOException
+         * @throws SymlinkException
          */
         public function add(string $package, string $unit='main'): void
         {
@@ -206,7 +206,7 @@
          * @param string $package
          * @return void
          * @throws AccessDeniedException
-         * @throws IOException
+         * @throws SymlinkException
          */
         public function remove(string $package): void
         {
@@ -229,7 +229,6 @@
 
                         if($filesystem->exists($symlink))
                             $filesystem->remove($symlink);
-
                     }
 
                     unset($this->SymlinkDictionary[$key]);
@@ -238,7 +237,7 @@
                 }
             }
 
-            throw new IOException(sprintf('failed to remove package %s from the symlink dictionary', $package));
+            throw new SymlinkException(sprintf('failed to remove package %s from the symlink dictionary', $package));
         }
 
         /**
@@ -247,7 +246,7 @@
          * @param string $package
          * @return void
          * @throws AccessDeniedException
-         * @throws IOException
+         * @throws SymlinkException
          */
         private function setAsRegistered(string $package): void
         {
@@ -269,7 +268,7 @@
          * @param string $package
          * @return void
          * @throws AccessDeniedException
-         * @throws IOException
+         * @throws SymlinkException
          */
         private function setAsUnregistered(string $package): void
         {
@@ -290,7 +289,7 @@
          *
          * @return void
          * @throws AccessDeniedException
-         * @throws IOException
+         * @throws SymlinkException
          */
         public function sync(): void
         {
