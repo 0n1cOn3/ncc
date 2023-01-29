@@ -40,6 +40,7 @@ namespace ncc\CLI\Management;
          *
          * @param $args
          * @return void
+         * @noinspection DuplicatedCode
          */
         public static function start($args): void
         {
@@ -209,7 +210,7 @@ namespace ncc\CLI\Management;
             $username = $args['username'] ?? $args['usr'] ?? null;
             $password = $args['password'] ?? $args['pwd'] ?? null;
             $token = $args['token'] ?? $args['pat'] ?? $args['private-token'] ?? null;
-            $encrypt = $args['encrypt'] ?? $args['encrypted'] ?? null;
+            $encrypt = !isset($args['no-encryption']);
 
             if($name === null)
                 $name = Console::getInput('Enter a name for the entry: ');
@@ -234,9 +235,6 @@ namespace ncc\CLI\Management;
             {
                 Console::outError('Invalid authentication type');
             }
-
-            if($encrypt === null)
-                $encrypt = Console::getBooleanInput('Encrypt entry with your password?');
 
             if($name === null)
             {
@@ -373,7 +371,7 @@ namespace ncc\CLI\Management;
             Console::outHelpSections([
                 new CliHelpSection(['--name'], 'The name of the entry'),
                 new CliHelpSection(['--auth-type', '--auth'], 'The type of authentication (login, pat)'),
-                new CliHelpSection(['--encrypted', '--encrypt'], 'Whether or not to encrypt the entry', true),
+                new CliHelpSection(['--no-encryption'], 'Omit encryption to the entry (By default it\'s encrypted)', true),
             ]);
 
             Console::out('   login authentication type options:');
@@ -392,8 +390,8 @@ namespace ncc\CLI\Management;
             Console::out('   pat' . PHP_EOL);
 
             Console::out('Examples:');
-            Console::out('   ncc cred add --alias "My Alias" --auth-type login --username "myusername" --password "mypassword" --encrypt');
-            Console::out('   ncc cred add --alias "My Alias" --auth-type pat --token "mytoken"');
+            Console::out('   ncc cred add --alias "My Alias" --auth-type login --username "myusername" --password "mypassword"');
+            Console::out('   ncc cred add --alias "My Alias" --auth-type pat --token "mytoken" --no-encryption');
             Console::out('   ncc cred remove --alias "My Alias"');
         }
     }
