@@ -25,7 +25,6 @@
     namespace ncc\Managers;
 
     use Exception;
-    use ncc\Abstracts\BuiltinRemoteSourceType;
     use ncc\Abstracts\CompilerExtensions;
     use ncc\Abstracts\ConstantReferences;
     use ncc\Abstracts\DependencySourceType;
@@ -52,8 +51,8 @@
     use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackageNotFoundException;
     use ncc\Exceptions\PackageParsingException;
+    use ncc\Exceptions\SymlinkException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
-    use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Exceptions\VersionNotFoundException;
     use ncc\Objects\DefinedRemoteSource;
     use ncc\Objects\InstallationPaths;
@@ -121,6 +120,7 @@
          * @throws UnsupportedRunnerException
          * @throws VersionNotFoundException
          * @throws InvalidPackageNameException
+         * @throws SymlinkException
          */
         public function install(string $package_path, ?Entry $entry=null, array $options=[]): string
         {
@@ -435,7 +435,7 @@
                 Console::outDebug('using builtin source ' . $input->Source);
                 switch($input->Source)
                 {
-                    case BuiltinRemoteSourceType::Composer:
+                    case 'composer':
                         try
                         {
                             return ComposerSourceBuiltin::fetch($input);
@@ -601,8 +601,8 @@
          * @throws PackageLockException
          * @throws PackageNotFoundException
          * @throws PackageParsingException
+         * @throws SymlinkException
          * @throws UnsupportedCompilerExtensionException
-         * @throws UnsupportedRunnerException
          * @throws VersionNotFoundException
          */
         private function processDependency(Dependency $dependency, Package $package, string $package_path, ?Entry $entry=null): void
@@ -814,6 +814,7 @@
          * @throws IOException
          * @throws PackageLockException
          * @throws PackageNotFoundException
+         * @throws SymlinkException
          * @throws VersionNotFoundException
          */
         public function uninstallPackageVersion(string $package, string $version): void
