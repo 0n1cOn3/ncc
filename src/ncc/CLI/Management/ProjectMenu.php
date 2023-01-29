@@ -26,13 +26,20 @@ namespace ncc\CLI\Management;
     use ncc\Abstracts\CompilerExtensionDefaultVersions;
     use ncc\Abstracts\CompilerExtensions;
     use ncc\Abstracts\CompilerExtensionSupportedVersions;
+    use ncc\Exceptions\AccessDeniedException;
+    use ncc\Exceptions\DirectoryNotFoundException;
+    use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\InvalidPackageNameException;
     use ncc\Exceptions\InvalidProjectNameException;
+    use ncc\Exceptions\IOException;
+    use ncc\Exceptions\MalformedJsonException;
     use ncc\Exceptions\ProjectAlreadyExistsException;
+    use ncc\Exceptions\ProjectConfigurationNotFoundException;
     use ncc\Managers\ProjectManager;
     use ncc\Objects\CliHelpSection;
     use ncc\Objects\ProjectConfiguration\Compiler;
     use ncc\Utilities\Console;
+    use ncc\Utilities\Functions;
 
     class ProjectMenu
     {
@@ -41,6 +48,12 @@ namespace ncc\CLI\Management;
          *
          * @param $args
          * @return void
+         * @throws AccessDeniedException
+         * @throws DirectoryNotFoundException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws MalformedJsonException
+         * @throws ProjectConfigurationNotFoundException
          */
         public static function start($args): void
         {
@@ -50,13 +63,17 @@ namespace ncc\CLI\Management;
             }
 
             self::displayOptions();
-            exit(0);
-
         }
 
         /**
          * @param $args
          * @return void
+         * @throws AccessDeniedException
+         * @throws DirectoryNotFoundException
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws MalformedJsonException
+         * @throws ProjectConfigurationNotFoundException
          */
         public static function createProject($args): void
         {
@@ -93,7 +110,7 @@ namespace ncc\CLI\Management;
             }
 
             // Remove basename from real_src
-            $real_src = \ncc\Utilities\Functions::removeBasename($real_src, $current_directory);
+            $real_src = Functions::removeBasename($real_src, $current_directory);
 
             // Fetch the rest of the information needed for the project
             //$compiler_extension = Console::getOptionInput($args, 'ce', 'Compiler Extension (php, java): ');
@@ -242,7 +259,7 @@ namespace ncc\CLI\Management;
                 new CliHelpSection(['create-makefile'], 'Generates a Makefile for the project'),
             ];
 
-            $options_padding = \ncc\Utilities\Functions::detectParametersPadding($options) + 4;
+            $options_padding = Functions::detectParametersPadding($options) + 4;
 
             Console::out('Usage: ncc project {command} [options]');
             Console::out('Options:' . PHP_EOL);

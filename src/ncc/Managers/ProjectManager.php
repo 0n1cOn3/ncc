@@ -40,7 +40,6 @@
     use ncc\Exceptions\ProjectAlreadyExistsException;
     use ncc\Exceptions\ProjectConfigurationNotFoundException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
-    use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Objects\ProjectConfiguration;
     use ncc\Objects\ProjectConfiguration\Compiler;
     use ncc\ThirdParty\Symfony\Uid\Uuid;
@@ -192,14 +191,10 @@
             // Process options
             foreach($options as $option)
             {
-                switch($option)
-                {
-                    case InitializeProjectOptions::CREATE_SOURCE_DIRECTORY:
-                        if(!file_exists($this->ProjectConfiguration->Build->SourcePath))
-                        {
-                            mkdir($this->ProjectConfiguration->Build->SourcePath);
-                        }
-                        break;
+                if ($option == InitializeProjectOptions::CREATE_SOURCE_DIRECTORY) {
+                    if (!file_exists($this->ProjectConfiguration->Build->SourcePath)) {
+                        mkdir($this->ProjectConfiguration->Build->SourcePath);
+                    }
                 }
             }
         }
@@ -227,7 +222,7 @@
          * @throws FileNotFoundException
          * @throws IOException
          */
-        public function load()
+        public function load(): void
         {
             if(!file_exists($this->ProjectFilePath) && !is_file($this->ProjectFilePath))
                 throw new ProjectConfigurationNotFoundException('The project configuration file \'' . $this->ProjectFilePath . '\' was not found');
@@ -241,7 +236,7 @@
          * @return void
          * @throws MalformedJsonException
          */
-        public function save()
+        public function save(): void
         {
             if(!$this->projectLoaded())
                 return;
@@ -294,7 +289,6 @@
          * @throws BuildException
          * @throws PackagePreparationFailedException
          * @throws UnsupportedCompilerExtensionException
-         * @throws UnsupportedRunnerException
          */
         public function build(string $build_configuration=BuildConfigurationValues::DefaultConfiguration): string
         {

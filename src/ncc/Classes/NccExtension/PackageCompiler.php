@@ -39,9 +39,9 @@ namespace ncc\Classes\NccExtension;
     use ncc\Exceptions\MalformedJsonException;
     use ncc\Exceptions\PackagePreparationFailedException;
     use ncc\Exceptions\ProjectConfigurationNotFoundException;
+    use ncc\Exceptions\RunnerExecutionException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\UnsupportedProjectTypeException;
-    use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Interfaces\CompilerInterface;
     use ncc\Managers\ProjectManager;
     use ncc\ncc;
@@ -70,7 +70,6 @@ namespace ncc\Classes\NccExtension;
          * @throws PackagePreparationFailedException
          * @throws ProjectConfigurationNotFoundException
          * @throws UnsupportedCompilerExtensionException
-         * @throws UnsupportedRunnerException
          */
         public static function compile(ProjectManager $manager, string $build_configuration=BuildConfigurationValues::DefaultConfiguration): string
         {
@@ -162,7 +161,7 @@ namespace ncc\Classes\NccExtension;
          * @throws AccessDeniedException
          * @throws FileNotFoundException
          * @throws IOException
-         * @throws UnsupportedRunnerException
+         * @throws RunnerExecutionException
          */
         public static function compileExecutionPolicies(string $path, ProjectConfiguration $configuration): array
         {

@@ -61,7 +61,7 @@ namespace ncc\ZiProto;
         {
             $self = new self();
 
-            $self->bigIntMode = self::getSingleOption('bigint', $bitmask,
+            $self->bigIntMode = self::getSingleOption($bitmask,
                 Options::BIGINT_AS_STR |
                 Options::BIGINT_AS_GMP |
                 Options::BIGINT_AS_EXCEPTION
@@ -87,12 +87,11 @@ namespace ncc\ZiProto;
         }
 
         /**
-         * @param string $name
          * @param int $bitmask
          * @param int $validBitmask
          * @return int
          */
-        private static function getSingleOption(string $name, int $bitmask, int $validBitmask) : int
+        private static function getSingleOption(int $bitmask, int $validBitmask) : int
         {
             $option = $bitmask & $validBitmask;
             if ($option === ($option & -$option))
@@ -112,6 +111,6 @@ namespace ncc\ZiProto;
                 $validOptions[] = __CLASS__.'::'.$map[$i];
             }
 
-            throw InvalidOptionException::outOfRange($name, $validOptions);
+            throw InvalidOptionException::outOfRange('bigint', $validOptions);
         }
     }

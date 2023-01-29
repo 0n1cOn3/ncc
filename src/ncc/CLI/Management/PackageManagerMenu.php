@@ -555,7 +555,6 @@ namespace ncc\CLI\Management;
 
             $version_entry = null;
             if($version_entry !== null && $package_entry !== null)
-                /** @noinspection PhpUnhandledExceptionInspection */
                 /** @noinspection PhpRedundantOptionalArgumentInspection */
                 $version_entry = $package_entry->getVersion($version_entry, false);
 

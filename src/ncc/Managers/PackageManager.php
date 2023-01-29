@@ -51,6 +51,7 @@
     use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackageNotFoundException;
     use ncc\Exceptions\PackageParsingException;
+    use ncc\Exceptions\RunnerExecutionException;
     use ncc\Exceptions\SymlinkException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
     use ncc\Exceptions\VersionNotFoundException;
@@ -109,6 +110,7 @@
          * @throws FileNotFoundException
          * @throws IOException
          * @throws InstallationException
+         * @throws InvalidPackageNameException
          * @throws InvalidScopeException
          * @throws MissingDependencyException
          * @throws NotImplementedException
@@ -116,11 +118,10 @@
          * @throws PackageLockException
          * @throws PackageNotFoundException
          * @throws PackageParsingException
-         * @throws UnsupportedCompilerExtensionException
-         * @throws UnsupportedRunnerException
-         * @throws VersionNotFoundException
-         * @throws InvalidPackageNameException
+         * @throws RunnerExecutionException
          * @throws SymlinkException
+         * @throws UnsupportedCompilerExtensionException
+         * @throws VersionNotFoundException
          */
         public function install(string $package_path, ?Entry $entry=null, array $options=[]): string
         {
@@ -604,6 +605,7 @@
          * @throws SymlinkException
          * @throws UnsupportedCompilerExtensionException
          * @throws VersionNotFoundException
+         * @throws RunnerExecutionException
          */
         private function processDependency(Dependency $dependency, Package $package, string $package_path, ?Entry $entry=null): void
         {
@@ -930,7 +932,7 @@
                 $paths->getDataPath() . DIRECTORY_SEPARATOR . 'assembly' =>
                     ZiProto::encode($package->Assembly->toArray(true)),
                 $paths->getDataPath() . DIRECTORY_SEPARATOR . 'ext' =>
-                    ZiProto::encode($package->Header->CompilerExtension->toArray(true)),
+                    ZiProto::encode($package->Header->CompilerExtension->toArray()),
                 $paths->getDataPath() . DIRECTORY_SEPARATOR . 'const' =>
                     ZiProto::encode($package->Header->RuntimeConstants),
                 $paths->getDataPath() . DIRECTORY_SEPARATOR . 'dependencies' =>

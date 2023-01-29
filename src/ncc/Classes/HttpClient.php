@@ -191,14 +191,11 @@ namespace ncc\Classes;
         /**
          * Displays the download progress in the console
          *
-         * @param $resource
          * @param $downloadSize
          * @param $downloaded
-         * @param $uploadSize
-         * @param $uploaded
          * @return void
          */
-        public static function displayProgress($resource, $downloadSize, $downloaded, $uploadSize, $uploaded): void
+        public static function displayProgress($downloadSize, $downloaded): void
         {
             if(Main::getLogLevel() !== null)
             {
@@ -223,7 +220,7 @@ namespace ncc\Classes;
         /**
          * Takes the return headers of a cURL request and parses them into an array.
          *
-         * @param string $headers
+         * @param string $input
          * @return array
          */
         private static function parseHeaders(string $input): array

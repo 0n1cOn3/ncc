@@ -20,8 +20,7 @@
  *
  */
 
-    /** @noinspection PhpPropertyOnlyWrittenInspection */
-    /** @noinspection PhpMissingFieldTypeInspection */
+/** @noinspection PhpMissingFieldTypeInspection */
 
     namespace ncc\Managers;
 

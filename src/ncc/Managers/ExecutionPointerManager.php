@@ -36,13 +36,11 @@
     use ncc\Classes\PythonExtension\Python3Runner;
     use ncc\Classes\PythonExtension\PythonRunner;
     use ncc\Exceptions\AccessDeniedException;
-    use ncc\Exceptions\ExecutionUnitNotFoundException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\NoAvailableUnitsException;
     use ncc\Exceptions\RunnerExecutionException;
-    use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Objects\ExecutionPointers;
     use ncc\Objects\Package;
     use ncc\Objects\Package\ExecutionUnit;
@@ -166,9 +164,8 @@
          * @throws AccessDeniedException
          * @throws FileNotFoundException
          * @throws IOException
-         * @throws UnsupportedRunnerException
+         * @throws RunnerExecutionException
          * @noinspection PhpUnused
-         * @noinspection DuplicatedCode
          */
         public function addUnit(string $package, string $version, ExecutionUnit $unit, bool $temporary=false): void
         {
@@ -209,7 +206,7 @@
                 Runners::python2 => Python2Runner::getFileExtension(),
                 Runners::python3 => Python3Runner::getFileExtension(),
                 Runners::lua => LuaRunner::getFileExtension(),
-                default => throw new UnsupportedRunnerException('The runner \'' . $unit->ExecutionPolicy->Runner . '\' is not supported'),
+                default => throw new RunnerExecutionException('The runner \'' . $unit->ExecutionPolicy->Runner . '\' is not supported'),
             };
 
             Console::outDebug(sprintf('bin_file=%s', $bin_file));
@@ -258,7 +255,6 @@
          * @throws AccessDeniedException
          * @throws FileNotFoundException
          * @throws IOException
-         * @noinspection DuplicatedCode
          */
         public function removeUnit(string $package, string $version, string $name): bool
         {
@@ -347,12 +343,10 @@
          * @param array $args
          * @return int
          * @throws AccessDeniedException
-         * @throws ExecutionUnitNotFoundException
          * @throws FileNotFoundException
          * @throws IOException
          * @throws NoAvailableUnitsException
          * @throws RunnerExecutionException
-         * @throws UnsupportedRunnerException
          */
         public function executeUnit(string $package, string $version, string $name, array $args=[]): int
         {
@@ -368,7 +362,7 @@
             $unit = $execution_pointers->getUnit($name);
 
             if($unit == null)
-                throw new ExecutionUnitNotFoundException('The execution unit \'' . $name . '\' was not found for \'' . $package . '=' .$version .'\'');
+                throw new RunnerExecutionException('The execution unit \'' . $name . '\' was not found for \'' . $package . '=' .$version .'\'');
 
             Console::outDebug(sprintf('unit=%s', $unit->ExecutionPolicy->Name));
             Console::outDebug(sprintf('runner=%s', $unit->ExecutionPolicy->Runner));
@@ -470,12 +464,10 @@
          * @param string $unit_name
          * @return void
          * @throws AccessDeniedException
-         * @throws ExecutionUnitNotFoundException
          * @throws FileNotFoundException
          * @throws IOException
          * @throws NoAvailableUnitsException
          * @throws RunnerExecutionException
-         * @throws UnsupportedRunnerException
          */
         public function temporaryExecute(Package $package, string $unit_name): void
         {
@@ -522,12 +514,10 @@
          * @param Process|null $process
          * @return bool
          * @throws AccessDeniedException
-         * @throws ExecutionUnitNotFoundException
          * @throws FileNotFoundException
          * @throws IOException
          * @throws NoAvailableUnitsException
          * @throws RunnerExecutionException
-         * @throws UnsupportedRunnerException
          */
         public function handleExit(string $package, string $version, ExitHandle $exitHandle, ?Process $process=null): bool
         {

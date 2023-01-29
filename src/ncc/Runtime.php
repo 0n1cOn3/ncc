@@ -174,7 +174,7 @@
             $package = self::getPackageManager()->getPackage($package);
 
             if($package == null)
-                throw new PackageNotFoundException(sprintf('Package %s not found', $package));
+                throw new PackageNotFoundException('Package not found (null entry error, possible bug)');
 
             return $package->getDataPath();
         }

@@ -283,28 +283,6 @@
         }
 
         /**
-         * Sets the package as unregistered
-         *
-         * @param string $package
-         * @return void
-         * @throws AccessDeniedException
-         * @throws SymlinkException
-         */
-        private function setAsUnregistered(string $package): void
-        {
-            foreach($this->SymlinkDictionary as $key => $entry)
-            {
-                if($entry->Package === $package)
-                {
-                    $entry->Registered = false;
-                    $this->SymlinkDictionary[$key] = $entry;
-                    $this->save();
-                    return;
-                }
-            }
-        }
-
-        /**
          * Syncs the symlink dictionary with the filesystem
          *
          * @return void

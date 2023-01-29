@@ -288,15 +288,13 @@
          *
          * @param string $src
          * @param string $output
-         * @param bool $ignore_units
          * @return string
          * @throws AccessDeniedException
          * @throws CollectorException
          * @throws FileNotFoundException
          * @throws IOException
-         * @throws NoUnitsFoundException
          */
-        private function generateAutoload(string $src, string $output, bool $ignore_units=true): string
+        private function generateAutoload(string $src, string $output): string
         {
             // Construct configuration
             $configuration = new Config([$src]);
@@ -317,10 +315,6 @@
             $result = self::runCollector($factory, $configuration);
 
             // Exception raises when there are no files in the project that can be processed by the autoloader
-            if(!$result->hasUnits() && !$ignore_units)
-            {
-                throw new NoUnitsFoundException('No units were found in the project');
-            }
 
             $template = IO::fread($configuration->getTemplate());
 

@@ -145,10 +145,9 @@
         /**
          * Returns an array representation of the object
          *
-         * @param bool $bytecode
          * @return array
          */
-        public function toArray(bool $bytecode=false): array
+        public function toArray(): array
         {
             $return_results = [];
             if($this->Extension !== null && strlen($this->Extension) > 0)

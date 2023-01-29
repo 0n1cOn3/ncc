@@ -20,10 +20,7 @@
  *
  */
 
-    /** @noinspection PhpPropertyOnlyWrittenInspection */
-    /** @noinspection PhpMissingFieldTypeInspection */
-
-    namespace ncc\Exceptions;
+namespace ncc\Exceptions;
 
     use Exception;
     use ncc\Abstracts\ExceptionCodes;

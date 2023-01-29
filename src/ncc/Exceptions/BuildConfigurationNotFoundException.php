@@ -20,9 +20,7 @@
  *
  */
 
-    /** @noinspection PhpPropertyOnlyWrittenInspection */
-
-    namespace ncc\Exceptions;
+namespace ncc\Exceptions;
 
     use Exception;
     use ncc\Abstracts\ExceptionCodes;

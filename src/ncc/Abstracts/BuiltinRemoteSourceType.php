@@ -20,20 +20,18 @@
  *
  */
 
-namespace ncc\Exceptions;
+    namespace ncc\Abstracts;
 
-    use Exception;
-    use ncc\Abstracts\ExceptionCodes;
-    use Throwable;
-
-    class PackageNotFoundException extends Exception
+    class BuiltinRemoteSourceType
     {
         /**
-         * @param string $message
-         * @param Throwable|null $previous
+         * The remote source indicates the package is to be
+         * fetched using the composer utility.
          */
-        public function __construct(string $message = "", ?Throwable $previous = null)
-        {
-            parent::__construct($message, ExceptionCodes::PackageNotFoundException, $previous);
-        }
+        const Composer = 'composer';
+
+
+        const All = [
+            self::Composer
+        ];
     }

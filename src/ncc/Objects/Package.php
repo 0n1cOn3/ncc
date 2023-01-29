@@ -129,7 +129,7 @@
          * @param Dependency $dependency
          * @return void
          */
-        public function addDependency(Dependency $dependency)
+        public function addDependency(Dependency $dependency): void
         {
             foreach($this->Dependencies as $dep)
             {
@@ -149,7 +149,7 @@
          * @param string $name
          * @return void
          */
-        private function removeDependency(string $name)
+        private function removeDependency(string $name): void
         {
             foreach($this->Dependencies as $key => $dep)
             {

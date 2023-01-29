@@ -114,7 +114,7 @@ namespace ncc\Objects;
          */
         public function setValue(string $value, bool $readonly=false): void
         {
-            if($this->Readonly == true)
+            if($this->Readonly)
             {
                 throw new ConstantReadonlyException('Cannot set value to the constant \'' .  $this->getFullName() .  '\', constant is readonly');
             }

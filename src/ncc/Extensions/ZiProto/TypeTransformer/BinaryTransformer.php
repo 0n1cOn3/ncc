@@ -34,7 +34,7 @@ namespace ncc\ncc\ZiProto\TypeTransformer;
         /**
          * @param Packet $packer
          * @param $value
-         * @return string
+         * @return string|null
          */
         public function pack(Packet $packer, $value): ?string
         {

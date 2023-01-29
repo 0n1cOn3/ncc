@@ -48,7 +48,6 @@ namespace ncc\Classes\ComposerExtension;
     use ncc\Exceptions\ProjectConfigurationNotFoundException;
     use ncc\Exceptions\RuntimeException;
     use ncc\Exceptions\UnsupportedCompilerExtensionException;
-    use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Exceptions\UserAbortedOperationException;
     use ncc\Interfaces\ServiceSourceInterface;
     use ncc\Managers\ProjectManager;
@@ -99,7 +98,6 @@ namespace ncc\Classes\ComposerExtension;
          * @throws ProjectConfigurationNotFoundException
          * @throws RuntimeException
          * @throws UnsupportedCompilerExtensionException
-         * @throws UnsupportedRunnerException
          * @throws UserAbortedOperationException
          */
         public static function fetch(RemotePackageInput $packageInput): string
@@ -138,7 +136,6 @@ namespace ncc\Classes\ComposerExtension;
          * @throws PackagePreparationFailedException
          * @throws ProjectConfigurationNotFoundException
          * @throws UnsupportedCompilerExtensionException
-         * @throws UnsupportedRunnerException
          * @throws UserAbortedOperationException
          */
         public static function fromLocal(string $path): string
@@ -196,7 +193,6 @@ namespace ncc\Classes\ComposerExtension;
          * @throws PackagePreparationFailedException
          * @throws ProjectConfigurationNotFoundException
          * @throws UnsupportedCompilerExtensionException
-         * @throws UnsupportedRunnerException
          */
         private static function compilePackages(string $composer_lock_path): array
         {

@@ -210,8 +210,11 @@ namespace ncc\ZiProto;
                 case 0xc3: return true;
 
                 // bin
+                case 0xd9:
                 case 0xc4: return $this->decodeStrData($this->decodeUint8());
+                case 0xda:
                 case 0xc5: return $this->decodeStrData($this->decodeUint16());
+                case 0xdb:
                 case 0xc6: return $this->decodeStrData($this->decodeUint32());
 
                 // float
@@ -231,9 +234,6 @@ namespace ncc\ZiProto;
                 case 0xd3: return $this->decodeInt64();
 
                 // str
-                case 0xd9: return $this->decodeStrData($this->decodeUint8());
-                case 0xda: return $this->decodeStrData($this->decodeUint16());
-                case 0xdb: return $this->decodeStrData($this->decodeUint32());
 
                 // array
                 case 0xdc: return $this->decodeArrayData($this->decodeUint16());
@@ -372,7 +372,7 @@ namespace ncc\ZiProto;
         }
 
         /**
-         * @return bool|string
+         * @return string
          */
         public function decodeStr()
         {
@@ -408,7 +408,7 @@ namespace ncc\ZiProto;
         }
 
         /**
-         * @return bool|string
+         * @return string
          */
         public function decodeBin()
         {

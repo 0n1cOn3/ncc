@@ -20,14 +20,13 @@
  *
  */
 
-    /** @noinspection PhpPropertyOnlyWrittenInspection */
+namespace ncc\Exceptions;
 
-    namespace ncc\Exceptions;
-
+    use Exception;
     use ncc\Abstracts\ExceptionCodes;
     use Throwable;
 
-    class ComposerDisabledException extends \Exception
+    class ComposerDisabledException extends Exception
     {
         /**
          * @param string $message

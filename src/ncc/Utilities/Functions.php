@@ -47,8 +47,8 @@ namespace ncc\Utilities;
     use ncc\Exceptions\InvalidScopeException;
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\MalformedJsonException;
+    use ncc\Exceptions\RunnerExecutionException;
     use ncc\Exceptions\UnsupportedArchiveException;
-    use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Managers\ConfigurationManager;
     use ncc\Managers\CredentialManager;
     use ncc\Managers\PackageLockManager;
@@ -298,10 +298,10 @@ namespace ncc\Utilities;
          * @param string $path
          * @param ExecutionPolicy $policy
          * @return ExecutionUnit
-         * @throws UnsupportedRunnerException
          * @throws AccessDeniedException
          * @throws FileNotFoundException
          * @throws IOException
+         * @throws RunnerExecutionException
          */
         public static function compileRunner(string $path, ExecutionPolicy $policy): ExecutionUnit
         {
@@ -313,7 +313,7 @@ namespace ncc\Utilities;
                 Runners::python2 => Python2Runner::processUnit($path, $policy),
                 Runners::python3 => Python3Runner::processUnit($path, $policy),
                 Runners::lua => LuaRunner::processUnit($path, $policy),
-                default => throw new UnsupportedRunnerException('The runner \'' . $policy->Runner . '\' is not supported'),
+                default => throw new RunnerExecutionException('The runner \'' . $policy->Runner . '\' is not supported'),
             };
         }
 
@@ -676,21 +676,13 @@ namespace ncc\Utilities;
             if (!in_array($mimeType, $supportedTypes))
                 throw new UnsupportedArchiveException("Unsupported archive type: $mimeType");
 
-            switch($mimeType)
-            {
-                case 'application/zip':
-                    $command = [$unzip_executable, $path, '-d', $out_path];
-                    break;
-                case 'application/x-tar':
-                    $command = [$tar_executable, '--verbose', '-xf', $path, '-C', $out_path];
-                    break;
-                case 'application/x-gzip':
-                    $command = [$tar_executable, '--verbose', '-xzf', $path, '-C', $out_path];
-                    break;
-                case 'application/x-bzip2':
-                    $command = [$tar_executable, '--verbose', '-xjf', $path, '-C', $out_path];
-                    break;
-            }
+            $command = match ($mimeType) {
+                'application/zip' => [$unzip_executable, $path, '-d', $out_path],
+                'application/x-tar' => [$tar_executable, '--verbose', '-xf', $path, '-C', $out_path],
+                'application/x-gzip' => [$tar_executable, '--verbose', '-xzf', $path, '-C', $out_path],
+                'application/x-bzip2' => [$tar_executable, '--verbose', '-xjf', $path, '-C', $out_path],
+                default => throw new UnsupportedArchiveException("Unsupported archive type: $mimeType"),
+            };
 
             Console::out("Extracting archive $path");
             $process = new Process($command);
@@ -746,7 +738,6 @@ namespace ncc\Utilities;
                 $minor = (string)null;
                 $patch = (string)null;
 
-                $buildmetadata = (string)null;
                 if(count($parts) >= 1)
                     $major = $parts[0];
                 if(count($parts) >= 2)
@@ -945,7 +936,7 @@ namespace ncc\Utilities;
          * @param string $input
          * @return float|int|mixed|string
          */
-        public static function stringTypeCast(string $input)
+        public static function stringTypeCast(string $input): mixed
         {
             if (is_numeric($input))
             {
@@ -969,7 +960,7 @@ namespace ncc\Utilities;
          * @return void
          * @throws InvalidScopeException
          */
-        public static function finalizePermissions()
+        public static function finalizePermissions(): void
         {
             if(Resolver::resolveScope() !== Scopes::System)
                 return;

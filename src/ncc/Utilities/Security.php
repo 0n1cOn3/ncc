@@ -48,8 +48,7 @@ namespace ncc\Utilities;
             if ($beautify) $input = self::beautifyFilename($input);
             // maximize filename length to 255 bytes http://serverfault.com/a/9548/44086
             $ext = pathinfo($input, PATHINFO_EXTENSION);
-            $input = mb_strcut(pathinfo($input, PATHINFO_FILENAME), 0, 255 - ($ext ? strlen($ext) + 1 : 0), mb_detect_encoding($input)) . ($ext ? '.' . $ext : '');
-            return $input;
+            return mb_strcut(pathinfo($input, PATHINFO_FILENAME), 0, 255 - ($ext ? strlen($ext) + 1 : 0), mb_detect_encoding($input)) . ($ext ? '.' . $ext : '');
         }
 
         /**
@@ -77,8 +76,6 @@ namespace ncc\Utilities;
             // lowercase for windows/unix interoperability http://support.microsoft.com/kb/100625
             $input = mb_strtolower($input, mb_detect_encoding($input));
             // ".file-name.-" becomes "file-name"
-            $input = trim($input, '.-');
-
-            return $input;
+            return trim($input, '.-');
         }
     }

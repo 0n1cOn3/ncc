@@ -34,7 +34,9 @@
     use ncc\CLI\Management\PackageManagerMenu;
     use ncc\CLI\Management\ProjectMenu;
     use ncc\CLI\Management\SourcesMenu;
+    use ncc\Exceptions\AccessDeniedException;
     use ncc\Exceptions\FileNotFoundException;
+    use ncc\Exceptions\IOException;
     use ncc\Exceptions\RuntimeException;
     use ncc\ncc;
     use ncc\Utilities\Console;
@@ -60,6 +62,8 @@
          * @param $argv
          * @return void
          * @throws RuntimeException
+         * @throws AccessDeniedException
+         * @throws IOException
          */
         public static function start($argv): void
         {
@@ -112,7 +116,6 @@
                 if(Resolver::checkLogLevel(self::$log_level, LogLevel::Debug))
                 {
                     Console::outDebug('Debug logging enabled');
-                    /** @noinspection PhpUnhandledExceptionInspection */
                     Console::outDebug(sprintf('const: %s', json_encode(ncc::getConstants(), JSON_UNESCAPED_SLASHES)));
                     Console::outDebug(sprintf('args: %s', json_encode(self::$args, JSON_UNESCAPED_SLASHES)));
                 }

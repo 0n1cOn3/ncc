@@ -66,10 +66,9 @@
         public $ExitHandlers;
 
         /**
-         * @param bool $throw_exception
          * @return bool
          */
-        public function validate(bool $throw_exception=True): bool
+        public function validate(): bool
         {
             // TODO: Implement validation method
             return true;

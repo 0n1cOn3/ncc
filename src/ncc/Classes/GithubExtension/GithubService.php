@@ -204,8 +204,7 @@ namespace ncc\Classes\GithubExtension;
             if ($response->StatusCode != 200)
                 throw new GithubServiceException(sprintf('Failed to fetch releases for the given repository. Status code: %s', $response->StatusCode));
 
-            $response_decoded = Functions::loadJson($response->Body, Functions::FORCE_ARRAY);
-            return $response_decoded;
+            return Functions::loadJson($response->Body, Functions::FORCE_ARRAY);
         }
 
         /**

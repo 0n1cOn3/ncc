@@ -88,7 +88,7 @@
         {
             $ReturnResults = [];
 
-            $ReturnResults[($bytecode ? Functions::cbc('compiler') : 'compiler')] = $this->Compiler->toArray($bytecode);
+            $ReturnResults[($bytecode ? Functions::cbc('compiler') : 'compiler')] = $this->Compiler->toArray();
             $ReturnResults[($bytecode ? Functions::cbc('options') : 'options')] = $this->Options;
 
             if($this->UpdateSource !== null)

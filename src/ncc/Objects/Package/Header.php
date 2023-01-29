@@ -84,7 +84,7 @@
         public function toArray(bool $bytecode=false): array
         {
             return [
-                ($bytecode ? Functions::cbc('compiler_extension') : 'compiler_extension') => $this->CompilerExtension->toArray($bytecode),
+                ($bytecode ? Functions::cbc('compiler_extension') : 'compiler_extension') => $this->CompilerExtension->toArray(),
                 ($bytecode ? Functions::cbc('runtime_constants') : 'runtime_constants') => $this->RuntimeConstants,
                 ($bytecode ? Functions::cbc('compiler_version') : 'compiler_version') => $this->CompilerVersion,
                 ($bytecode ? Functions::cbc('update_source') : 'update_source') => ($this->UpdateSource?->toArray($bytecode) ?? null),

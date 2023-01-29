@@ -22,10 +22,11 @@
 
 namespace ncc\Exceptions;
 
+    use Exception;
     use ncc\Abstracts\ExceptionCodes;
     use Throwable;
 
-    class PackageFetchException extends \Exception
+    class PackageFetchException extends Exception
     {
         /**
          * @param string $message

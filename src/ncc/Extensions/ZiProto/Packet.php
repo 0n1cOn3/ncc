@@ -112,7 +112,7 @@ namespace ncc\ZiProto;
          * @param $value
          * @return false|string
          */
-        public function encode($value)
+        public function encode($value): false|string
         {
             if (is_int($value))
             {
@@ -185,7 +185,7 @@ namespace ncc\ZiProto;
         /**
          * @return string
          */
-        public function encodeNil()
+        public function encodeNil(): string
         {
             return "\xc0";
         }
@@ -194,7 +194,7 @@ namespace ncc\ZiProto;
          * @param $bool
          * @return string
          */
-        public function encodeBool($bool)
+        public function encodeBool($bool): string
         {
             return $bool ? "\xc3" : "\xc2";
         }
@@ -203,7 +203,7 @@ namespace ncc\ZiProto;
          * @param $int
          * @return string
          */
-        public function encodeInt($int)
+        public function encodeInt($int): string
         {
             if ($int >= 0)
             {
@@ -257,7 +257,7 @@ namespace ncc\ZiProto;
          * @param $float
          * @return string
          */
-        public function encodeFloat($float)
+        public function encodeFloat($float): string
         {
             return $this->isForceFloat32
                 ? "\xca". pack('G', $float)
@@ -268,7 +268,7 @@ namespace ncc\ZiProto;
          * @param $str
          * @return string
          */
-        public function encodeStr($str)
+        public function encodeStr($str): string
         {
             $length = strlen($str);
 
@@ -294,7 +294,7 @@ namespace ncc\ZiProto;
          * @param $str
          * @return string
          */
-        public function encodeBin($str)
+        public function encodeBin($str): string
         {
             $length = strlen($str);
 
@@ -313,9 +313,9 @@ namespace ncc\ZiProto;
 
         /**
          * @param $array
-         * @return false|string
+         * @return string
          */
-        public function encodeArray($array)
+        public function encodeArray($array): string
         {
             $data = $this->encodeArrayHeader(count($array));
 
@@ -331,7 +331,7 @@ namespace ncc\ZiProto;
          * @param $size
          * @return string
          */
-        public function encodeArrayHeader($size)
+        public function encodeArrayHeader($size): string
         {
             if ($size <= 0xf)
             {
@@ -348,9 +348,9 @@ namespace ncc\ZiProto;
 
         /**
          * @param $map
-         * @return false|string
+         * @return string
          */
-        public function encodeMap($map)
+        public function encodeMap($map): string
         {
             $data = $this->encodeMapHeader(count($map));
 
@@ -391,7 +391,7 @@ namespace ncc\ZiProto;
          * @param $size
          * @return string
          */
-        public function encodeMapHeader($size)
+        public function encodeMapHeader($size): string
         {
             if ($size <= 0xf)
             {
@@ -411,7 +411,7 @@ namespace ncc\ZiProto;
          * @param $data
          * @return string
          */
-        public function encodeExt($type, $data)
+        public function encodeExt($type, $data): string
         {
             $length = strlen($data);
 

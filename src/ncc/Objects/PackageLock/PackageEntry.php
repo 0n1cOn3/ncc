@@ -239,7 +239,7 @@
             if(!file_exists($path) && Resolver::resolveScope() == Scopes::System)
             {
                 $filesystem = new Filesystem();
-                $filesystem->mkdir($path, 0777);
+                $filesystem->mkdir($path);
             }
 
             return $path;

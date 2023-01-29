@@ -292,7 +292,6 @@
          * Detects the project type from the specified path
          *
          * @param string $path
-         * @param array $exlucde
          * @return ProjectDetectionResults
          */
         public static function detectProjectType(string $path): ProjectDetectionResults

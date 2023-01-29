@@ -112,7 +112,7 @@
 
             return [
                 ($bytecode ? Functions::cbc('version')  : 'version')  => $this->Version,
-                ($bytecode ? Functions::cbc('compiler')  : 'compiler')  => $this->Compiler->toArray($bytecode),
+                ($bytecode ? Functions::cbc('compiler')  : 'compiler')  => $this->Compiler->toArray(),
                 ($bytecode ? Functions::cbc('dependencies')  : 'dependencies')  => $dependencies,
                 ($bytecode ? Functions::cbc('execution_units')  : 'execution_units')  => $execution_units,
                 ($bytecode ? Functions::cbc('main_execution_policy')  : 'main_execution_policy')  => $this->MainExecutionPolicy,

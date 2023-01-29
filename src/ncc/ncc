@@ -19,6 +19,8 @@
      *  DEALINGS IN THE SOFTWARE.
      *
      */
-    
-    require('autoload.php');
-    \ncc\CLI\Main::start($argv);
+
+use ncc\CLI\Main;
+
+require('autoload.php');
+    Main::start($argv);

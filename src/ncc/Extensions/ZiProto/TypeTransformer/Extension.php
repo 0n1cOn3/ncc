@@ -40,5 +40,5 @@ namespace ncc\ncc\ZiProto\TypeTransformer;
          * @param int $extLength
          * @return mixed
          */
-        public function decode(BufferStream $stream, int $extLength);
+        public function decode(BufferStream $stream, int $extLength): mixed;
     }

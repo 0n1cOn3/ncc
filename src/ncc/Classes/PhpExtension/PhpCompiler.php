@@ -39,7 +39,7 @@
     use ncc\Exceptions\IOException;
     use ncc\Exceptions\PackageLockException;
     use ncc\Exceptions\PackagePreparationFailedException;
-    use ncc\Exceptions\UnsupportedRunnerException;
+    use ncc\Exceptions\RunnerExecutionException;
     use ncc\Exceptions\VersionNotFoundException;
     use ncc\Interfaces\CompilerInterface;
     use ncc\Managers\PackageLockManager;
@@ -304,7 +304,6 @@
          * @throws BuildException
          * @throws FileNotFoundException
          * @throws IOException
-         * @throws UnsupportedRunnerException
          */
         public function build(): ?Package
         {
@@ -443,7 +442,7 @@
          * @throws AccessDeniedException
          * @throws FileNotFoundException
          * @throws IOException
-         * @throws UnsupportedRunnerException
+         * @throws RunnerExecutionException
          */
         public function compileExecutionPolicies(): void
         {

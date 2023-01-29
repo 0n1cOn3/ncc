@@ -27,7 +27,6 @@ namespace ncc\Interfaces;
     use ncc\Exceptions\BuildException;
     use ncc\Exceptions\FileNotFoundException;
     use ncc\Exceptions\IOException;
-    use ncc\Exceptions\UnsupportedRunnerException;
     use ncc\Objects\Package;
     use ncc\Objects\ProjectConfiguration;
 
@@ -57,7 +56,6 @@ namespace ncc\Interfaces;
          * @throws BuildException
          * @throws FileNotFoundException
          * @throws IOException
-         * @throws UnsupportedRunnerException
          */
         public function build(): ?Package;
 
@@ -88,7 +86,6 @@ namespace ncc\Interfaces;
          * @throws AccessDeniedException
          * @throws FileNotFoundException
          * @throws IOException
-         * @throws UnsupportedRunnerException
          */
         public function compileExecutionPolicies(): void;
 

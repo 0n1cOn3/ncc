@@ -38,7 +38,7 @@ namespace ncc;
     {
     
         /**
-         * The cache'd version of the version information object.
+         * The cached version of the version information object.
          *
          * @var NccVersionInformation|null
          */
@@ -98,7 +98,9 @@ namespace ncc;
          * Initializes the NCC environment
          *
          * @return bool
-         * @throws Exceptions\FileNotFoundException
+         * @throws AccessDeniedException
+         * @throws FileNotFoundException
+         * @throws IOException
          * @throws RuntimeException
          */
         public static function initialize(): bool
@@ -146,7 +148,7 @@ namespace ncc;
          */
         public static function getConstants(): array
         {
-            if(defined('NCC_INIT') == false)
+            if(!defined('NCC_INIT'))
             {
                 throw new RuntimeException('NCC Must be initialized before executing ' . get_called_class() . '::getConstants()');
             }

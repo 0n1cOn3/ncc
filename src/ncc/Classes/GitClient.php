@@ -66,7 +66,7 @@ namespace ncc\Classes;
          * @param string $branch
          * @throws GitCheckoutException
          */
-        public static function checkout(string $path, string $branch)
+        public static function checkout(string $path, string $branch): void
         {
             Console::outVerbose('Checking out branch' . $branch);
             $process = new Process(["git", "checkout", $branch], $path);

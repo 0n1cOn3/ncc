@@ -59,8 +59,6 @@
 
 namespace ncc\Objects;
 
-    use ncc\Abstracts\ProjectType;
-
     class ProjectDetectionResults
     {
         /**
