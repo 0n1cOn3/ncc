@@ -138,6 +138,10 @@
                             SourcesMenu::start(self::$args);
                             break;
 
+                        case 'version':
+                            Console::out(sprintf('NCC version %s (%s)', NCC_VERSION_NUMBER, NCC_VERSION_BRANCH));
+                            break;
+
                         case '1':
                         case 'help':
                             HelpMenu::start(self::$args);
@@ -189,8 +193,15 @@
          */
         public static function shutdown(): void
         {
-            RuntimeCache::clearCache();
-            Functions::finalizePermissions();
+            try
+            {
+                RuntimeCache::clearCache();
+                Functions::finalizePermissions();
+            }
+            catch (Exception $e)
+            {
+                Console::outWarning('An error occurred while shutting down NCC, ' . $e->getMessage());
+            }
         }
 
     }
