@@ -36,6 +36,7 @@ NCC, from basic installation, basic usage, standards and much more.
       * [execution_policy.execute](#executionpolicyexecute)
       * [execution_policy.exit_handlers](#executionpolicyexithandlers)
       * [exit_handler](#exithandler)
+    * [installer](#installer)
 * [Execution Policies](#execution-policies)
   * [Supported Runners](#supported-runners)
   * [Configuring Runners](#configuring-runners)
@@ -434,6 +435,22 @@ running.
 | end_execution | `bool`   | No       | Whether to end the execution of the program or not if this exit handler is triggered. If not specified, the program will not end execution. |
 | run           | `string` | No       | The name of the execution policy to run when this exit handler is triggered.                                                                |
 | exit_code     | `int`    | No       | The exit code that the process must have exited with for this exit handler to be triggered.                                                 |
+
+### installer
+
+The `installer` field contains allows you to configure the execution of policies during different stages of the
+installation process of the package. Note that these files only accepts an array of strings, which are the names of
+the execution policies that you want to run during the specified stage. NCC will reject the package if the execution
+policy does not exist.
+
+| Name           | Type       | Required | Description                                                             |
+|----------------|------------|----------|-------------------------------------------------------------------------|
+| pre_install    | `string[]` | No       | The execution policies to run before the installation of the package.   |
+| post_install   | `string[]` | No       | The execution policies to run after the installation of the package.    |
+| pre_uninstall  | `string[]` | No       | The execution policies to run before the uninstallation of the package. |
+| post_uninstall | `string[]` | No       | The execution policies to run after the uninstallation of the package.  |
+| pre_update     | `string[]` | No       | The execution policies to run before the update of the package.         |
+| post_update    | `string[]` | No       | The execution policies to run after the update of the package.          |
 
 ------------------------------------------------------------------------------------
 
