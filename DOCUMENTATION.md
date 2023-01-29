@@ -31,6 +31,14 @@ NCC, from basic installation, basic usage, standards and much more.
     * [project.update_source](#projectupdatesource)
     * [project.update_source.repository](#projectupdatesourcerepository)
     * [assembly](#assembly)
+    * [execution_policies](#executionpolicies)
+      * [execution_policy](#executionpolicy)
+      * [execution_policy.execute](#executionpolicyexecute)
+      * [execution_policy.exit_handlers](#executionpolicyexithandlers)
+      * [exit_handler](#exithandler)
+* [Execution Policies](#execution-policies)
+  * [Supported Runners](#supported-runners)
+  * [Configuring Runners](#configuring-runners)
 * [Remote Sources](#remote-sources)
   * [Supported sources](#supported-sources)
   * [Default sources](#default-sources)
@@ -359,6 +367,110 @@ The `assembly` field contains metadata about the program, such as the name, vers
 | trademark   | `string` | No       | The trademark of the package                                                                                                                                                                                       |
 | version     | `string` | Yes      | The version of the package, see [Versioning](#versioning) for additional information                                                                                                                               |
 | uuid        | `string` | Yes      | The UUID of the package, see [UUIDs](#uuids) for additional information                                                                                                                                            |
+
+### execution_policies
+
+The `execution_policies` field contains information about the execution policies that the program uses, such as
+the execution policy that the program uses to run additional programs during different stages of the installation
+process of the package or used as the main execution policy for the program.
+
+Note that this field is an array of `execution_policy` objects, see [execution_policy](#executionpolicy) for additional
+information.
+
+For more information about execution policies, see [Execution Policies](#execution-policies).
+
+#### execution_policy
+
+The `execution_policy` object contains information about the execution policy.
+
+| Name          | Type                             | Required | Description                                                                                        |
+|---------------|----------------------------------|----------|----------------------------------------------------------------------------------------------------|
+| name          | `string`                         | Yes      | The name of the execution policy, this is used to identify the execution policy                    |
+| runner        | `string`                         | Yes      | The name of the runner that the execution policy uses, see [Supported runners](#supported-runners) |
+| message       | `string`                         | No       | The message to display when the execution policy is being run                                      |
+| execute       | `execution_policy.execute`       | Yes      | The execution policy to run when the execution policy is being run                                 |
+| exit_handlers | `execution_policy.exit_handlers` | No       | The exit handlers to run when the execution policy has finished running                            |
+
+#### execution_policy.execute
+
+The `execution_policy.execute` object contains information about how to run the execution policy when triggered.
+
+| Name                  | Type       | Required | Description                                                                                                                                           |
+|-----------------------|------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| target                | `string`   | Yes      | The target file to run when the execution policy is triggered, file path is relative to the location of your project.json file (eg; scripts/main.php) |
+| working_directory     | `string`   | No       | The working directory to run the process in. If not specified, the working directory will be your current working directory.                          |
+| options               | `string[]` | No       | The options to pass to the process when running it. (eg; ["--foo", "bar", "-f"])                                                                      |
+| environment_variables | `string[]` | No       | The environment variables to pass to the process when running it. (eg; ["FOO=bar"])                                                                   |
+| silent                | `bool`     | No       | Whether to run the process silently or not. If not specified, the process will not be run silently.                                                   |
+| tty                   | `bool`     | No       | Whether to run the process in a TTY or not. If not specified, the process will not be run in a TTY.                                                   |
+| timeout               | `int`      | No       | The timeout of the process in seconds. If not specified, the process will not have a timeout.                                                         |
+| idle_timeout          | `int`      | No       | The idle timeout of the process in seconds. If not specified, the process will not have an idle timeout.                                              |
+
+#### execution_policy.exit_handlers
+
+The `execution_policy.exit_handlers` object contains information about how to run the exit handlers when the execution
+policy has finished running. This is useful for running additional policies when the process has exited in a specific
+way.
+
+The two handlers that can be executed automatically despite the exit code are `success` and `error`. Which means if the
+process exits with a success exit code, the `success` handler will be run, and if the process exits with an error exit
+code, the `error` handler will be run. The `warning` handler will only be run if the process exits with specified exit
+code.
+
+| Name    | Type           | Required | Description                                                                   |
+|---------|----------------|----------|-------------------------------------------------------------------------------|
+| success | `exit_handler` | No       | The exit handler to run when the process has exited successfully.             |
+| warning | `exit_handler` | No       | The exit handler to run when the process has exited with a warning exit code. |
+| error   | `exit_handler` | No       | The exit handler to run when the process has exited with an error exit code.  |
+
+#### exit_handler
+
+The `exit_handler` object contains information about how to run the exit handler when the execution policy has finished
+running.
+
+| Name          | Type     | Required | Description                                                                                                                                 |
+|---------------|----------|----------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| message       | `string` | No       | The message to display when the exit handler is triggered                                                                                   |
+| end_execution | `bool`   | No       | Whether to end the execution of the program or not if this exit handler is triggered. If not specified, the program will not end execution. |
+| run           | `string` | No       | The name of the execution policy to run when this exit handler is triggered.                                                                |
+| exit_code     | `int`    | No       | The exit code that the process must have exited with for this exit handler to be triggered.                                                 |
+
+------------------------------------------------------------------------------------
+
+# Execution Policies
+
+Execution policies are the policies that are used to run additional programs during different stages of the installation
+or execution of the package. These policies are defined in your project.json `execution_policies` field with unique
+names for each policy, so that these policies can be referenced by other policies or by NCC if configured to do so.
+
+## Supported Runners
+
+At the moment, NCC only supports a select few "runners" that can be used to run the policies, these runners are:
+
+- `php` - This runner is used to run PHP scripts, it is the default runner for NCC
+- `bash` - This runner is used to run bash scripts
+- `python` - This runner is used to run python scripts
+- `python2` - This runner is used to run python2 scripts
+- `python3` - This runner is used to run python3 scripts
+- `perl` - This runner is used to run perl scripts
+- `lua` - This runner is used to run lua scripts
+
+ > Note: these runners are not installed by default, you will need to install them yourself.
+
+## Configuring Runners
+
+If for some reason NCC cannot automatically detect the runner that you want to use, you can configure the runner yourself
+by modifying your configuration file. The configuration file is located at `/var/ncc/ncc.yaml` under the `runners` field.
+
+Or you can modify the configuration file by running the following command:
+
+```bash
+ncc config -p runners.bash -v /usr/bin/bash
+```
+
+This will set the `bash` runner to use the `/usr/bin/bash` binary.
+
+ > **Note:** You must have root permissions to modify the configuration file.
 
 ------------------------------------------------------------------------------------
 
