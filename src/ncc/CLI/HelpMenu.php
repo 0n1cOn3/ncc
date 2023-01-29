@@ -72,7 +72,7 @@ namespace ncc\CLI;
             Console::outHelpSections([
                 new CliHelpSection(['{command} --help'], 'Displays help information about a specific command'),
                 new CliHelpSection(['-v', '--version'], 'Display NCC version information'),
-                new CliHelpSection(['-l', '--log-level={debug|info|warn|error|fatal}'], 'Set the logging level', 'info'),
+                new CliHelpSection(['-l', '--log-level={silent|debug|verbose|info|warn|error|fatal}'], 'Set the logging level', 'info'),
                 new CliHelpSection(['--basic-ascii'], 'Uses basic ascii characters'),
                 new CliHelpSection(['--no-color'], 'Omits the use of colors'),
                 new CliHelpSection(['--no-banner'], 'Omits displaying the NCC ascii banner')
