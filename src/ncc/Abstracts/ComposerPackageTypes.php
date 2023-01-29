@@ -12,7 +12,7 @@
         /**
          * This denotes a project rather than a library. For example
          * application shells like the Symfony standard edition, CMSs
-         * like the SilverStripe instlaler or full-fledged applications
+         * like the SilverStripe installer or full-fledged applications
          * distributed as packages. This can for example be used by IDEs
          * to provide listings of projects to initialize when creating
          * a new workspace.
