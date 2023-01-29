@@ -358,7 +358,7 @@ The `assembly` field contains metadata about the program, such as the name, vers
 | copyright   | `string` | No       | The copyright of the package                                                                                                                                                                                       |
 | trademark   | `string` | No       | The trademark of the package                                                                                                                                                                                       |
 | version     | `string` | Yes      | The version of the package, see [Versioning](#versioning) for additional information                                                                                                                               |
-| uuid        | `string` | No       | The UUID of the package, see [UUIDs](#uuids) for additional information                                                                                                                                            |
+| uuid        | `string` | Yes      | The UUID of the package, see [UUIDs](#uuids) for additional information                                                                                                                                            |
 
 ------------------------------------------------------------------------------------
 
