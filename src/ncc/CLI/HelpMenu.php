@@ -39,7 +39,6 @@
             self::displayMainOptions();
             self::displayManagementCommands();
             self::displayMainCommands();
-            self::displayExtensions();
         }
 
         /**
@@ -53,7 +52,6 @@
             Console::outHelpSections([
                 new CliHelpSection(['{command} --help'], 'Displays help information about a specific command'),
                 new CliHelpSection(['-v', '--version'], 'Display NCC version information'),
-                new CliHelpSection(['-D', '--debug'], 'Enables debug mode'),
                 new CliHelpSection(['-l', '--log-level={debug|info|warn|error|fatal}'], 'Set the logging level', 'info'),
                 new CliHelpSection(['--basic-ascii'], 'Uses basic ascii characters'),
                 new CliHelpSection(['--no-color'], 'Omits the use of colors'),
@@ -72,7 +70,6 @@
             Console::outHelpSections([
                 new CliHelpSection(['project'], 'Manages the current project'),
                 new CliHelpSection(['package'], 'Manages the package system'),
-                new CliHelpSection(['cache'], 'Manages the system cache'),
                 new CliHelpSection(['cred'], 'Manages credentials'),
                 new CliHelpSection(['config'], 'Changes NCC configuration values'),
                 new CliHelpSection(['source'], 'Manages remote sources'),
@@ -90,19 +87,6 @@
             Console::outHelpSections([
                 new CliHelpSection(['build'], 'Builds the current project'),
                 new CliHelpSection(['main'], 'Executes the main entrypoint of a package')
-            ]);
-        }
-
-        /**
-         * Displays the main commands section
-         *
-         * @return void
-         */
-        private static function displayExtensions(): void
-        {
-            Console::out('Extensions:');
-            Console::outHelpSections([
-                new CliHelpSection(['exphp'], 'The PHP compiler extension')
             ]);
         }
     }
