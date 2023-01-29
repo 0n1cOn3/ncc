@@ -45,6 +45,7 @@ NCC, from basic installation, basic usage, standards and much more.
 * [Naming a package](#naming-a-package)
   * [Naming conventions](#naming-conventions)
   * [References](#references)
+* [Error Codes](#error-codes)
 <!-- TOC -->
 
 ## Introduction
@@ -535,3 +536,82 @@ like a region to name packages, for example `net.nosial.region.example`
 For Java's package naming conventions see [Naming a Package](https://docs.oracle.com/javase/tutorial/java/package/namingpkgs.html)
 from the Oracle's Java documentation resource, as the same rules apply to NCC except for *some* illegal naming
 conventions such as packages not being able to begin with `int` or numbers
+
+------------------------------------------------------------------------------------
+
+# Error Codes
+
+NCC uses error codes to identify errors, these error codes are used to identify errors in the ncc command-line tool
+and in the ncc API.
+
+| Error Code | Name                                  |
+|:----------:|:--------------------------------------|
+|  `-1700`   | InvalidProjectConfigurationException  |
+|  `-1701`   | FileNotFoundException                 |
+|  `-1702`   | DirectoryNotFoundException            |
+|  `-1703`   | InvalidScopeException                 |
+|  `-1704`   | AccessDeniedException                 |
+|  `-1705`   | MalformedJsonException                |
+|  `-1706`   | RuntimeException                      |
+|  `-1707`   | InvalidCredentialsEntryException      |
+|  `-1708`   | ComponentVersionNotFoundException     |
+|  `-1709`   | ConstantReadonlyException             |
+|  `-1710`   | InvalidPackageNameException           |
+|  `-1711`   | InvalidVersionNumberException         |
+|  `-1712`   | InvalidProjectNameException           |
+|  `-1713`   | ProjectAlreadyExistsException         |
+|  `-1714`   | AutoloadGeneratorException            |
+|  `-1715`   | NoUnitsFoundException                 |
+|  `-1716`   | UnsupportedPackageException           |
+|  `-1717`   | NotImplementedException               |
+|  `-1718`   | InvalidPackageException               |
+|  `-1719`   | InvalidConstantNameException          |
+|  `-1720`   | PackagePreparationFailedException     |
+|  `-1721`   | BuildConfigurationNotFoundException   |
+|  `-1722`   | InvalidProjectBuildConfiguration      |
+|  `-1723`   | UnsupportedCompilerExtensionException |
+|  `-1724`   | InvalidPropertyValueException         |
+|  `-1725`   | InvalidVersionConfigurationException  |
+|  `-1726`   | UnsupportedExtensionVersionException  |
+|  `-1727`   | BuildException                        |
+|  `-1728`   | PackageParsingException               |
+|  `-1729`   | PackageLockException                  |
+|  `-1730`   | InstallationException                 |
+|  `-1731`   | UnsupportedComponentTypeException     |
+|  `-1732`   | ComponentDecodeException              |
+|  `-1733`   | ComponentChecksumException            |
+|  `-1734`   | ResourceChecksumException             |
+|  `-1735`   | IOException                           |
+|  `-1736`   | UnsupportedRunnerException            |
+|  `-1737`   | VersionNotFoundException              |
+|  `-1738`   | UndefinedExecutionPolicyException     |
+|  `-1739`   | InvalidExecutionPolicyName            |
+|  `-1740`   | ProjectConfigurationNotFoundException |
+|  `-1741`   | RunnerExecutionException              |
+|  `-1742`   | NoAvailableUnitsException             |
+|  `-1743`   | ExecutionUnitNotFoundException        |
+|  `-1744`   | PackageAlreadyInstalledException      |
+|  `-1745`   | PackageNotFoundException              |
+|  `-1746`   | ComposerDisabledException             |
+|  `-1747`   | InternalComposerNotAvailable          |
+|  `-1748`   | ComposerNotAvailableException         |
+|  `-1749`   | ComposerException                     |
+|  `-1750`   | UserAbortedOperationException         |
+|  `-1751`   | MissingDependencyException            |
+|  `-1752`   | HttpException                         |
+|  `-1753`   | UnsupportedRemoteSourceTypeException  |
+|  `-1754`   | GitCloneException                     |
+|  `-1755`   | GitCheckoutException                  |
+|  `-1756`   | GitlabServiceException                |
+|  `-1757`   | ImportException                       |
+|  `-1758`   | GitTagsException                      |
+|  `-1759`   | GithubServiceException                |
+|  `-1760`   | AuthenticationException               |
+|  `-1761`   | NotSupportedException                 |
+|  `-1762`   | UnsupportedProjectTypeException       |
+|  `-1763`   | UnsupportedArchiveException           |
+|  `-1764`   | ArchiveException                      |
+|  `-1765`   | PackageFetchException                 |
+|  `-1766`   | InvalidBuildConfigurationException    |
+|  `-1767`   | InvalidDependencyConfiguration        |
+|  `-1768`   | SymlinkException                      |
