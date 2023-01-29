@@ -19,6 +19,10 @@ NCC, from basic installation, basic usage, standards and much more.
 * [Installing NCC](#installing-ncc)
   * [Command line arguments](#command-line-arguments)
 * [Uninstalling NCC](#uninstalling-ncc)
+* [NCC Command-line Interface](#ncc-command-line-interface)
+  * [Management Commands](#management-commands)
+  * [Utility Commands](#utility-commands)
+  * [Options](#options)
 * [Projects](#projects)
   * [Creating a project](#creating-a-project)
   * [project.json structure](#projectjson-structure)
@@ -204,6 +208,52 @@ that were installed using ncc and remove any artifacts that were created by thes
 
 ------------------------------------------------------------------------------------
 
+# NCC Command-line Interface
+
+NCC provides a command-line interface that can be used to manage packages, create projects, compile source code, manage
+remote sources, configure ncc, and more. You can run `ncc --help` to see a list of all the available commands.
+
+![ncc cli](assets/ncc_cli.png)
+
+## Management Commands
+
+Management commands are used to manage ncc's configuration, remote sources, and packages.
+
+
+`project` Manage or create a project (*see [Projects](#projects) section*)
+
+`package` Manage packages
+
+`source` Manage remote sources
+
+`config` Manage ncc's configuration
+
+## Utility Commands
+
+Utility commands are used to perform tasks in the current directory or project.
+
+`build` Compile source code of the project
+
+`exec` Executes a package's entry point file (package must be installed)
+
+## Options
+
+NCC also accepts a few command line arguments that can be used to alter the behavior of the command-line interface.
+
+`-l <level>, --log-level <level>` Sets the log level, this can be one of `debug`, `verbose`, `info`, `warn`, `error`, `fatal`
+
+`-v, --version` Displays the version of ncc 
+
+`-h, --help` Displays the help message
+
+`--basic-ascii` Renders some messages using basic ASCII characters instead of unicode characters
+
+`--no-color` Disables colored output
+
+`--no-banner` Omits displaying the NCC graphical banner
+
+------------------------------------------------------------------------------------
+
 # Projects
 
 A project is a directory that contains all the source files to your program, it's similar to a workspace in other IDEs.
@@ -298,17 +348,17 @@ It would be useful to read more about [Remote Sources](#remote-sources) before c
 
 The `assembly` field contains metadata about the program, such as the name, version, description, so on.
 
-| Name        | Type     | Required | Description                                                                                                                                                                                                  |
-|-------------|----------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name        | `string` | Yes      | The name of the package, this is used to display the name of the package (eg; `Example Program`)                                                                                                             |
-| package     | `string` | Yes      | The package name of the program, this is used to identify the package and to avoid conflicts with other packages that may have the same name, see [Package names](#package-names) for additional information |
-| description | `string` | No       | The description of the package, this is used to display a description of the package when installing                                                                                                         |
-| company     | `string` | No       | The company that created the package, this is used to display the company that created the package when installing                                                                                           |
-| product     | `string` | No       | The product that the package is a part of, this is used to display the product that the package is a part of when installing                                                                                 |
-| copyright   | `string` | No       | The copyright of the package                                                                                                                                                                                 |
-| trademark   | `string` | No       | The trademark of the package                                                                                                                                                                                 |
-| version     | `string` | Yes      | The version of the package, see [Versioning](#versioning) for additional information                                                                                                                         |
-| uuid        | `string` | No       | The UUID of the package, see [UUIDs](#uuids) for additional information                                                                                                                                      |
+| Name        | Type     | Required | Description                                                                                                                                                                                                        |
+|-------------|----------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name        | `string` | Yes      | The name of the package, this is used to display the name of the package (eg; `Example Program`)                                                                                                                   |
+| package     | `string` | Yes      | The package name of the program, this is used to identify the package and to avoid conflicts with other packages that may have the same name, see [Naming a package](#naming-a-package) for additional information |
+| description | `string` | No       | The description of the package, this is used to display a description of the package when installing                                                                                                               |
+| company     | `string` | No       | The company that created the package, this is used to display the company that created the package when installing                                                                                                 |
+| product     | `string` | No       | The product that the package is a part of, this is used to display the product that the package is a part of when installing                                                                                       |
+| copyright   | `string` | No       | The copyright of the package                                                                                                                                                                                       |
+| trademark   | `string` | No       | The trademark of the package                                                                                                                                                                                       |
+| version     | `string` | Yes      | The version of the package, see [Versioning](#versioning) for additional information                                                                                                                               |
+| uuid        | `string` | No       | The UUID of the package, see [UUIDs](#uuids) for additional information                                                                                                                                            |
 
 ------------------------------------------------------------------------------------
 
