@@ -8,7 +8,6 @@ autoload:
 	make $(SRC_PATH)/ncc/ThirdParty/defuse/php-encryption/autoload_spl.php
 	make $(SRC_PATH)/ncc/ThirdParty/jelix/version/autoload_spl.php
 	make $(SRC_PATH)/ncc/ThirdParty/nikic/php-parser/autoload_spl.php
-	make $(SRC_PATH)/ncc/ThirdParty/php_parallel_lint/php_console_color/autoload_spl.php
 	make $(SRC_PATH)/ncc/ThirdParty/Symfony/polyfill-ctype/autoload_spl.php
 	make $(SRC_PATH)/ncc/ThirdParty/Symfony/polyfill-mbstring/autoload_spl.php
 	make $(SRC_PATH)/ncc/ThirdParty/Symfony/polyfill-uuid/autoload_spl.php
@@ -32,10 +31,6 @@ $(SRC_PATH)/ncc/ThirdParty/jelix/version/autoload_spl.php:
 $(SRC_PATH)/ncc/ThirdParty/nikic/php-parser/autoload_spl.php:
 	$(PHPCC) $(PHPAB) --output $(SRC_PATH)/ncc/ThirdParty/nikic/PhpParser/autoload_spl.php \
 		$(SRC_PATH)/ncc/ThirdParty/nikic/PhpParser
-
-$(SRC_PATH)/ncc/ThirdParty/php_parallel_lint/php_console_color/autoload_spl.php:
-	$(PHPCC) $(PHPAB) --output $(SRC_PATH)/ncc/ThirdParty/php_parallel_lint/php_console_color/autoload_spl.php \
-		$(SRC_PATH)/ncc/ThirdParty/php_parallel_lint/php_console_color
 
 $(SRC_PATH)/ncc/ThirdParty/Symfony/polyfill-ctype/autoload_spl.php:
 	$(PHPCC) $(PHPAB) --output $(SRC_PATH)/ncc/ThirdParty/Symfony/polyfill-ctype/autoload_spl.php \
@@ -114,7 +109,6 @@ clean:
 	rm -f $(SRC_PATH)/ncc/ThirdParty/defuse/php-encryption/autoload_spl.php
 	rm -f $(SRC_PATH)/ncc/ThirdParty/jelix/version/autoload_spl.php
 	rm -f $(SRC_PATH)/ncc/ThirdParty/nikic/PhpParser/autoload_spl.php
-	rm -f $(SRC_PATH)/ncc/ThirdParty/php_parallel_lint/php_console_color/autoload_spl.php
 	rm -f $(SRC_PATH)/ncc/ThirdParty/Symfony/polyfill-ctype/autoload_spl.php
 	rm -f $(SRC_PATH)/ncc/ThirdParty/Symfony/polyfill-mbstring/autoload_spl.php
 	rm -f $(SRC_PATH)/ncc/ThirdParty/Symfony/polyfill-uuid/autoload_spl.php
