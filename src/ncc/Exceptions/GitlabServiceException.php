@@ -15,6 +15,5 @@
         public function __construct(string $message = "", ?Throwable $previous = null)
         {
             parent::__construct($message, ExceptionCodes::GitlabServiceException, $previous);
-            $this->message = $message;
         }
     }

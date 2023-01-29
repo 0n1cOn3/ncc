@@ -3,11 +3,17 @@
     namespace ncc\Exceptions;
 
     use Exception;
+    use ncc\Abstracts\ExceptionCodes;
+    use Throwable;
 
     class UnsupportedExtensionVersionException extends Exception
     {
-        public function __construct(string $message = "", int $code = 0, ?Throwable $previous = null)
+        /**
+         * @param string $message
+         * @param Throwable|null $previous
+         */
+        public function __construct(string $message = "", ?Throwable $previous = null)
         {
-            parent::__construct($message, $code, $previous);
+            parent::__construct($message, ExceptionCodes::UnsupportedExtensionVersionException, $previous);
         }
     }

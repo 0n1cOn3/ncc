@@ -9,8 +9,6 @@
     class InvalidScopeException extends Exception
     {
         /**
-         * Public Constructor
-         *
          * @param string $scope
          * @param Throwable|null $previous
          */

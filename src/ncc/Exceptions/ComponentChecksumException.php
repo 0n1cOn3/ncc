@@ -10,10 +10,6 @@
 
     class ComponentChecksumException extends Exception
     {
-        /**
-         * @var Throwable|null
-         */
-        private ?Throwable $previous;
 
         /**
          * @param string $message
@@ -22,7 +18,5 @@
         public function __construct(string $message = "", ?Throwable $previous = null)
         {
             parent::__construct($message, ExceptionCodes::ComponentChecksumException, $previous);
-            $this->message = $message;
-            $this->previous = $previous;
         }
     }

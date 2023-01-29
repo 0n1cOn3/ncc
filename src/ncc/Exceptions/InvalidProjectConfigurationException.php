@@ -12,15 +12,7 @@
      */
     class InvalidProjectConfigurationException extends Exception
     {
-
         /**
-         * @var Throwable|null
-         */
-        private ?Throwable $previous;
-
-        /**
-         * The full property name that needs correcting
-         *
          * @var string|null
          */
         private ?string $property;
@@ -33,8 +25,14 @@
         public function __construct(string $message = "", ?string $property=null, ?Throwable $previous = null)
         {
             parent::__construct($message, ExceptionCodes::InvalidProjectConfigurationException, $previous);
-            $this->message = $message;
-            $this->previous = $previous;
             $this->property = $property;
+        }
+
+        /**
+         * @return string|null
+         */
+        public function getProperty(): ?string
+        {
+            return $this->property;
         }
     }

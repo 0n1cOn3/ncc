@@ -19,6 +19,5 @@
         public function __construct(string $path = "", ?Throwable $previous = null)
         {
             parent::__construct('The file \'' . realpath($path) . '\' was not found', ExceptionCodes::FileNotFoundException, $previous);
-            $this->code = ExceptionCodes::FileNotFoundException;
         }
     }
